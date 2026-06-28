@@ -43,6 +43,21 @@ function onBoardChange(e) {
   // 去回答舊板的問題（後端 session 綁定某塊板的對話歷史）。
   pending = null;
   chatSessionId = null;
+  initDts();                                  // DTS 生成可用性依板而定
+}
+
+// --------------------------------------------------------------------------- //
+// DTS patch 生成（兩段式流程第二段）——該板具備 baseline/ + dts_generation/
+// 知識庫才在 plan 表格工具列顯示「產生 DTS」按鈕。
+// --------------------------------------------------------------------------- //
+let dtsAvailable = false;
+
+async function initDts() {
+  try {
+    const q = currentBoard ? "?board=" + encodeURIComponent(currentBoard) : "";
+    const d = await (await fetch("/api/dts/status" + q)).json();
+    dtsAvailable = !!d.available;
+  } catch (e) { dtsAvailable = false; }        // 舊後端沒有此端點：隱藏功能
 }
 
 // 後端每個回應都會回帶 board；以它為準同步前端狀態（反問來回維持同一塊板）
@@ -236,7 +251,7 @@ function renderChatContent(d, body, autoResult) {
   // 驗證已完成（v）→ 不再輪詢；逾時/被取代（autoResult=null）→ 掛輪詢備援。
   if (d.plan && d.plan.length) {
     body.appendChild(buildResultBlock(
-      d.plan, v ? null : d.plan_fingerprint));
+      d.plan, v ? null : d.plan_fingerprint, d.plan_fingerprint || null));
   }
 
   // 驗證過的修改建議（G6）：卡片可一鍵採納
@@ -554,7 +569,8 @@ function renderDone(d, body) {
       ' 個開機必要 signals（require.json），避免被其他週邊佔用。'));
   }
 
-  body.appendChild(buildResultBlock(d.assignment, d.plan_fingerprint || null));
+  body.appendChild(buildResultBlock(d.assignment, d.plan_fingerprint || null,
+                                    d.plan_fingerprint || null));
   scrollBottom();
 }
 
@@ -598,7 +614,9 @@ function groupByPeripheral(rows) {
 }
 
 // 工具列(複製) + 表格(peripheral 合併成一大格) + 下載 CSV/XLSX/CubeMX 驗證結果
-function buildResultBlock(rows, watchFp) {
+// planFp = 這份 plan 的指紋（「產生 DTS」用它向伺服器指認畫面上的 plan；
+// watchFp 只在還沒驗完時非空，兩者語意不同所以分開帶）。
+function buildResultBlock(rows, watchFp, planFp) {
   const block = el("div", "result-block");
 
   // 有任何 row 帶板上外部 IC 才顯示 ic 欄（G7；無 IC 的板子表格維持四欄）
@@ -641,6 +659,18 @@ function buildResultBlock(rows, watchFp) {
   dl.appendChild(copyBtn);
   const vBtn = buildValidatorDownloadBtn();
   dl.appendChild(vBtn);
+  if (dtsAvailable) {
+    const dtsBtn = el("button", "icon-btn", "⚙ 產生 DTS patch");
+    if (planFp) {
+      dtsBtn.title = "以這份 plan 產生 kernel DTS patch（結構驗證＋dtc 編譯，" +
+                     "需要 LLM 的週邊會呼叫 API，約 1–5 分鐘）";
+      dtsBtn.addEventListener("click", () => startDtsGeneration(block, dtsBtn, planFp));
+    } else {
+      dtsBtn.disabled = true;
+      dtsBtn.title = "此結果缺 plan 指紋（舊版回應）——請重新求解後再產生 DTS";
+    }
+    dl.appendChild(dtsBtn);
+  }
   block.appendChild(dl);
 
   // 每個新 plan 伺服器都會自動排入背景 CubeMX 驗證：這裡輪詢直到「result 的
@@ -720,6 +750,154 @@ function buildValidatorDownloadBtn() {
     } catch (e) {
       const orig = btn.innerHTML;
       btn.innerHTML = "尚無驗證產物";
+      setTimeout(() => (btn.innerHTML = orig), 1400);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  return btn;
+}
+
+// 「產生 DTS」：確認 → POST /api/dts/generate（只帶指紋，rows 一律由伺服器
+// 保存的解供給——防偽）→ 輪詢 /api/dts/status → 掛結果卡片與下載。
+async function startDtsGeneration(block, btn, planFp) {
+  if (!confirm("將以目前這份 plan 產生 kernel DTS patch。\n" +
+               "過程包含定位、生成（必要時呼叫 LLM）、結構與編譯驗證，" +
+               "約需 1–5 分鐘。要繼續嗎？")) return;
+  btn.disabled = true;
+  let d;
+  try {
+    const r = await fetch("/api/dts/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fingerprint: planFp }),
+    });
+    d = await r.json();
+    if (!r.ok) {
+      block.appendChild(el("p", "note", "無法產生 DTS：" + (d.error || "HTTP " + r.status)));
+      btn.disabled = false;
+      scrollBottom();
+      return;
+    }
+  } catch (e) {
+    block.appendChild(el("p", "note", "請求失敗：" + e.message));
+    btn.disabled = false;
+    scrollBottom();
+    return;
+  }
+
+  const line = el("div", "loading validating");
+  line.appendChild(el("span", "spinner"));
+  line.appendChild(el("span", "loading-label",
+    "DTS patch 生成中…（定位 → 生成 → 驗證 → 修復，約 1–5 分鐘）"));
+  block.appendChild(line);
+  scrollBottom();
+
+  const deadline = Date.now() + 15 * 60 * 1000;
+  while (Date.now() < deadline) {
+    await new Promise((res) => setTimeout(res, 5000));
+    try {
+      const s = await (await fetch("/api/dts/status")).json();
+      if (!s.running && s.result && s.result.fingerprint === planFp) {
+        line.remove();
+        block.appendChild(buildDtsCard(s.result));
+        btn.disabled = false;
+        scrollBottom();
+        return;
+      }
+      if (!s.running && (!s.result || s.result.fingerprint !== planFp)) {
+        line.remove();                       // 結果屬於別份 plan（理論上不會發生）
+        block.appendChild(el("p", "note", "生成結果與這份 plan 不符，請重試。"));
+        btn.disabled = false;
+        return;
+      }
+    } catch (e) { /* 網路抖動：下一輪再試 */ }
+  }
+  line.querySelector(".loading-label").textContent =
+    "（生成仍在進行——完成後可由「⤓ DTS patch 產物」下載）";
+  line.querySelector(".spinner").remove();
+  btn.disabled = false;
+}
+
+// DTS 生成結果卡片（樣式重用 CubeMX 的 val-card）。三種收尾：
+// passed → 綠卡＋產物下載；needs-human（locator_blocked / needs_info /
+// boot_conflict）→ 黃卡列出待補資訊；其他 → 紅卡附摘要。
+function buildDtsCard(res) {
+  const NEEDS_HUMAN = ["locator_blocked", "needs_info", "boot_conflict"];
+  const card = el("div", res.passed ? "val-card pass"
+    : (NEEDS_HUMAN.includes(res.stop_reason) ? "val-card err" : "val-card fail"));
+
+  if (res.passed) {
+    card.appendChild(el("p", "val-head",
+      `✓ DTS patch 生成完成（修復 ${res.repair_rounds} 輪` +
+      (res.compiled ? "，dtc 編譯通過" : "，未編譯——本機無 dtc/gcc") + "）"));
+    const pers = res.peripherals || [];
+    if (pers.length) {
+      const ul = el("ul");
+      pers.forEach((p) => {
+        ul.appendChild(el("li", "mv",
+          `<b>${escapeHtml(p.peripheral)}</b> — ${escapeHtml(p.action)}` +
+          (p.lm_used ? "（LLM）" : "（deterministic）") +
+          (p.cache_hit ? "［cache］" : "")));
+      });
+      card.appendChild(ul);
+    }
+    card.appendChild(el("p", "note",
+      "產物：generated.patch（可直接給 Yocto SRC_URI）＋ stm32mp257f-ev1.generated.dts" +
+      "＋各項 report——由「⤓ DTS patch 產物」下載。"));
+    card.appendChild(buildDtsDownloadBtn());
+    return card;
+  }
+
+  if (NEEDS_HUMAN.includes(res.stop_reason)) {
+    card.appendChild(el("p", "val-head",
+      `⚠ 需要人工介入（${escapeHtml(res.stop_reason)}）`));
+    const ul = el("ul");
+    (res.ask_user || []).forEach((a) => {
+      ul.appendChild(el("li", "mv", escapeHtml(
+        typeof a === "string" ? a : JSON.stringify(a))));
+    });
+    card.appendChild(ul);
+    card.appendChild(el("p", "note",
+      "請依上述訊息調整需求或補充資訊後重新求解，再產生 DTS。"));
+    return card;
+  }
+
+  card.appendChild(el("p", "val-head",
+    `✗ DTS patch 生成失敗（${escapeHtml(res.stop_reason || "未知原因")}）`));
+  if (res.error) {
+    const p = el("p", "note");
+    p.textContent = res.error;
+    card.appendChild(p);
+  }
+  if (res.summary) {
+    const pre = el("pre", "note");
+    pre.textContent = res.summary;
+    card.appendChild(pre);
+  }
+  return card;
+}
+
+function buildDtsDownloadBtn() {
+  const btn = el("button", "icon-btn", "⤓ DTS patch 產物");
+  btn.title = "下載 output/generated/ 全部產物（generated.patch、generated.dts、各 report）";
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try {
+      const r = await fetch("/api/dts/download");
+      if (!r.ok) throw new Error("no artifacts");
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "dts_patch_artifacts.zip";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = "尚無產物";
       setTimeout(() => (btn.innerHTML = orig), 1400);
     } finally {
       btn.disabled = false;
@@ -828,5 +1006,6 @@ $("mode-toggle").addEventListener("click", (e) => {
 });
 
 // 啟動：載入可選板子清單 + 以伺服器最近一次驗證結果初始化 CubeMX 徽章
-loadBoards();
+// + 查詢 DTS 生成可用性（板子清單載完才知道 currentBoard）
+loadBoards().then(initDts);
 initValidatorBadge();

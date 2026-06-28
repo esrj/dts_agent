@@ -15,8 +15,10 @@ import copy
 import io
 import json
 import os
+import shutil
 import sys
 import threading
+import time
 import zipfile
 
 # 既有 code 都用 `from util... / from solver...`（root 是 src），
@@ -86,6 +88,7 @@ def _with_auto_validation(out, board):
     背景驗證（含 baseline——它也是一份 plan）。"""
     if isinstance(out, dict) and out.get("sat") and out.get("assignment"):
         out["plan_fingerprint"] = plan_fingerprint(expected_pin_map(out["assignment"]))
+        _remember_plan(out["assignment"], board, out["plan_fingerprint"])
         _kick_validation(out["assignment"], board)
     return out
 
@@ -185,6 +188,7 @@ def chat():
     fp = None
     if reply.plan:
         fp = plan_fingerprint(expected_pin_map(reply.plan))
+        _remember_plan(reply.plan, sess.board, fp)
         if turn_validator is None:
             _kick_validation(reply.plan, sess.board)
     return jsonify(
@@ -277,6 +281,153 @@ def export():
     except Exception as exc:
         return jsonify(error=str(exc)), 500
     return jsonify(error=f"unknown format: {fmt}"), 400
+
+
+# --------------------------------------------------------------------------- #
+# DTS patch 生成（兩段式流程的第二段：plan.csv -> kernel DTS patch）
+#
+# 防偽不變式（與 emit_plan / run_validator 同一條紅線）：/api/dts/generate 絕不
+# 接受 client 提供的 rows——plan 來源只能是伺服器端保存的最後一份 SAT 解
+# （_last_plan，由 /api/solve 與 /api/chat 的出口掛鉤寫入）。client 只傳
+# fingerprint 指認「畫面上這份 plan」，與伺服器保存的不一致即拒絕（409），
+# 保證 pipeline 讀到的 plan.csv 與使用者確認的內容一致。
+#
+# 執行模式：single-flight 背景執行緒（同時最多一個 DTS 生成工作；進行中再點
+# 回 409），結果存 _dts["result"] 供 /api/dts/status 輪詢；產物全部落在
+# output/generated/（patch_agent 既有的覆寫制目錄）。
+# --------------------------------------------------------------------------- #
+_last_plan = {"lock": threading.Lock(), "rows": None, "board": None, "fp": None}
+_dts = {"lock": threading.Lock(), "running": False, "result": None,
+        "started_fp": None}
+
+
+def _remember_plan(rows, board, fp):
+    """伺服器端保存「最新一份 SAT plan」——/api/dts/generate 的唯一 plan 來源。"""
+    with _last_plan["lock"]:
+        _last_plan["rows"] = copy.deepcopy(rows)
+        _last_plan["board"] = board
+        _last_plan["fp"] = fp
+
+
+def _dts_available(board: str) -> bool:
+    """該板具備 DTS patch 生成的知識庫（baseline/ + dts_generation/，選配檔語意
+    ——缺夾時 plan 流程照常，只有本功能不可用）。patch pipeline 目前單板
+    （config.BOARD），多板化列於 MERGE_PLAN §10.2。"""
+    try:
+        from patch_agent import config as pconfig
+    except Exception:
+        return False
+    return (board == pconfig.BOARD
+            and pconfig.BASELINE.is_dir() and pconfig.DTS_GEN.is_dir())
+
+
+def _dts_files() -> list:
+    return _validator_files(os.path.join(OUTPUT, "generated"))
+
+
+def _dts_worker(board: str, fp: str):
+    started = time.time()
+    try:
+        from patch_agent import config as pconfig
+        from patch_agent.cli import _write_locator_reports, summarize
+        from patch_agent.m8_repairer import run as m8_run
+        # dtc/gcc 缺席時退化為不編譯（結構檢查照跑），狀態如實回報 compiled=False
+        run_compile = bool(shutil.which(pconfig.DTC)) and bool(shutil.which("gcc"))
+        res = m8_run(plan_csv=str(pconfig.PLAN_CSV), write=True,
+                     run_compile=run_compile)
+        _write_locator_reports(res)                  # diff_plan / locator_report 落地
+        result = {
+            "passed": bool(res.passed),
+            "stop_reason": res.stop_reason,
+            "ask_user": [a if isinstance(a, (dict, str)) else str(a)
+                         for a in (res.ask_user or [])],
+            "repair_rounds": res.rounds,
+            "compiled": run_compile,
+            "checks": dict(res.validation.checks) if res.validation is not None else {},
+            "peripherals": list((res.art.report.get("peripherals") or [])
+                                if res.art is not None else []),
+            "summary": summarize(res),
+        }
+    except Exception as exc:                          # pipeline 例外（缺 key、壞資料…）
+        result = {"passed": False, "stop_reason": "exception", "error": str(exc),
+                  "ask_user": [], "repair_rounds": 0, "compiled": False,
+                  "checks": {}, "peripherals": [], "summary": ""}
+    result.update(fingerprint=fp, board=board,
+                  ran_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
+                  seconds=round(time.time() - started, 1),
+                  artifacts=_dts_files())
+    with _dts["lock"]:
+        _dts["result"] = result
+        _dts["running"] = False
+        _dts["started_fp"] = None
+
+
+@app.post("/api/dts/generate")
+def dts_generate():
+    """以伺服器保存的最後一份 SAT plan 產生 kernel DTS patch（背景執行）。
+    請求：{fingerprint}——畫面上那份 plan 的指紋（防偽比對用）。"""
+    data = request.get_json(silent=True) or {}
+    fp = data.get("fingerprint")
+    with _last_plan["lock"]:
+        rows = _last_plan["rows"]
+        board = _last_plan["board"]
+        have_fp = _last_plan["fp"]
+    if not rows:
+        return jsonify(error="伺服器尚無已求解的 plan——請先求解一次。"), 409
+    if fp and fp != have_fp:
+        return jsonify(error="這份 plan 已不是伺服器上最新的解——"
+                             "請重新求解後，再從最新結果產生 DTS。"), 409
+    if not _dts_available(board):
+        return jsonify(error=f"板子 {board} 缺少 DTS 生成知識庫"
+                             "（data/<board>/baseline/ 與 dts_generation/）。"), 404
+    with _dts["lock"]:
+        if _dts["running"]:
+            return jsonify(error="已有一個 DTS 生成工作進行中，請稍候。",
+                           running=True), 409
+        _dts["running"] = True
+        _dts["started_fp"] = have_fp
+    # 交棒介面落地：plan.csv 只寫伺服器保存的 rows（防偽），覆寫制單一位置
+    plan_dir = os.path.join(OUTPUT, "plan")
+    os.makedirs(plan_dir, exist_ok=True)
+    with open(os.path.join(plan_dir, "plan.csv"), "w", newline="",
+              encoding="utf-8") as fh:
+        fh.write(plan_csv_text(rows))
+    threading.Thread(target=_dts_worker, args=(board, have_fp),
+                     daemon=True).start()
+    return jsonify(started=True, fingerprint=have_fp), 202
+
+
+@app.get("/api/dts/status")
+def dts_status():
+    """DTS 生成狀態（前端輪詢）：{available, running, started_fingerprint,
+    result}。result.fingerprint 讓前端把結果對回正確的 plan（比照 CubeMX
+    validator 的 fingerprint 機制）。"""
+    board = request.args.get("board") or DEFAULT_BOARD
+    with _dts["lock"]:
+        running = _dts["running"]
+        started_fp = _dts["started_fp"]
+        result = _dts["result"]
+    return jsonify(available=_dts_available(board), running=running,
+                   started_fingerprint=started_fp, result=result)
+
+
+@app.get("/api/dts/download")
+def dts_download():
+    """打包 output/generated/（generated.patch、*.generated.dts、各 report、
+    llm_cache/）為 zip。無產物 → 404。"""
+    gdir = os.path.join(OUTPUT, "generated")
+    files = _validator_files(gdir)
+    if not files:
+        return jsonify(error="尚無 DTS 產物——請先執行一次「產生 DTS」。"), 404
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for f in files:
+            zf.write(os.path.join(gdir, f), arcname=f)
+    buf.seek(0)
+    return Response(
+        buf.read(), mimetype="application/zip",
+        headers={"Content-Disposition":
+                 "attachment; filename=dts_patch_artifacts.zip"})
 
 
 if __name__ == "__main__":
