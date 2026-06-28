@@ -210,11 +210,11 @@ def main():
     board_config, bindings = extract_board_config_and_bindings(
         trees[BOARD_FILE], trees[SOC_FILE])
 
-    # gpio_pins is a solver/base constraint -> top level;
-    # board_config + bindings are render data -> dts_generation/
+    # All three are DTS-patch derived data -> dts_generation/ (merged layout;
+    # gpio_pins moved there from the old flat top level, see data/README.md)
     GEN = os.path.join(ROOT, "dts_generation")
     os.makedirs(GEN, exist_ok=True)
-    for path, doc in [(os.path.join(ROOT, "gpio_pins.json"), gpio),
+    for path, doc in [(os.path.join(GEN, "gpio_pins.json"), gpio),
                       (os.path.join(GEN, "board_config.json"), board_config),
                       (os.path.join(GEN, "dts_property_bindings.json"), bindings)]:
         json.dump(doc, open(path, "w"), indent=2, ensure_ascii=False)

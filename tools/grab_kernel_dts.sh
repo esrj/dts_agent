@@ -57,4 +57,4 @@ tar -C "$SRC" -czf "$OUT" \
 echo
 echo ">> DONE. Created: $OUT  ($(du -h "$OUT" | cut -f1))"
 echo ">> From the Mac, pull it with e.g.:"
-echo "   scp $(whoami)@$(hostname -I 2>/dev/null | awk '{print $1}'):$OUT ~/Desktop/DTS_patch_agent/"
+echo "   scp $(whoami)@$(hostname -I 2>/dev/null | awk '{print $1}'):$OUT ~/Desktop/DTS_agent/"
