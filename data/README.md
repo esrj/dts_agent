@@ -25,14 +25,33 @@ data/<board>/
 ├── bindings/    板上外部 IC 與 DT binding 知識（G4；手工整理 + 雙重驗證）
 │   └── board_components.json       instance ↔ IC ↔ compatible ↔ binding_doc ↔ source
 │                                   （驗證來源：原理圖 + 官方 kernel DTS）
-└── cache/       自動產生 —— 整個資料夾可刪除，程式會自動重建
-    └── binding_cache.json          lookup_binding 查過即存（doc 摘要 + source_url +
-                                    fetched_at）；離線時命中仍可用
+├── cache/       自動產生 —— 整個資料夾可刪除，程式會自動重建
+│   └── binding_cache.json          lookup_binding 查過即存（doc 摘要 + source_url +
+│                                   fetched_at）；離線時命中仍可用
+├── baseline/    官方 kernel DTS 快照（第二段 DTS patch 專用；機械抓取，
+│                錯了重抓不手改——tools/grab_kernel_dts.sh）
+│   ├── baseline.csv                官方預設 pin 配置表
+│   └── dts/                        官方 .dts/.dtsi ＋ include/ headers ＋
+│                                   MANIFEST.md（出處與版本說明）
+└── dts_generation/  DTS 生成/驗證知識（第二段專用；路徑權威是
+    │                src/patch_agent/config.py，不歸 dataio 管）
+    ├── board_config.json           板級 DTS 常數（tools/extract_board_data.py）
+    ├── dts_property_bindings.json  family→DTS 屬性模板（同上工具）
+    ├── gpio_pins.json              官方 DTS 保護的 GPIO 腳（同上工具）
+    ├── fixed_connections.json      板上實體連線（tools/extract_fixed_connections.py）
+    ├── peripheral_node_alias.json  peripheral↔DTS node 對照（tools/derive_alias.py）
+    └── boot_requirements.json      開機必備 DTS node 知識（手工整理，datasheet
+                                    交叉查證）。注意：與 base/require.json 是
+                                    **不同的檔案**——那份是 solver 的腳位級開機
+                                    常數，這份是 DTS node 級知識，永不合併
+                                    （MERGE_PLAN §0.1 決策 1）
 ```
 
 `base/` + `dts/` 五檔是**必要檔**（缺任一檔該板不會出現在板子清單）；
 `bindings/`、`cache/` 是**選配檔**（缺檔時 loader 回空值，功能優雅降級：
-ic 欄留空、lookup_binding 回 no_ic / 現查）。
+ic 欄留空、lookup_binding 回 no_ic / 現查）；`baseline/`、`dts_generation/`
+是**第二段（DTS patch）的選配檔**——缺夾時 plan 流程照常，只有「產生 DTS」
+功能不可用（web 依 `/api/dts/status` 的 available 決定是否顯示按鈕）。
 
 ## 為什麼這樣分類
 

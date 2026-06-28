@@ -1,9 +1,15 @@
-# PROJECT_OVERVIEW — solver_agent
+# PROJECT_OVERVIEW — DTS_agent（pin-mux 求解段）
 
 > STM32MP257F-EV1 的 pin-mux 求解與編排系統：把「自然語言的週邊需求」變成
 > 「可佈線、經官方 STM32CubeMX 驗證的 pin assignment ＋ device tree 產物」。
-> 本文是專案的單一總覽文件（原 docs/ 里程碑文檔已於 2026-07-04 清理，
+> 本文是**第一段（求解）**的總覽文件（原 docs/ 里程碑文檔已於 2026-07-04 清理，
 > 營運必要知識已濃縮至本文）。
+>
+> 2026-06 起本專案與 DTS_patch_agent 合併為單一 DTS_agent（見根目錄
+> [README.md](README.md) 與 [MERGE_PLAN.md](MERGE_PLAN.md)）：第二段
+> 「plan.csv → kernel DTS patch」由 `src/patch_agent/` 承接
+> （其 pipeline 細節見 [src/patch_agent/README.md](src/patch_agent/README.md)），
+> 兩段的交棒介面見 §5。
 
 ---
 
@@ -77,11 +83,14 @@ service 同一條反腐＋求解路徑，所以「LLM 自由重試」與「結�
 ## 3. 資料夾結構
 
 ```
-solver_agent/
-├── PROJECT_OVERVIEW.md      本文（專案總覽）
+DTS_agent/
+├── README.md                合併系統總覽＋快速上手（兩段式流程）
+├── PROJECT_OVERVIEW.md      本文（第一段：求解總覽）
 ├── CLAUDE.md                Claude Code 工作說明（指令、紅線、慣例）
-├── llm_modules.ini          LLM provider 選型（[parse] / [orchestrator] 各自選模型）
+├── MERGE_PLAN.md            兩專案合併計劃與決策記錄（2026-06 執行完畢）
+├── llm_modules.ini          LLM provider 選型（[parse]/[orchestrator]/[dts_patch]）
 ├── .env                     API keys 等環境變數
+├── requirements.txt         Python 相依（venv 重建用）
 ├── data/                    板級知識庫（詳見 data/README.md）
 │   └── stm32mp257f-ev1/
 │       ├── base/            手工核心：af_table.json（pin↔AF↔signal 全表）、
@@ -92,9 +101,14 @@ solver_agent/
 │       ├── dts/             官方 DTS 解析：signal_to_pin.json（官方預設腳位）、
 │       │                    official_dts_peripheral.json（官方啟用週邊）
 │       ├── bindings/        board_components.json（板上外部 IC 對照，雙重驗證）
-│       └── cache/           binding_cache.json（自動快取，可整夾刪除）
+│       ├── cache/           binding_cache.json（自動快取，可整夾刪除）
+│       ├── baseline/        官方 kernel DTS 快照（第二段專用）：baseline.csv＋
+│       │                    dts/（.dts/.dtsi＋include headers＋MANIFEST）
+│       └── dts_generation/  DTS 生成/驗證知識（第二段專用）：board_config、
+│                            dts_property_bindings、fixed_connections、
+│                            peripheral_node_alias、gpio_pins、boot_requirements
 ├── src/
-│   ├── main.py              CLI 入口
+│   ├── main.py              CLI 入口（solver 實驗）
 │   ├── service.py           確定性 pipeline（parse→澄清→optional 拆解→求解）
 │   ├── solver/              CSP 核心：solve.py（求解+Hall）、resolver.py（反腐層）、
 │   │                        peripherals.py（三層展開）、counts.py（count 降階）、
@@ -102,14 +116,21 @@ solver_agent/
 │   ├── orchestrator/        agent.py（tool-use loop）、tools.py（六工具）、
 │   │                        session.py（伺服器端 session）、system_prompt.md
 │   ├── validator/           script_gen.py / runner.py / report.py（CubeMX 三段式）
-│   ├── llm_provider/        anthropic / gemini / local_lm 抽象、parse 的 system_prompt.md
+│   ├── patch_agent/         第二段：DTS patch pipeline（m1–m8＋cli＋config.py
+│   │                        路徑集中；細節見其 README.md）
+│   ├── llm_provider/        anthropic / gemini / local_lm 抽象（兩段共用）、
+│   │                        parse 的 system_prompt.md
 │   ├── util/                dataio.py（知識庫路徑唯一權威 + I/O）、csv2xlsx.py
-│   └── web/                 app.py（Flask）+ static/（前端 UI）
+│   └── web/                 app.py（Flask，含 /api/dts/* 第二段觸發）+ static/
+├── tools/                   第二段 data/ 重建工具（grab_kernel_dts、extract_*、
+│                            derive_alias；平常不需執行）
 ├── output/                  執行期產物（覆寫制，可整夾刪除；.gitignore 排除）
-│   ├── plan/                plan.csv + plan.xlsx        ← 與另一專案的合併介面
-│   └── validator/           cubemx.log、pinout.csv、result.json、validated.ioc、
-│                            devicetree/{kernel,u-boot,tf-a,optee-os}/
-└── venv/                    Python 虛擬環境
+│   ├── plan/                plan.csv + plan.xlsx        ← 兩段流程的交棒點
+│   ├── validator/           cubemx.log、pinout.csv、result.json、validated.ioc、
+│   │                        devicetree/{kernel,u-boot,tf-a,optee-os}/
+│   └── generated/           第二段產物：generated.patch、*.generated.dts、
+│                            diff_plan/locator/generation/validation report、llm_cache/
+└── venv/                    Python 虛擬環境（3.10；requirements.txt 重建）
 ```
 
 ---
@@ -126,6 +147,9 @@ solver_agent/
 | `POST /api/export` | per-message 匯出 csv/xlsx |
 | `GET /api/validator/status` | 最近一次驗證結果摘要（result.json）＋ `running`（背景自動驗證進行中，前端輪詢用） |
 | `GET /api/validator/download` | 打包 output/validator/ 為 zip（遞迴含 devicetree/） |
+| `POST /api/dts/generate` | 第二段觸發：以**伺服器保存的最後一份 SAT plan** 產生 kernel DTS patch（client 只傳 fingerprint 指認畫面上的 plan，不一致回 409——防偽紅線延伸）；single-flight 背景執行 |
+| `GET /api/dts/status` | `{available, running, result}`——available=該板具備 baseline/＋dts_generation/；result 帶 fingerprint 對回它所根據的 plan |
+| `GET /api/dts/download` | 打包 output/generated/ 為 zip（generated.patch、generated.dts、各 report） |
 
 **編排工具**（鎖定動作集，`src/orchestrator/tools.py`）：
 
@@ -140,11 +164,14 @@ solver_agent/
 
 ---
 
-## 5. 與另一專案的合併介面
+## 5. 兩段流程的交棒介面（原「與另一專案的合併介面」，2026-06 合併完成）
 
-本專案端到端產生兩組產物，合併時以檔案介面對接：
+第一段（求解）產生兩組產物；第二段（`src/patch_agent/`）經同一顆 `output/`
+自動銜接，不再需要人工複製檔案：
 
-**`output/plan/plan.csv`**（+同內容的 plan.xlsx）——pin assignment 的正式輸出：
+**`output/plan/plan.csv`**（+同內容的 plan.xlsx）——pin assignment 的正式輸出，
+也是第二段的唯一輸入。web 流程中由 `POST /api/dts/generate` 在觸發當下以
+**伺服器保存的解**覆寫落地（防偽），CLI 流程則由 `emit_plan`／`write_plan` 產生：
 
 ```csv
 peripheral,signal,pin,af

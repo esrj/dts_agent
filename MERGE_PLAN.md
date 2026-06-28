@@ -1,5 +1,11 @@
 # MERGE_PLAN — solver_agent ＋ DTS_patch_agent 合併計劃
 
+> **✅ 已於 2026-06-28 執行完畢**（Phase 0–6 全數完成，每 Phase 一個 git commit）。
+> 兩個原專案的 git 歷史保存在 `.archive/*.bundle`（`git clone <bundle>` 可還原）。
+> 驗證結果：locate 輸出與合併前基準逐字一致、diff_plan.json 語意一致、
+> /api/solve 端到端正常、DTS 生成端到端 passed（dtc 編譯過、6 項檢查全 pass、
+> 防偽 409 與 single-flight 409 皆驗證）。本文件保留作為合併的決策與設計記錄。
+
 > 目標：把 `solver_agent/`（自然語言 → plan.csv）與 `DTS_patch_agent/`（plan.csv → DTS patch）
 > 合併為**單一 `DTS_agent/` 專案**，形成「需求 → plan.csv →（使用者確認）→ DTS patch」
 > 的一條龍、可分階段確認的流程。
