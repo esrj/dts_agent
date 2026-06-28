@@ -1,0 +1,53 @@
+{
+  "net/ethernet-phy.yaml": {
+    "title": "Ethernet PHY Common Properties",
+    "required_properties": [
+      "reg"
+    ],
+    "maintainers": [
+      "Andrew Lunn <andrew@lunn.ch>",
+      "Florian Fainelli <f.fainelli@gmail.com>"
+    ],
+    "source_url": "https://github.com/STMicroelectronics/linux/blob/v6.6-stm32mp/Documentation/devicetree/bindings/net/ethernet-phy.yaml",
+    "fetched_at": "2026-07-03"
+  },
+  "usb/usb-device.yaml": {
+    "title": "Generic USB Device",
+    "required_properties": [
+      "reg"
+    ],
+    "maintainers": [
+      "Greg Kroah-Hartman <gregkh@linuxfoundation.org>"
+    ],
+    "source_url": "https://github.com/STMicroelectronics/linux/blob/v6.6-stm32mp/Documentation/devicetree/bindings/usb/usb-device.yaml",
+    "fetched_at": "2026-07-03"
+  },
+  "mmc/mmc-card.yaml": {
+    "title": "MMC Card / eMMC Generic",
+    "required_properties": [
+      "compatible",
+      "reg"
+    ],
+    "maintainers": [
+      "Ulf Hansson <ulf.hansson@linaro.org>"
+    ],
+    "source_url": "https://github.com/STMicroelectronics/linux/blob/v6.6-stm32mp/Documentation/devicetree/bindings/mmc/mmc-card.yaml",
+    "fetched_at": "2026-07-03"
+  },
+  "net/can/bosch,m_can.yaml": {
+    "title": "Bosch MCAN controller",
+    "required_properties": [
+      "compatible",
+      "reg",
+      "reg-names",
+      "clocks",
+      "clock-names",
+      "bosch,mram-cfg"
+    ],
+    "maintainers": [
+      "Chandrasekar Ramakrishnan <rcsekar@samsung.com>"
+    ],
+    "source_url": "https://github.com/STMicroelectronics/linux/blob/v6.6-stm32mp/Documentation/devicetree/bindings/net/can/bosch,m_can.yaml",
+    "fetched_at": "2026-07-03"
+  }
+}

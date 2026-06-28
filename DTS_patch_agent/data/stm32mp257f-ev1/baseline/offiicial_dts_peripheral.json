@@ -1,0 +1,267 @@
+{
+  "soc": "STM32MP257F",
+  "source": "stm32mp257f-ev1.dts (official ST EVAL board device tree)",
+  "description": "官方 EV1 DTS 啟用的 peripheral → signal",
+  "peripherals": {
+    "a35ss_syscfg": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "arm_wdt": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "combophy": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "crc": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cryp1": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_cpu_debug0": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_cpu_debug1": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_cti0": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_cti1": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_cti_cpu0": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_cti_cpu1": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_etf": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_etm0": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_etm1": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_etr": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_funnel": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_replicator": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_stm": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "cs_tpiu": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "dbg_bus": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "dcmipp": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "eth1": {
+      "signals": [
+        "ETH1_RGMII_TXD0",
+        "ETH1_RGMII_TXD1",
+        "ETH1_RGMII_TXD2",
+        "ETH1_RGMII_TXD3",
+        "ETH1_RGMII_TX_CTL",
+        "ETH1_RGMII_CLK125",
+        "ETH1_RGMII_GTX_CLK",
+        "ETH1_RGMII_RXD0",
+        "ETH1_RGMII_RXD1",
+        "ETH1_RGMII_RXD2",
+        "ETH1_RGMII_RXD3",
+        "ETH1_RGMII_RX_CTL",
+        "ETH1_RGMII_RX_CLK",
+        "ETH1_MDC",
+        "ETH1_MDIO"
+      ],
+      "pinctrl_groups": [
+        "eth1_rgmii_pins_a",
+        "eth1_mdio_pins_a"
+      ]
+    },
+    "eth2": {
+      "signals": [
+        "ETH2_RGMII_TXD0",
+        "ETH2_RGMII_TXD1",
+        "ETH2_RGMII_TXD2",
+        "ETH2_RGMII_TXD3",
+        "ETH2_RGMII_TX_CTL",
+        "ETH2_RGMII_CLK125",
+        "ETH2_RGMII_GTX_CLK",
+        "ETH2_MDC",
+        "ETH2_MDIO",
+        "ETH2_RGMII_RXD0",
+        "ETH2_RGMII_RXD1",
+        "ETH2_RGMII_RXD2",
+        "ETH2_RGMII_RXD3",
+        "ETH2_RGMII_RX_CTL",
+        "ETH2_RGMII_RX_CLK"
+      ],
+      "pinctrl_groups": [
+        "eth2_rgmii_pins_a"
+      ]
+    },
+    "gpu": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "i2c2": {
+      "signals": [
+        "I2C2_SCL",
+        "I2C2_SDA"
+      ],
+      "pinctrl_groups": [
+        "i2c2_pins_a"
+      ]
+    },
+    "ipcc1": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "ipcc2": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "lptimer3": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "ltdc": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "lvds": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "m0_rproc": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "m33_rproc": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "m_can1": {
+      "signals": [
+        "FDCAN1_TX",
+        "FDCAN1_RX"
+      ],
+      "pinctrl_groups": [
+        "m_can1_pins_a"
+      ]
+    },
+    "m_can3": {
+      "signals": [
+        "FDCAN3_TX",
+        "FDCAN3_RX"
+      ],
+      "pinctrl_groups": [
+        "m_can3_pins_a"
+      ]
+    },
+    "ommanager": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "pcie_rc": {
+      "signals": [
+        "PCIE_CLKREQN"
+      ],
+      "pinctrl_groups": [
+        "pcie_pins_a"
+      ]
+    },
+    "rtc": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "sdmmc1": {
+      "signals": [
+        "SDMMC1_D0",
+        "SDMMC1_D1",
+        "SDMMC1_D2",
+        "SDMMC1_D3",
+        "SDMMC1_CMD",
+        "SDMMC1_CK"
+      ],
+      "pinctrl_groups": [
+        "sdmmc1_b4_pins_a"
+      ]
+    },
+    "sdmmc2": {
+      "signals": [
+        "SDMMC2_D0",
+        "SDMMC2_D1",
+        "SDMMC2_D2",
+        "SDMMC2_D3",
+        "SDMMC2_CMD",
+        "SDMMC2_CK",
+        "SDMMC2_D4",
+        "SDMMC2_D5",
+        "SDMMC2_D6",
+        "SDMMC2_D7"
+      ],
+      "pinctrl_groups": [
+        "sdmmc2_b4_pins_a",
+        "sdmmc2_d47_pins_a"
+      ]
+    },
+    "usart2": {
+      "signals": [
+        "USART2_TX",
+        "USART2_RX"
+      ],
+      "pinctrl_groups": [
+        "usart2_pins_a"
+      ]
+    },
+    "usb2_phy1": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "usb2_phy2": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "usb3dr": {
+      "signals": [],
+      "pinctrl_groups": []
+    },
+    "usbh": {
+      "signals": [],
+      "pinctrl_groups": []
+    }
+  }
+}

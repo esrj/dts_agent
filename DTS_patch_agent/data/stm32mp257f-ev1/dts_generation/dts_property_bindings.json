@@ -1,0 +1,329 @@
+{
+  "board": "stm32mp257f-ev1",
+  "description": "Per-family non-pinctrl property template, aggregated from ENABLED board overrides (status-aware). Empty extra_properties means the family's nodes carry only pinctrl+status on this board. `soc_definition_props` lists structural cells from the SoC node definition that a generated child-bearing node must (re)declare.",
+  "source": "data/stm32mp257f-ev1/baseline/dts/{stm32mp257f-ev1.dts,stm32mp251.dtsi}",
+  "families": {
+    "eth": {
+      "total_overrides": 2,
+      "enabled_instances": 2,
+      "enabled_labels": [
+        "eth1",
+        "eth2"
+      ],
+      "extra_properties": {
+        "max-speed": {
+          "occurrences": 2,
+          "in_all_enabled_instances": true,
+          "boolean_flag": false,
+          "example_values": [
+            "<1000>"
+          ]
+        },
+        "phy-handle": {
+          "occurrences": 2,
+          "in_all_enabled_instances": true,
+          "boolean_flag": false,
+          "example_values": [
+            "<&phy1_eth1>",
+            "<&phy1_eth2>"
+          ]
+        },
+        "phy-mode": {
+          "occurrences": 2,
+          "in_all_enabled_instances": true,
+          "boolean_flag": false,
+          "example_values": [
+            "\"rgmii-id\""
+          ]
+        },
+        "snps,ext-systime": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "st,eth-clk-sel": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "st,eth-ptp-from-rcc": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        }
+      },
+      "soc_definition_props": null
+    },
+    "fdcan": {
+      "total_overrides": 2,
+      "enabled_instances": 2,
+      "enabled_labels": [
+        "m_can1",
+        "m_can3"
+      ],
+      "extra_properties": {},
+      "soc_definition_props": null
+    },
+    "i2c": {
+      "total_overrides": 2,
+      "enabled_instances": 1,
+      "enabled_labels": [
+        "i2c2"
+      ],
+      "extra_properties": {
+        "clock-frequency": {
+          "occurrences": 1,
+          "in_all_enabled_instances": true,
+          "boolean_flag": false,
+          "example_values": [
+            "<400000>"
+          ]
+        },
+        "i2c-scl-falling-time-ns": {
+          "occurrences": 1,
+          "in_all_enabled_instances": true,
+          "boolean_flag": false,
+          "example_values": [
+            "<13>"
+          ]
+        },
+        "i2c-scl-rising-time-ns": {
+          "occurrences": 1,
+          "in_all_enabled_instances": true,
+          "boolean_flag": false,
+          "example_values": [
+            "<100>"
+          ]
+        }
+      },
+      "soc_definition_props": {
+        "defined_in": "stm32mp251.dtsi:917",
+        "example_label": "i2c1",
+        "structural_cells": {
+          "#address-cells": "<1>",
+          "#size-cells": "<0>"
+        },
+        "has_reg": true,
+        "has_compatible": true
+      }
+    },
+    "i2s": {
+      "total_overrides": 1,
+      "enabled_instances": 0,
+      "enabled_labels": [],
+      "extra_properties": {},
+      "soc_definition_props": null
+    },
+    "i3c": {
+      "total_overrides": 1,
+      "enabled_instances": 0,
+      "enabled_labels": [],
+      "extra_properties": {},
+      "soc_definition_props": {
+        "defined_in": "stm32mp251.dtsi:1043",
+        "example_label": "i3c1",
+        "structural_cells": {
+          "#address-cells": "<3>",
+          "#size-cells": "<0>"
+        },
+        "has_reg": true,
+        "has_compatible": true
+      }
+    },
+    "lpuart": {
+      "total_overrides": 1,
+      "enabled_instances": 0,
+      "enabled_labels": [],
+      "extra_properties": {},
+      "soc_definition_props": null
+    },
+    "octospi": {
+      "total_overrides": 1,
+      "enabled_instances": 1,
+      "enabled_labels": [
+        "ommanager"
+      ],
+      "extra_properties": {
+        "memory-region": {
+          "occurrences": 1,
+          "in_all_enabled_instances": true,
+          "boolean_flag": false,
+          "example_values": [
+            "<&mm_ospi1>"
+          ]
+        },
+        "memory-region-names": {
+          "occurrences": 1,
+          "in_all_enabled_instances": true,
+          "boolean_flag": false,
+          "example_values": [
+            "\"mm_ospi1\""
+          ]
+        }
+      },
+      "soc_definition_props": {
+        "defined_in": "stm32mp251.dtsi:388",
+        "example_label": "ommanager",
+        "structural_cells": {
+          "#address-cells": "<2>",
+          "#size-cells": "<1>"
+        },
+        "has_reg": true,
+        "has_compatible": true
+      }
+    },
+    "sdmmc": {
+      "total_overrides": 3,
+      "enabled_instances": 2,
+      "enabled_labels": [
+        "sdmmc1",
+        "sdmmc2"
+      ],
+      "extra_properties": {
+        "bus-width": {
+          "occurrences": 2,
+          "in_all_enabled_instances": true,
+          "boolean_flag": false,
+          "example_values": [
+            "<4>",
+            "<8>"
+          ]
+        },
+        "cd-gpios": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": false,
+          "example_values": [
+            "<&gpiod 9 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>"
+          ]
+        },
+        "disable-wp": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "mmc-ddr-1_8v": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "mmc-hs200-1_8v": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "no-sd": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "no-sdio": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "non-removable": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "sd-uhs-ddr50": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "sd-uhs-sdr104": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "sd-uhs-sdr12": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "sd-uhs-sdr25": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "sd-uhs-sdr50": {
+          "occurrences": 1,
+          "in_all_enabled_instances": false,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "st,neg-edge": {
+          "occurrences": 2,
+          "in_all_enabled_instances": true,
+          "boolean_flag": true,
+          "example_values": []
+        },
+        "vmmc-supply": {
+          "occurrences": 2,
+          "in_all_enabled_instances": true,
+          "boolean_flag": false,
+          "example_values": [
+            "<&scmi_vdd_emmc>",
+            "<&scmi_vdd_sdcard>"
+          ]
+        },
+        "vqmmc-supply": {
+          "occurrences": 2,
+          "in_all_enabled_instances": true,
+          "boolean_flag": false,
+          "example_values": [
+            "<&scmi_vddio1>",
+            "<&scmi_vddio2>"
+          ]
+        }
+      },
+      "soc_definition_props": null
+    },
+    "spi": {
+      "total_overrides": 2,
+      "enabled_instances": 0,
+      "enabled_labels": [],
+      "extra_properties": {},
+      "soc_definition_props": {
+        "defined_in": "stm32mp251.dtsi:799",
+        "example_label": "spi2",
+        "structural_cells": {
+          "#address-cells": "<1>",
+          "#size-cells": "<0>"
+        },
+        "has_reg": true,
+        "has_compatible": true
+      }
+    },
+    "usart": {
+      "total_overrides": 2,
+      "enabled_instances": 1,
+      "enabled_labels": [
+        "usart2"
+      ],
+      "extra_properties": {
+        "bootph-all": {
+          "occurrences": 1,
+          "in_all_enabled_instances": true,
+          "boolean_flag": true,
+          "example_values": []
+        }
+      },
+      "soc_definition_props": null
+    }
+  }
+}

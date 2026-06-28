@@ -1,0 +1,467 @@
+{
+  "board": "stm32mp257f-ev1",
+  "description": "Fixed peripheral connections physically wired on the board, extracted from the baseline board DTS. `manageable` = the Patch Agent may enable/disable this connection from plan.csv content; boot-required / board-locked connections are never disabled.",
+  "source": "data/stm32mp257f-ev1/baseline/dts/stm32mp257f-ev1.dts",
+  "generated_by": "tools/extract_fixed_connections.py",
+  "connections": {
+    "eth1": {
+      "peripheral": "ETH1",
+      "target_node": "&eth1",
+      "family": "eth",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "eth1_rgmii_pins_a",
+        "eth1_mdio_pins_a"
+      ],
+      "pins": [
+        "PA11",
+        "PA13",
+        "PA14",
+        "PA15",
+        "PC0",
+        "PC1",
+        "PC2",
+        "PF0",
+        "PF1",
+        "PF2",
+        "PH10",
+        "PH11",
+        "PH12",
+        "PH13",
+        "PH9"
+      ],
+      "ics": [
+        {
+          "path": "mdio1",
+          "label": null,
+          "compatible": "snps,dwmac-mdio",
+          "reg": null,
+          "status": null,
+          "props": {
+            "#address-cells": "<1>",
+            "#size-cells": "<0>"
+          }
+        },
+        {
+          "path": "mdio1/ethernet-phy@4",
+          "label": "phy1_eth1",
+          "compatible": "ethernet-phy-id001c.c916",
+          "reg": "<4>",
+          "status": null,
+          "props": {
+            "reset-gpios": "<&gpioj 9 GPIO_ACTIVE_LOW>",
+            "reset-assert-us": "<10000>",
+            "reset-deassert-us": "<80000>",
+            "realtek,eee-disable": null
+          }
+        }
+      ],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "eth2": {
+      "peripheral": "ETH2",
+      "target_node": "&eth2",
+      "family": "eth",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "eth2_rgmii_pins_a"
+      ],
+      "pins": [
+        "PC10",
+        "PC11",
+        "PC12",
+        "PC3",
+        "PC4",
+        "PC5",
+        "PC6",
+        "PC7",
+        "PC8",
+        "PC9",
+        "PF6",
+        "PF7",
+        "PF8",
+        "PF9",
+        "PG0"
+      ],
+      "ics": [
+        {
+          "path": "mdio1",
+          "label": null,
+          "compatible": "snps,dwmac-mdio",
+          "reg": null,
+          "status": null,
+          "props": {
+            "#address-cells": "<1>",
+            "#size-cells": "<0>"
+          }
+        },
+        {
+          "path": "mdio1/ethernet-phy@1",
+          "label": "phy1_eth2",
+          "compatible": "ethernet-phy-id001c.c916",
+          "reg": "<1>",
+          "status": null,
+          "props": {
+            "reset-gpios": "<&gpiog 6 GPIO_ACTIVE_LOW>",
+            "reset-assert-us": "<10000>",
+            "reset-deassert-us": "<80000>",
+            "realtek,eee-disable": null
+          }
+        }
+      ],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "i2c2": {
+      "peripheral": "I2C2",
+      "target_node": "&i2c2",
+      "family": "i2c",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "i2c2_pins_a"
+      ],
+      "pins": [
+        "PB4",
+        "PB5"
+      ],
+      "ics": [
+        {
+          "path": "camera@1a",
+          "label": "imx335",
+          "compatible": "sony,imx335",
+          "reg": "<0x1a>",
+          "status": "okay",
+          "props": {
+            "clocks": "<&clk_ext_camera>",
+            "avdd-supply": "<&scmi_v3v3>",
+            "ovdd-supply": "<&scmi_v3v3>",
+            "dvdd-supply": "<&scmi_v3v3>",
+            "reset-gpios": "<&gpioi 7 (GPIO_ACTIVE_LOW | GPIO_PUSH_PULL)>",
+            "powerdown-gpios": "<&gpioi 0 (GPIO_ACTIVE_HIGH | GPIO_PUSH_PULL)>"
+          }
+        },
+        {
+          "path": "hdmi@3d",
+          "label": "adv753x",
+          "compatible": "adi,adv7533",
+          "reg": "<0x3d>, <0x3c>, <0x3f>, <0x38>",
+          "status": "disabled",
+          "props": {
+            "reg-names": "\"main\", \"cec\", \"edid\", \"packet\"",
+            "clocks": "<&cec_clock>",
+            "clock-names": "\"cec\"",
+            "interrupt-parent": "<&gpiod>",
+            "interrupts": "<10 IRQ_TYPE_EDGE_FALLING>",
+            "adi,dsi-lanes": "<4>",
+            "reset-gpios": "<&gpiog 14 GPIO_ACTIVE_LOW>",
+            "avdd-supply": "<&scmi_v1v8>",
+            "dvdd-supply": "<&scmi_v1v8>",
+            "pvdd-supply": "<&scmi_v1v8>",
+            "a2vdd-supply": "<&scmi_v1v8>",
+            "v3p3-supply": "<&scmi_v3v3>",
+            "v1p2-supply": "<&scmi_v1v8>"
+          }
+        },
+        {
+          "path": "ili2511@41",
+          "label": "ili2511",
+          "compatible": "ilitek,ili251x",
+          "reg": "<0x41>",
+          "status": "okay",
+          "props": {
+            "interrupt-parent": "<&gpioi>",
+            "interrupts": "<13 IRQ_TYPE_EDGE_FALLING>",
+            "reset-gpios": "<&gpiog 14 GPIO_ACTIVE_LOW>"
+          }
+        }
+      ],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "i2c8": {
+      "peripheral": null,
+      "target_node": "&i2c8",
+      "family": "i2c",
+      "enabled_in_baseline": false,
+      "pinctrl_groups": [
+        "i2c8_pins_a"
+      ],
+      "pins": [
+        "PZ3",
+        "PZ4"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "i2s2": {
+      "peripheral": null,
+      "target_node": "&i2s2",
+      "family": "i2s",
+      "enabled_in_baseline": false,
+      "pinctrl_groups": [
+        "i2s2_pins_a"
+      ],
+      "pins": [
+        "PB0",
+        "PI14",
+        "PK1"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "i3c4": {
+      "peripheral": null,
+      "target_node": "&i3c4",
+      "family": "i3c",
+      "enabled_in_baseline": false,
+      "pinctrl_groups": [
+        "i3c4_pins_b"
+      ],
+      "pins": [
+        "PZ0",
+        "PZ1"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "lpuart1": {
+      "peripheral": null,
+      "target_node": "&lpuart1",
+      "family": "lpuart",
+      "enabled_in_baseline": false,
+      "pinctrl_groups": [
+        "lpuart1_pins_a"
+      ],
+      "pins": [
+        "PZ5",
+        "PZ6",
+        "PZ7",
+        "PZ8"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "m_can1": {
+      "peripheral": "FDCAN1",
+      "target_node": "&m_can1",
+      "family": "fdcan",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "m_can1_pins_a"
+      ],
+      "pins": [
+        "PG11",
+        "PG12"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "m_can3": {
+      "peripheral": "FDCAN3",
+      "target_node": "&m_can3",
+      "family": "fdcan",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "m_can3_pins_a"
+      ],
+      "pins": [
+        "PI12",
+        "PJ14"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "ommanager": {
+      "peripheral": "OCTOSPIM",
+      "target_node": "&ommanager",
+      "family": "octospi",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "ospi_port1_clk_pins_a",
+        "ospi_port1_io03_pins_a",
+        "ospi_port1_cs0_pins_a"
+      ],
+      "pins": [
+        "PD0",
+        "PD3",
+        "PD4",
+        "PD5",
+        "PD6",
+        "PD7"
+      ],
+      "ics": [
+        {
+          "path": "spi@40430000/flash@0",
+          "label": "flash0",
+          "compatible": "jedec,spi-nor",
+          "reg": "<0>",
+          "status": null,
+          "props": {
+            "spi-rx-bus-width": "<4>",
+            "spi-tx-bus-width": "<4>",
+            "spi-max-frequency": "<84000000>"
+          }
+        }
+      ],
+      "boot_required": false,
+      "board_locked": true,
+      "manageable": false
+    },
+    "sdmmc1": {
+      "peripheral": "SDMMC1",
+      "target_node": "&sdmmc1",
+      "family": "sdmmc",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "sdmmc1_b4_pins_a"
+      ],
+      "pins": [
+        "PE0",
+        "PE1",
+        "PE2",
+        "PE3",
+        "PE4",
+        "PE5"
+      ],
+      "ics": [],
+      "boot_required": true,
+      "board_locked": true,
+      "manageable": false
+    },
+    "sdmmc2": {
+      "peripheral": "SDMMC2",
+      "target_node": "&sdmmc2",
+      "family": "sdmmc",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "sdmmc2_b4_pins_a",
+        "sdmmc2_d47_pins_a"
+      ],
+      "pins": [
+        "PE10",
+        "PE11",
+        "PE12",
+        "PE13",
+        "PE14",
+        "PE15",
+        "PE6",
+        "PE7",
+        "PE8",
+        "PE9"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": true,
+      "manageable": false
+    },
+    "sdmmc3": {
+      "peripheral": null,
+      "target_node": "&sdmmc3",
+      "family": "sdmmc",
+      "enabled_in_baseline": false,
+      "pinctrl_groups": [
+        "sdmmc3_b4_pins_a"
+      ],
+      "pins": [
+        "PB12",
+        "PB13",
+        "PB14",
+        "PD12",
+        "PD13",
+        "PI11"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "spi3": {
+      "peripheral": null,
+      "target_node": "&spi3",
+      "family": "spi",
+      "enabled_in_baseline": false,
+      "pinctrl_groups": [
+        "spi3_pins_a"
+      ],
+      "pins": [
+        "PB10",
+        "PB7",
+        "PB8"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "spi8": {
+      "peripheral": null,
+      "target_node": "&spi8",
+      "family": "spi",
+      "enabled_in_baseline": false,
+      "pinctrl_groups": [
+        "spi8_pins_a"
+      ],
+      "pins": [
+        "PZ0",
+        "PZ1",
+        "PZ2"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "usart2": {
+      "peripheral": "USART2",
+      "target_node": "&usart2",
+      "family": "usart",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "usart2_pins_a"
+      ],
+      "pins": [
+        "PA4",
+        "PA8"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    },
+    "usart6": {
+      "peripheral": null,
+      "target_node": "&usart6",
+      "family": "usart",
+      "enabled_in_baseline": false,
+      "pinctrl_groups": [
+        "usart6_pins_a"
+      ],
+      "pins": [
+        "PF13",
+        "PF14",
+        "PF15",
+        "PG5"
+      ],
+      "ics": [],
+      "boot_required": false,
+      "board_locked": false,
+      "manageable": true
+    }
+  }
+}

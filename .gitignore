@@ -1,0 +1,15 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Byproducts（執行期自動產生，不入庫）
+__pycache__/
+*.pyc
+.DS_Store
+.pytest_cache/
+node_modules/
+output/
+plan.inc
+
+.env

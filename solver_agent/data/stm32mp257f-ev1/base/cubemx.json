@@ -1,0 +1,23 @@
+{
+  "description": "STM32CubeMX validator（G5）用的板級常數。來源：CubeMX 內建官方板定義 db/plugins/boardmanager/boards/M33_Evaluation_Board_STM32MP257F-EV1_STM32MP257FAI_Board_AllConfig.ioc。dt_* 欄位供 generate deviceTree 附加產物用（probe B–F + e2e，2026-07-04）：board_ioc 相對於 CubeMX Resources 目錄——必須用 AllConfig 版：非 AllConfig 版（*_Board.ioc）實測 DT 生成不含 pinctrl 群組（pinmux 全缺）；AllConfig + clearpinout 後 pinctrl 正常，殘留僅 OCTOSPIM_P1 開機 flash 腳（與 require.json reserve_only 語意一致，無害）。dt_modes 是 family 前綴 -> CubeMX mode 名（來源 db/mcu/IP/<family>-<version>_Modes.xml），對映不到的周邊只是不進 DT、不影響驗證；dt_instance_map 處理知識庫與 CubeMX InstanceName 的命名差（USBH -> USBH_HS）。",
+  "mcu_family": "STM32MP2",
+  "mcu_name": "STM32MP257FAIx",
+  "mcu_package": "TFBGA436",
+  "board_name": "STM32MP257F-EV1",
+  "board_ioc": "db/plugins/boardmanager/boards/M33_Evaluation_Board_STM32MP257F-EV1_STM32MP257FAI_Board_AllConfig.ioc",
+  "dt_context": "CortexA35NSOS",
+  "dt_manifest_version": "1.0",
+  "dt_instance_map": {
+    "USBH": "USBH_HS"
+  },
+  "dt_modes": {
+    "I2C": "I2C",
+    "USART": "Asynchronous",
+    "UART": "Asynchronous",
+    "SPI": "Full_Duplex_Master",
+    "ETH": "RGMII (Reduced GMII)",
+    "SDMMC": "SD_4_bits_Wide_bus",
+    "FDCAN": "FDCAN_Activate",
+    "USBH_HS": "Activated"
+  }
+}

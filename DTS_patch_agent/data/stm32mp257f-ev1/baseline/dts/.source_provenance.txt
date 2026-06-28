@@ -1,0 +1,6 @@
+recipe: linux-stm32mp
+source_path: /home/parallels/Desktop/stm32mp2-dis/build/../build-openstlinuxrt-stm32mp2-rt/workspace/sources/linux-stm32mp
+git_head: 5d10a6dfaf5964bf12b2e77d2761a8c205bca25c
+git_describe: devtool-patched-43-g5d10a6dfa
+git_branch: devtool
+captured_on: ubuntu-gnu-linux-24-04-3

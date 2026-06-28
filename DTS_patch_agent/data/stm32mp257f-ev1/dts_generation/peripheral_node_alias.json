@@ -1,0 +1,130 @@
+{
+  "board": "stm32mp257f-ev1",
+  "description": "Maps CSV peripheral name -> kernel DTS node label (&node). Derived from baseline DTS by tools/derive_alias.py.",
+  "source_dts": "data/stm32mp257f-ev1/baseline/dts/",
+  "aliases": {
+    "ETH1": {
+      "node_label": "eth1",
+      "target_node": "&eth1",
+      "resolved_by": "same-name",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "eth1_mdio_pins_a",
+        "eth1_rgmii_pins_a"
+      ],
+      "csv_pins": 16,
+      "pins_matched_in_baseline": 15
+    },
+    "ETH2": {
+      "node_label": "eth2",
+      "target_node": "&eth2",
+      "resolved_by": "same-name",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "eth2_rgmii_pins_a"
+      ],
+      "csv_pins": 15,
+      "pins_matched_in_baseline": 15
+    },
+    "FDCAN1": {
+      "node_label": "m_can1",
+      "target_node": "&m_can1",
+      "resolved_by": "pin-match",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "m_can1_pins_a"
+      ],
+      "csv_pins": 3,
+      "pins_matched_in_baseline": 2
+    },
+    "FDCAN3": {
+      "node_label": "m_can3",
+      "target_node": "&m_can3",
+      "resolved_by": "pin-match",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "m_can3_pins_a"
+      ],
+      "csv_pins": 2,
+      "pins_matched_in_baseline": 2
+    },
+    "I2C1": {
+      "node_label": "i2c1",
+      "target_node": "&i2c1",
+      "resolved_by": "same-name",
+      "enabled_in_baseline": false,
+      "pinctrl_groups": [],
+      "csv_pins": 2,
+      "pins_matched_in_baseline": 0
+    },
+    "I2C2": {
+      "node_label": "i2c2",
+      "target_node": "&i2c2",
+      "resolved_by": "same-name",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "i2c2_pins_a"
+      ],
+      "csv_pins": 2,
+      "pins_matched_in_baseline": 2
+    },
+    "OCTOSPIM": {
+      "node_label": "ommanager",
+      "target_node": "&ommanager",
+      "resolved_by": "pin-match",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "ospi_port1_clk_pins_a",
+        "ospi_port1_cs0_pins_a",
+        "ospi_port1_io03_pins_a"
+      ],
+      "csv_pins": 6,
+      "pins_matched_in_baseline": 6
+    },
+    "PCIE": {
+      "node_label": "pcie_rc",
+      "target_node": "&pcie_rc",
+      "resolved_by": "pin-match",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "pcie_pins_a"
+      ],
+      "csv_pins": 1,
+      "pins_matched_in_baseline": 1
+    },
+    "SDMMC1": {
+      "node_label": "sdmmc1",
+      "target_node": "&sdmmc1",
+      "resolved_by": "same-name",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "sdmmc1_b4_pins_a"
+      ],
+      "csv_pins": 6,
+      "pins_matched_in_baseline": 6
+    },
+    "SDMMC2": {
+      "node_label": "sdmmc2",
+      "target_node": "&sdmmc2",
+      "resolved_by": "same-name",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "sdmmc2_b4_pins_a",
+        "sdmmc2_d47_pins_a"
+      ],
+      "csv_pins": 10,
+      "pins_matched_in_baseline": 10
+    },
+    "USART2": {
+      "node_label": "usart2",
+      "target_node": "&usart2",
+      "resolved_by": "same-name",
+      "enabled_in_baseline": true,
+      "pinctrl_groups": [
+        "usart2_pins_a"
+      ],
+      "csv_pins": 3,
+      "pins_matched_in_baseline": 2
+    }
+  }
+}

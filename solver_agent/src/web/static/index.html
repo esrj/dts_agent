@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DTS Agent</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-soft: #f7f7f8;
+      --text: #0d0d0d;
+      --text-soft: #6e6e80;
+      --border: #e5e5e5;
+      --bubble-user: #f4f4f4;
+      --bubble-assistant: #ffffff;
+      --accent: #0d0d0d;
+      --accent-text: #ffffff;
+      --ok: #15803d;
+      --err: #c0392b;
+      --warn: #b45309;
+      --warn-bg: #fff7ed;
+      --warn-border: #fed7aa;
+      --shadow: 0 0 0 1px rgba(0,0,0,.04), 0 2px 12px rgba(0,0,0,.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #212121;
+        --bg-soft: #2f2f2f;
+        --text: #ececec;
+        --text-soft: #9b9ba6;
+        --border: #3a3a3a;
+        --bubble-user: #2f2f2f;
+        --bubble-assistant: #2f2f2f;
+        --accent: #ffffff;
+        --accent-text: #0d0d0d;
+        --ok: #4ade80;
+        --err: #f87171;
+        --warn: #fbbf24;
+        --warn-bg: #3a2f1c;
+        --warn-border: #66501f;
+        --shadow: 0 0 0 1px rgba(255,255,255,.06), 0 2px 12px rgba(0,0,0,.4);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+                   "Helvetica Neue", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+    }
+
+    /* ---- header ---- */
+    header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+    header .dot {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--accent); color: var(--accent-text);
+      display: grid; place-items: center; font-size: .85rem; font-weight: 700;
+    }
+    header small { color: var(--text-soft); font-weight: 400; }
+    /* board selector — ChatGPT-style pill (model-switcher look), top-left */
+    .board-picker {
+      position: relative;
+      display: inline-flex; align-items: center;
+      margin-left: 10px;
+      font-weight: 400;
+    }
+    #board-select {
+      appearance: none; -webkit-appearance: none; -moz-appearance: none;
+      font: inherit; font-size: .92rem; font-weight: 600;
+      color: var(--text);
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: .42rem 2.1rem .42rem 1rem;     /* extra right padding for the chevron */
+      cursor: pointer; line-height: 1.2;
+      transition: background-color .15s, border-color .15s, box-shadow .15s;
+    }
+    #board-select:hover { background: var(--bubble-user); border-color: var(--accent); }
+    #board-select:focus-visible {
+      outline: none; border-color: var(--accent); box-shadow: var(--shadow);
+    }
+    #board-select:disabled { opacity: .5; cursor: default; }
+    /* custom chevron (native arrow removed via appearance:none) */
+    .board-picker::after {
+      content: "›";
+      position: absolute; right: .9rem; top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.05rem; font-weight: 700; color: var(--text-soft);
+      pointer-events: none;
+    }
+    .board-picker:has(#board-select:disabled)::after { opacity: .5; }
+
+    /* mode toggle — Agent 對話 vs 直接求解（segmented pill, top-right of header） */
+    .mode-toggle {
+      margin-left: auto;
+      display: inline-flex; gap: 2px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px;
+    }
+    .mode-btn {
+      font: inherit; font-size: .82rem; font-weight: 600;
+      color: var(--text-soft); background: transparent;
+      border: none; border-radius: 999px;
+      padding: .3rem .85rem; cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .mode-btn.active { background: var(--accent); color: var(--accent-text); }
+    .mode-btn:disabled { opacity: .5; cursor: default; }
+
+    /* assistant reply rich text (markdown-ish from the orchestrator) */
+    .reply { margin: 0; font-size: .95rem; color: var(--text); }
+    .reply p { margin: 0 0 .5rem; }
+    .reply ul { margin: .2rem 0 .6rem; padding-left: 1.2rem; }
+    .reply li { margin: .12rem 0; }
+    .reply strong { font-weight: 700; }
+    .reply code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .85em; background: var(--bg-soft);
+      border: 1px solid var(--border); border-radius: 5px; padding: .02rem .3rem;
+    }
+
+    /* ---- conversation ---- */
+    .chat {
+      flex: 1 1 auto;
+      overflow-y: auto;
+    }
+    .chat-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .msg { display: flex; gap: .85rem; align-items: flex-start; }
+    .msg .avatar {
+      flex: 0 0 auto;
+      width: 30px; height: 30px; border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: .8rem; font-weight: 700;
+    }
+    .msg.assistant .avatar { background: var(--accent); color: var(--accent-text); }
+    .msg .body { flex: 1 1 auto; min-width: 0; padding-top: .15rem; }
+
+    /* user message: right-aligned bubble, no avatar */
+    .msg.user { justify-content: flex-end; }
+    .msg.user .bubble {
+      background: var(--bubble-user);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: .55rem .9rem;
+      max-width: 80%;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .intro h1 { font-size: 1.35rem; margin: 0 0 .35rem; }
+    .intro p  { margin: 0; color: var(--text-soft); }
+
+    .examples { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
+    .examples .chip {
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      color: var(--text-soft);
+      border-radius: 12px;
+      padding: .5rem .75rem;
+      font-size: .82rem;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .examples .chip:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ---- per-message status line ---- */
+    .status { margin: 0; font-size: .9rem; color: var(--text-soft); }
+    .status.ok  { color: var(--ok); font-weight: 600; }
+    .status.err { color: var(--err); font-weight: 600; }
+
+    /* ---- 載入中：轉圈圈 + 標籤（送出後的動態占位） ---- */
+    .loading { display: inline-flex; align-items: center; gap: .5rem; }
+    .loading-label { font-size: .9rem; color: var(--text-soft); }
+    .spinner {
+      width: 1rem; height: 1rem; flex: none; border-radius: 50%;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      animation: spin .7s linear infinite;
+    }
+    /* 跑 CubeMX（1–3 分鐘）時切成警示色，暗示這是長時間操作 */
+    .loading.validating .spinner { border-top-color: var(--warn); }
+    .loading.validating .loading-label { color: var(--warn); font-weight: 600; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .spinner { animation-duration: 1.6s; }   /* 尊重減量動態偏好：放慢不停轉 */
+    }
+
+    /* ---- normal conversational message (e.g. 不支援/無解 的回覆，不用紅字) ---- */
+    .note { margin: 0; font-size: .95rem; color: var(--text); white-space: pre-wrap; }
+
+    /* ---- count auto-selection line ---- */
+    .chosen { margin: .5rem 0 0; font-size: .88rem; color: var(--text-soft); }
+    .chosen b { color: var(--text); font-weight: 600; }
+    .chosen em { font-style: normal; opacity: .75; }
+    .chosen .tag {
+      display: inline-block;
+      margin-right: .5rem;
+      padding: .05rem .5rem;
+      border-radius: 10px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      font-size: .75rem;
+      color: var(--text-soft);
+    }
+
+    /* boot-reserved signal badge (require.json 自動保留的開機 signal) */
+    .badge-boot {
+      display: inline-block; margin-left: .45rem;
+      padding: .02rem .4rem; border-radius: 8px;
+      font-size: .68rem; font-weight: 600;
+      color: var(--text-soft); background: var(--bg-soft);
+      border: 1px solid var(--border); vertical-align: middle;
+    }
+
+    /* boot-relaxed warning card — 固定板：開機介面被搬離官方腳，需實體改線 */
+    .boot-warn {
+      margin: .75rem 0 0;
+      padding: .65rem .85rem;
+      border: 1px solid var(--warn-border);
+      border-left: 3px solid var(--warn);
+      border-radius: 10px;
+      background: var(--warn-bg);
+      font-size: .88rem;
+    }
+    .boot-warn .boot-warn-head { font-weight: 600; color: var(--warn); }
+    .boot-warn ul { margin: .4rem 0 0; padding-left: 1.2rem; }
+    .boot-warn li { margin: .1rem 0; }
+    .boot-warn .mv {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .82rem;
+    }
+    .boot-warn .mv b { color: var(--text); }
+
+    /* ---- clarification question + options ---- */
+    .ask { margin: 0 0 .6rem; font-size: .95rem; }
+    .opts { display: flex; flex-direction: column; gap: .5rem; }
+    .opt {
+      display: flex; flex-direction: column; gap: .15rem;
+      text-align: left; cursor: pointer;
+      padding: .6rem .85rem;
+      border: 1px solid var(--border); border-radius: 12px;
+      background: var(--bg-soft); color: var(--text);
+      font: inherit; transition: border-color .15s, background .15s;
+    }
+    .opt:hover:not(:disabled) { border-color: var(--accent); }
+    .opt:disabled { cursor: default; opacity: .5; }
+    .opt.chosen { border-color: var(--accent); opacity: 1; }
+    .opt-label {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-weight: 600; font-size: .9rem;
+    }
+    .opt-note { font-size: .78rem; color: var(--text-soft); }
+
+    /* ---- result block: table + action buttons (download / copy) ---- */
+    .result-block { margin-top: .85rem; }
+    .icon-btn {
+      display: inline-flex; align-items: center; gap: .3rem;
+      border: 1px solid var(--border); border-radius: 9px;
+      background: var(--bg-soft); color: var(--text-soft);
+      padding: .25rem .6rem; font: inherit; font-size: .78rem; cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    .result {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      font-size: .9rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .result th, .result td {
+      padding: .55rem .85rem;
+      text-align: left;                 /* 內容靠左 */
+      vertical-align: middle;           /* 上下置中 */
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);   /* 三欄之間的直線 */
+    }
+    .result th:last-child, .result td:last-child { border-right: none; }
+    .result th {
+      background: var(--bg-soft);
+      color: var(--text-soft);
+      font-weight: 600;
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .result tbody tr:last-child td { border-bottom: none; }
+    /* pin column monospace（ic 欄加入後不再是 last-child，改用 class） */
+    .result td.pin {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-weight: 600;
+    }
+    /* ic 欄：板上外部 IC（同 peripheral 合併成一大格） */
+    .result td.ic {
+      text-align: center; vertical-align: middle;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .8rem; color: var(--text-soft);
+      white-space: nowrap;
+    }
+    /* merged peripheral cell (rowspan): one big cell glued together */
+    .result td.periph {
+      text-align: center;               /* 大格置中 */
+      vertical-align: middle;           /* 上下置中 */
+      font-weight: 700;
+      background: var(--bg-soft);
+      white-space: nowrap;
+    }
+
+    .downloads { display: flex; gap: .5rem; margin-top: .55rem; flex-wrap: wrap; }
+    .icon-btn:disabled { opacity: .45; cursor: default; }
+    .icon-btn:disabled:hover { border-color: var(--border); color: var(--text-soft); }
+
+    /* ---- CubeMX validator badge（header）與結果卡片 ---- */
+    .v-badge {
+      display: inline-flex; align-items: center;
+      margin-left: .6rem; padding: .22rem .7rem;
+      border-radius: 999px; border: 1px solid var(--border);
+      font-size: .75rem; font-weight: 600; color: var(--text-soft);
+      background: var(--bg-soft); white-space: nowrap;
+    }
+    .v-badge.err  { color: var(--warn); border-color: var(--warn); }
+    .v-badge[hidden] { display: none; }        /* 只有 CubeMX 離線時才顯示 */
+
+    .val-card {
+      margin: .75rem 0 0;
+      padding: .65rem .85rem;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--text-soft);
+      border-radius: 10px;
+      background: var(--bg-soft);
+      font-size: .88rem;
+    }
+    .val-card .val-head { margin: 0; font-weight: 600; }
+    .val-card.pass { border-left-color: var(--ok); }
+    .val-card.pass .val-head { color: var(--ok); }
+    .val-card.fail { border-left-color: var(--err); }
+    .val-card.fail .val-head { color: var(--err); }
+    .val-card.err  { border-left-color: var(--warn); background: var(--warn-bg);
+                     border-color: var(--warn-border); }
+    .val-card.err .val-head { color: var(--warn); }
+    .val-card ul { margin: .4rem 0 0; padding-left: 1.2rem; }
+    .val-card li.mv {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .82rem; margin: .1rem 0;
+    }
+    .val-card li.mv b { color: var(--text); }
+
+    /* ---- 修改建議卡片（G6）：驗證過的替代方案，一鍵採納 ---- */
+    .sugg-cards { display: flex; flex-direction: column; gap: .5rem; margin-top: .85rem; }
+    .sugg-head { margin: 0 0 .1rem; font-size: .8rem; font-weight: 600;
+                 color: var(--text-soft); text-transform: none; }
+    .sugg {
+      display: flex; flex-direction: column; gap: .15rem;
+      text-align: left; cursor: pointer;
+      padding: .6rem .85rem;
+      border: 1px solid var(--border); border-left: 3px solid var(--ok);
+      border-radius: 12px;
+      background: var(--bg-soft); color: var(--text);
+      font: inherit; transition: border-color .15s, background .15s;
+    }
+    .sugg:hover:not(:disabled) { border-color: var(--accent); }
+    .sugg:disabled { cursor: default; opacity: .5; }
+    .sugg.chosen { border-color: var(--accent); opacity: 1; }
+    .sugg-label { font-weight: 600; font-size: .9rem; }
+    .sugg-note { font-size: .75rem; color: var(--text-soft); }
+
+    /* ---- composer ---- */
+    .composer {
+      flex: 0 0 auto;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .composer-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: .9rem 1.25rem 1.1rem;
+    }
+    .composer-box {
+      display: flex;
+      align-items: flex-end;
+      gap: .5rem;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: .55rem .6rem .55rem 1.1rem;
+      box-shadow: var(--shadow);
+    }
+    #q {
+      flex: 1 1 auto;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      resize: none;
+      max-height: 180px;
+      padding: .35rem 0;
+      outline: none;
+    }
+    #q::placeholder { color: var(--text-soft); }
+    #go {
+      flex: 0 0 auto;
+      width: 36px; height: 36px;
+      border: none; border-radius: 50%;
+      background: var(--accent); color: var(--accent-text);
+      display: grid; place-items: center;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    #go:hover { opacity: .85; }
+    #go:disabled { opacity: .35; cursor: default; }
+    #go svg { width: 18px; height: 18px; display: block; }
+    .hint {
+      margin: .6rem 0 0;
+      text-align: center;
+      font-size: .75rem;
+      color: var(--text-soft);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="dot">P</span>
+    <span>DTS Agent</span>
+    <label class="board-picker" title="目標板子（切換後套用該板資料）">
+      <select id="board-select" aria-label="選擇目標板子"></select>
+    </label>
+    <span id="validator-badge" class="v-badge err" hidden
+          title="STM32CubeMX 環境異常（找不到或損壞的執行檔）——驗證功能暫不可用">CubeMX 離線</span>
+    <span class="mode-toggle" id="mode-toggle" role="group" aria-label="模式">
+      <button class="mode-btn active" data-mode="agent"
+              title="LLM 編排器：可多輪對話、自動調用求解器、給修改建議">Agent 對話</button>
+      <button class="mode-btn" data-mode="solve"
+              title="確定性流程：單輪解析→求解（fallback）">直接求解</button>
+    </span>
+  </header>
+
+  <main class="chat" id="chat">
+    <div class="chat-inner" id="messages">
+      <!-- 開場（assistant 訊息）；之後的對話由 app.js append 在後面 -->
+      <div class="msg assistant intro">
+        <div class="avatar">P</div>
+        <div class="body">
+          <h1>需要分配哪些硬體週邊？</h1>
+          <p>用自然語言描述需求，我會解析並算出 pin 對應。點下方範例或直接輸入。</p>
+          <div class="examples">
+            <span class="chip">我要兩個 FDCAN 跟一個 ETH</span>
+            <span class="chip">我要啟用 ETH1 ETH2 I2C2</span>
+            <span class="chip">一個 i2c 用 AF8</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="composer">
+    <div class="composer-inner">
+      <div class="composer-box">
+        <textarea id="q" rows="1" placeholder="輸入你的需求…"></textarea>
+        <button id="go" title="送出 (Enter)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="19" x2="12" y2="5"></line>
+            <polyline points="5 12 12 5 19 12"></polyline>
+          </svg>
+        </button>
+      </div>
+      <p class="hint">Enter 送出 · Shift + Enter 換行</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

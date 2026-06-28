@@ -1,0 +1,197 @@
+{
+  "board": "stm32mp257f-ev1",
+  "description": "Protected GPIO pins reserved in the baseline DTS via *-gpios/gpios/cs-gpios refs and GPIO-as-interrupt lines. These must NOT be re-muxed to a peripheral AF. `protected_pins` = reserved by an active consumer; `reserved_by_disabled_only` = reserved only by a disabled node (re-muxable only with care).",
+  "source": "data/stm32mp257f-ev1/baseline/dts/ (auto-extracted, status-aware)",
+  "protected_pins": [
+    "PD2",
+    "PD9",
+    "PG6",
+    "PG14",
+    "PG15",
+    "PH5",
+    "PI0",
+    "PI5",
+    "PI7",
+    "PI13",
+    "PJ7",
+    "PJ8",
+    "PJ9"
+  ],
+  "reserved_by_disabled_only": [
+    "PD10",
+    "PG8"
+  ],
+  "count": 13,
+  "reservations": [
+    {
+      "pin": "PD10",
+      "bank": "gpiod",
+      "line": 10,
+      "property": "interrupts",
+      "consumer_node": "adv753x",
+      "consumer_active": false,
+      "consumer_compatible": "adi,adv7533",
+      "source": "stm32mp257f-ev1.dts:447"
+    },
+    {
+      "pin": "PD2",
+      "bank": "gpiod",
+      "line": 2,
+      "property": "gpios",
+      "consumer_node": "button-user-1",
+      "consumer_active": true,
+      "consumer_compatible": null,
+      "source": "stm32mp257f-ev1.dts:73"
+    },
+    {
+      "pin": "PD9",
+      "bank": "gpiod",
+      "line": 9,
+      "property": "cd-gpios",
+      "consumer_node": "sdmmc1",
+      "consumer_active": true,
+      "consumer_compatible": null,
+      "source": "stm32mp257f-ev1.dts:785"
+    },
+    {
+      "pin": "PG14",
+      "bank": "gpiog",
+      "line": 14,
+      "property": "reset-gpios",
+      "consumer_node": "adv753x",
+      "consumer_active": false,
+      "consumer_compatible": "adi,adv7533",
+      "source": "stm32mp257f-ev1.dts:447"
+    },
+    {
+      "pin": "PG14",
+      "bank": "gpiog",
+      "line": 14,
+      "property": "reset-gpios",
+      "consumer_node": "ili2511",
+      "consumer_active": true,
+      "consumer_compatible": "ilitek,ili251x",
+      "source": "stm32mp257f-ev1.dts:496"
+    },
+    {
+      "pin": "PG15",
+      "bank": "gpiog",
+      "line": 15,
+      "property": "enable-gpios",
+      "consumer_node": "panel_lvds",
+      "consumer_active": true,
+      "consumer_compatible": "edt,etml0700z9ndha",
+      "source": "stm32mp257f-ev1.dts:125"
+    },
+    {
+      "pin": "PG6",
+      "bank": "gpiog",
+      "line": 6,
+      "property": "reset-gpios",
+      "consumer_node": "phy1_eth2",
+      "consumer_active": true,
+      "consumer_compatible": "ethernet-phy-id001c.c916",
+      "source": "stm32mp257f-ev1.dts:386"
+    },
+    {
+      "pin": "PG8",
+      "bank": "gpiog",
+      "line": 8,
+      "property": "gpios",
+      "consumer_node": "button-user-2",
+      "consumer_active": false,
+      "consumer_compatible": null,
+      "source": "stm32mp257f-ev1.dts:80"
+    },
+    {
+      "pin": "PH5",
+      "bank": "gpioh",
+      "line": 5,
+      "property": "wake-gpios",
+      "consumer_node": "pcie_rc",
+      "consumer_active": true,
+      "consumer_compatible": null,
+      "source": "stm32mp257f-ev1.dts:739"
+    },
+    {
+      "pin": "PI0",
+      "bank": "gpioi",
+      "line": 0,
+      "property": "powerdown-gpios",
+      "consumer_node": "imx335",
+      "consumer_active": true,
+      "consumer_compatible": "sony,imx335",
+      "source": "stm32mp257f-ev1.dts:426"
+    },
+    {
+      "pin": "PI13",
+      "bank": "gpioi",
+      "line": 13,
+      "property": "interrupts",
+      "consumer_node": "ili2511",
+      "consumer_active": true,
+      "consumer_compatible": "ilitek,ili251x",
+      "source": "stm32mp257f-ev1.dts:496"
+    },
+    {
+      "pin": "PI5",
+      "bank": "gpioi",
+      "line": 5,
+      "property": "gpios",
+      "consumer_node": "panel_lvds_backlight",
+      "consumer_active": true,
+      "consumer_compatible": "gpio-backlight",
+      "source": "stm32mp257f-ev1.dts:155"
+    },
+    {
+      "pin": "PI7",
+      "bank": "gpioi",
+      "line": 7,
+      "property": "reset-gpios",
+      "consumer_node": "imx335",
+      "consumer_active": true,
+      "consumer_compatible": "sony,imx335",
+      "source": "stm32mp257f-ev1.dts:426"
+    },
+    {
+      "pin": "PJ7",
+      "bank": "gpioj",
+      "line": 7,
+      "property": "gpios",
+      "consumer_node": "led-blue",
+      "consumer_active": true,
+      "consumer_compatible": null,
+      "source": "stm32mp257f-ev1.dts:99"
+    },
+    {
+      "pin": "PJ8",
+      "bank": "gpioj",
+      "line": 8,
+      "property": "reset-gpios",
+      "consumer_node": "pcie_ep",
+      "consumer_active": false,
+      "consumer_compatible": null,
+      "source": "stm32mp257f-ev1.dts:731"
+    },
+    {
+      "pin": "PJ8",
+      "bank": "gpioj",
+      "line": 8,
+      "property": "reset-gpios",
+      "consumer_node": "pcie_rc",
+      "consumer_active": true,
+      "consumer_compatible": null,
+      "source": "stm32mp257f-ev1.dts:739"
+    },
+    {
+      "pin": "PJ9",
+      "bank": "gpioj",
+      "line": 9,
+      "property": "reset-gpios",
+      "consumer_node": "phy1_eth1",
+      "consumer_active": true,
+      "consumer_compatible": "ethernet-phy-id001c.c916",
+      "source": "stm32mp257f-ev1.dts:361"
+    }
+  ]
+}

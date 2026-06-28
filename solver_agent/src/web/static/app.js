@@ -1,0 +1,832 @@
+const $ = (id) => document.getElementById(id);
+
+// 反問進行中時，暫存這一輪的 intent + 待確認問題，等使用者點候選再帶回伺服器
+let pending = null;
+
+// 目前選定的目標板子；每個請求都會帶上它（無狀態後端依此載入對應 /data）
+let currentBoard = null;
+
+// 模式：'agent'（LLM 編排器，多輪對話）或 'solve'（確定性單輪）。預設 agent。
+let mode = "agent";
+// Agent 對話的伺服器端 session id（後端首次回傳後保存；換板/換模式時清掉開新對話）
+let chatSessionId = null;
+
+// --------------------------------------------------------------------------- //
+// 板子選擇 — 啟動時向 /api/boards 取得 data/boards/ 下自動偵測到的板子清單
+// --------------------------------------------------------------------------- //
+async function loadBoards() {
+  const sel = $("board-select");
+  if (!sel) return;
+  try {
+    const r = await fetch("/api/boards");
+    const d = await r.json();
+    const boards = (d.boards && d.boards.length) ? d.boards : [d.default];
+    currentBoard = d.default || boards[0];
+    sel.innerHTML = "";
+    boards.forEach((b) => {
+      const opt = document.createElement("option");
+      opt.value = b;
+      opt.textContent = b;
+      if (b === currentBoard) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener("change", onBoardChange);
+  } catch (e) {
+    // 取不到清單（舊後端 / 失敗）-> 隱藏選單，沿用後端預設板
+    sel.style.display = "none";
+  }
+}
+
+function onBoardChange(e) {
+  currentBoard = e.target.value;
+  // 換板等於開新話題：丟掉未完成的反問 + Agent 對話 session，避免拿新板的 Σ/DTS
+  // 去回答舊板的問題（後端 session 綁定某塊板的對話歷史）。
+  pending = null;
+  chatSessionId = null;
+}
+
+// 後端每個回應都會回帶 board；以它為準同步前端狀態（反問來回維持同一塊板）
+function syncBoard(board) {
+  if (!board || board === currentBoard) return;
+  currentBoard = board;
+  const sel = $("board-select");
+  if (sel) sel.value = board;
+}
+
+function setBoardEnabled(on) {
+  const sel = $("board-select");
+  if (sel) sel.disabled = !on;
+}
+
+// --------------------------------------------------------------------------- //
+// DOM helpers — 對話以 append 方式累積，永遠不覆寫先前訊息
+// --------------------------------------------------------------------------- //
+function el(tag, cls, html) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html != null) e.innerHTML = html;
+  return e;
+}
+
+function scrollBottom() {
+  const chat = $("chat");
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function appendUser(text) {
+  const msg = el("div", "msg user");
+  const bubble = el("div", "bubble");
+  bubble.textContent = text;                 // textContent：安全且保留換行
+  msg.appendChild(bubble);
+  $("messages").appendChild(msg);
+  scrollBottom();
+}
+
+// 建一則 assistant 訊息，回傳它的 .body 供後續填內容（先放一個轉圈圈載入占位）。
+// validatePhase=true（agent 模式）：請求超過閾值仍未回 → 幾乎必是在跑 CubeMX
+// （系統中唯一的慢操作，1–3 分鐘）→ 把標籤切成「CubeMX 驗證中」。回應到達時
+// 由 render/renderChat/setStatus 呼叫 body._stopLoading() 收掉計時器。
+const VALIDATE_HINT_MS = 6000;
+function appendAssistant(label, { validatePhase = false } = {}) {
+  const msg = el("div", "msg assistant");
+  msg.appendChild(el("div", "avatar", "P"));
+  const body = el("div", "body");
+  msg.appendChild(body);
+  $("messages").appendChild(msg);
+
+  let timer = null;
+  if (label) {
+    const load = el("div", "loading");
+    load.appendChild(el("span", "spinner"));
+    const lab = el("span", "loading-label", label);
+    load.appendChild(lab);
+    body.appendChild(load);
+    if (validatePhase) {
+      timer = setTimeout(() => {
+        lab.textContent = "CubeMX 驗證中…（約 1–3 分鐘）";
+        load.classList.add("validating");
+      }, VALIDATE_HINT_MS);
+    }
+  }
+  body._stopLoading = () => { if (timer) { clearTimeout(timer); timer = null; } };
+  scrollBottom();
+  return body;
+}
+
+function setStatus(body, text, kind) {
+  if (body._stopLoading) body._stopLoading();
+  body.innerHTML = "";
+  const p = el("p", "status" + (kind ? " " + kind : ""));
+  p.textContent = text;                       // textContent：error 訊息可能含 < > 等，勿當 HTML
+  body.appendChild(p);
+  scrollBottom();
+}
+
+// 一般對話式訊息（不支援的週邊、無解…）—— 中性文字，不用紅色錯誤樣式
+function setNote(body, text) {
+  body.innerHTML = "";
+  const p = el("p", "note");
+  p.textContent = text;
+  body.appendChild(p);
+  scrollBottom();
+}
+
+// --------------------------------------------------------------------------- //
+// 網路
+// --------------------------------------------------------------------------- //
+async function postSolve(payload) {
+  if (currentBoard) payload.board = currentBoard;   // 單一進出口：start 與 answer 都自動帶上 board
+  const r = await fetch("/api/solve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return { r, d: await r.json() };
+}
+
+async function postChat(message) {
+  const payload = { message, board: currentBoard };
+  if (chatSessionId) payload.session_id = chatSessionId;
+  const r = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return { r, d: await r.json() };
+}
+
+// --------------------------------------------------------------------------- //
+// 送出一則使用者訊息（依模式分流）
+// --------------------------------------------------------------------------- //
+async function send() {
+  const ta = $("q");
+  const text = ta.value.trim();
+  if (!text) return;                          // 空字串／純空白不送
+
+  ta.value = "";                              // 清空輸入框
+  ta.style.height = "auto";
+  ta.focus();                                 // 保持 focus，方便繼續輸入
+
+  appendUser(text);
+  const body = appendAssistant(mode === "agent" ? "思考中…" : "求解中…",
+                               { validatePhase: mode === "agent" });
+  $("go").disabled = true;
+  setBoardEnabled(false);                      // 進行中鎖住板子選單，避免中途切板
+  try {
+    if (mode === "agent") {
+      const { r, d } = await postChat(text);
+      renderChat(r, d, body);
+    } else {
+      const { r, d } = await postSolve({ text });
+      render(r, d, body);
+    }
+  } catch (e) {
+    setStatus(body, "請求失敗：" + e.message, "err");
+  } finally {
+    $("go").disabled = false;
+    setBoardEnabled(true);
+  }
+}
+
+// --------------------------------------------------------------------------- //
+// Agent 模式：渲染 orchestrator 的回覆（人話 + 一句為什麼）＋（若有）新的 plan 表格
+//
+// 有新 plan 時（伺服器已自動排入背景 CubeMX 驗證）：先「只」顯示驗證中轉圈，
+// 等驗證完成再一次輸出 LLM 回覆＋plan 表格＋驗證卡片——避免使用者先看到
+// 未經驗證的結果。無 plan（clarify / unsat / 純回覆）或本輪模型已顯式驗過
+// （d.validator）則立即完整渲染。
+// --------------------------------------------------------------------------- //
+function renderChat(r, d, body) {
+  if (body._stopLoading) body._stopLoading();
+  body.innerHTML = "";
+  if (!r.ok) { setNote(body, (d && d.error) || ("發生問題（HTTP " + r.status + "）")); return; }
+  if (d.session_id) chatSessionId = d.session_id;   // 保存伺服器端 session
+  if (d.board) syncBoard(d.board);
+
+  const waitFp = (d.plan && d.plan.length && !d.validator && d.plan_fingerprint)
+    ? d.plan_fingerprint : null;
+  if (!waitFp) { renderChatContent(d, body, null); return; }
+
+  // 只顯示驗證中；完成（或被更新的 plan 取代／逾時）後一次輸出全部內容
+  const load = el("div", "loading validating");
+  load.appendChild(el("span", "spinner"));
+  load.appendChild(el("span", "loading-label", "CubeMX 驗證中…（約 1–3 分鐘）"));
+  body.appendChild(load);
+  scrollBottom();
+  waitForValidation(waitFp).then((result) => {
+    body.innerHTML = "";
+    renderChatContent(d, body, result);   // result=null → 附表格時掛回輪詢備援
+  });
+}
+
+// 一次渲染完整內容。autoResult = 背景自動驗證的 result（指紋已對上）或 null。
+function renderChatContent(d, body, autoResult) {
+  const reply = el("div", "reply");
+  reply.innerHTML = renderMarkdown(d.reply || "（沒有回覆）");
+  body.appendChild(reply);
+
+  // CubeMX 驗證卡片：本輪模型顯式驗過（d.validator）或背景自動驗證完成
+  const v = d.validator || autoResult;
+  if (v) {
+    body.appendChild(buildValidatorCard(v));
+    setValidatorBadge(v.status);
+  }
+
+  // 只有「這一輪真的求解出新 plan」時才附表格（後端只在本輪 SAT 才回非空 plan）。
+  // 驗證已完成（v）→ 不再輪詢；逾時/被取代（autoResult=null）→ 掛輪詢備援。
+  if (d.plan && d.plan.length) {
+    body.appendChild(buildResultBlock(
+      d.plan, v ? null : d.plan_fingerprint));
+  }
+
+  // 驗證過的修改建議（G6）：卡片可一鍵採納
+  if (d.suggestions && d.suggestions.length) {
+    body.appendChild(buildSuggestionCards(d.suggestions));
+  }
+
+  // 待答歧義（clarify）：選項按鈕（與確定性模式同一套 UI）。選項來自
+  // solve_pinmux 的 question.options（合法候選），點選即以文字送回對話，
+  // 由編排模型把選擇折回 intent 重解。
+  if (d.clarify && d.clarify.options && d.clarify.options.length) {
+    body.appendChild(buildChatClarify(d.clarify));
+  }
+  scrollBottom();
+}
+
+// 等背景自動驗證完成：result 指紋 == fp 才回傳 result；被更新的 plan 取代或
+// 逾時（8 分鐘）回 null（呼叫端照常渲染內容，表格處掛輪詢備援）。
+async function waitForValidation(fp) {
+  const deadline = Date.now() + 8 * 60 * 1000;
+  let delay = 3000;                              // 第一次快查，之後 8 秒一輪
+  while (Date.now() < deadline) {
+    await new Promise((res) => setTimeout(res, delay));
+    delay = 8000;
+    try {
+      const d = await (await fetch("/api/validator/status")).json();
+      const got = d.exists && d.result && d.result.validated
+        ? d.result.validated.fingerprint : null;
+      if (!d.running && got === fp) return d.result;
+      if (!d.running && got && got !== fp) return null;   // 已被更新的 plan 取代
+    } catch (e) { /* 網路抖動：下一輪再試 */ }
+  }
+  return null;
+}
+
+function buildChatClarify(q) {
+  const opts = el("div", "opts");
+  q.options.forEach((o) => {
+    const btn = el("button", "opt");
+    btn.appendChild(el("span", "opt-label", escapeHtml(o.label)));
+    if (o.note) btn.appendChild(el("span", "opt-note", escapeHtml(o.note)));
+    btn.addEventListener("click", () => chooseChatOption(o, btn, opts));
+    opts.appendChild(btn);
+  });
+  return opts;
+}
+
+async function chooseChatOption(option, btn, optsEl) {
+  // 鎖住這組選項並標記被選的那顆（保留在對話紀錄中）
+  optsEl.querySelectorAll("button").forEach((b) => (b.disabled = true));
+  btn.classList.add("chosen");
+
+  const text = "選擇：" + option.label + (option.note ? "（" + option.note + "）" : "");
+  appendUser(text);
+  const body = appendAssistant("思考中…", { validatePhase: true });
+  $("go").disabled = true;
+  setBoardEnabled(false);
+  try {
+    const { r, d } = await postChat(text);
+    renderChat(r, d, body);
+  } catch (e) {
+    setStatus(body, "請求失敗：" + e.message, "err");
+  } finally {
+    $("go").disabled = false;
+    setBoardEnabled(true);
+  }
+}
+
+// --------------------------------------------------------------------------- //
+// validator（G5/G7）：徽章 + 衝突清單
+// --------------------------------------------------------------------------- //
+// header 徽章唯一的用途 = CubeMX 環境異常提示。status 為 "error"（找不到／
+// 損壞的執行檔、逾時等環境問題）時亮「CubeMX 離線」，其餘一律隱藏——pass /
+// fail / 未驗證都不佔用 header（衝突細節仍由訊息內的 val-card 呈現）。
+function setValidatorBadge(status) {
+  const badge = $("validator-badge");
+  if (!badge) return;
+  badge.hidden = status !== "error";
+}
+
+// 啟動時以伺服器上最近一次結果初始化徽章（覆寫制的 result.json）：只有上次
+// 驗證因環境錯誤失敗才亮離線，pass/fail 不從磁碟狀態帶進 header。
+async function initValidatorBadge() {
+  try {
+    const r = await fetch("/api/validator/status");
+    const d = await r.json();
+    setValidatorBadge(d.exists && d.result ? d.result.status : "none");
+  } catch (e) { /* 舊後端沒有此端點：維持隱藏 */ }
+}
+
+// devicetree 區塊（result.devicetree，附加產物）→ 一行摘要；無 DT 時不顯示
+function dtSummaryLine(v) {
+  const dt = v.devicetree;
+  if (!dt || dt.status !== "ok" || !(dt.files || []).length) return null;
+  const dirs = [...new Set(dt.files.map((f) => f.split("/")[0]))].sort();
+  return el("p", "note",
+    `含 CubeMX 生成的 device tree（${dirs.join(" / ")}，共 ${dt.files.length} 檔）——由「⤓ CubeMX 驗證結果」下載`);
+}
+
+function buildValidatorCard(v) {
+  const ok = v.status === "pass";
+  const card = el("div", ok ? "val-card pass" : "val-card fail");
+  // 驗證對象（result.validated）：讓每份報告可對外指認「這次驗了誰」
+  const who = (v.validated && v.validated.instances || []).join("、");
+  if (ok) {
+    card.appendChild(el("p", "val-head",
+      `✓ STM32CubeMX 驗證通過（${who ? who + " — " : ""}${v.checked_pins ?? "?"} 支腳，無衝突）`));
+    const dt = dtSummaryLine(v);
+    if (dt) card.appendChild(dt);
+    return card;
+  }
+  if (v.status === "error") {
+    card.className = "val-card err";
+    card.appendChild(el("p", "val-head", "⚠ CubeMX 驗證未完成"));
+    const p = el("p", "note");
+    p.textContent = v.message || "未知原因";
+    card.appendChild(p);
+    return card;
+  }
+  card.appendChild(el("p", "val-head",
+    `✗ STM32CubeMX 驗證發現 ${(v.conflicts || []).length} 項衝突`));
+  const ul = el("ul");
+  (v.conflicts || []).forEach((c) => {
+    ul.appendChild(el("li", "mv",
+      `<b>${escapeHtml(c.signal)}</b>@<b>${escapeHtml(c.pin)}</b> — ${escapeHtml(c.message || "")}`));
+  });
+  card.appendChild(ul);
+  return card;
+}
+
+// --------------------------------------------------------------------------- //
+// 修改建議卡片（G6）：點擊 = 把驗證過的 intent 送回 /api/chat 一鍵採納
+// --------------------------------------------------------------------------- //
+function buildSuggestionCards(suggestions) {
+  const wrap = el("div", "sugg-cards");
+  wrap.appendChild(el("p", "sugg-head", "驗證過的替代方案（點擊採納）"));
+  suggestions.forEach((s) => {
+    const btn = el("button", "sugg");
+    btn.appendChild(el("span", "sugg-label", escapeHtml(s.summary)));
+    btn.appendChild(el("span", "sugg-note", "✓ 已通過求解器驗證 · 點擊採納並重新求解"));
+    btn.addEventListener("click", () => adoptSuggestion(s, btn, wrap));
+    wrap.appendChild(btn);
+  });
+  return wrap;
+}
+
+async function adoptSuggestion(s, btn, wrap) {
+  wrap.querySelectorAll("button").forEach((b) => (b.disabled = true));
+  btn.classList.add("chosen");
+
+  appendUser("採納建議：" + s.summary);
+  const body = appendAssistant("依採納的方案重新求解中…", { validatePhase: true });
+  $("go").disabled = true;
+  setBoardEnabled(false);
+  try {
+    const payload = { adopt: s, board: currentBoard };
+    if (chatSessionId) payload.session_id = chatSessionId;
+    const r = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    renderChat(r, d, body);
+  } catch (e) {
+    setStatus(body, "請求失敗：" + e.message, "err");
+  } finally {
+    $("go").disabled = false;
+    setBoardEnabled(true);
+  }
+}
+
+// 極簡 markdown -> 安全 HTML：先跳脫，再還原 **粗體**、`code`、- 清單、段落換行。
+// 只允許這幾種，避免 XSS（不還原任何標籤）。
+function renderMarkdown(src) {
+  const esc = escapeHtml(src);
+  const lines = esc.split("\n");
+  let html = "", inList = false;
+  const inline = (s) =>
+    s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+     .replace(/`([^`]+)`/g, "<code>$1</code>");
+  for (let raw of lines) {
+    const line = raw.trim();
+    if (/^[-*]\s+/.test(line)) {
+      if (!inList) { html += "<ul>"; inList = true; }
+      html += "<li>" + inline(line.replace(/^[-*]\s+/, "")) + "</li>";
+    } else {
+      if (inList) { html += "</ul>"; inList = false; }
+      if (line) html += "<p>" + inline(line) + "</p>";
+    }
+  }
+  if (inList) html += "</ul>";
+  return html || "<p></p>";
+}
+
+// 把一則伺服器回應渲染進指定的 assistant body
+function render(r, d, body) {
+  if (body._stopLoading) body._stopLoading();
+  body.innerHTML = "";
+  // 後端的業務性回覆（422：不支援的週邊、腳位衝突…）當成一般回答，不用紅字
+  if (!r.ok) { setNote(body, d.error || ("發生問題（HTTP " + r.status + "）")); return; }
+  if (d.board) syncBoard(d.board);            // 以後端回帶的 board 為準同步前端
+  if (d.status === "clarify") return renderClarify(d, body);
+  return renderDone(d, body);
+}
+
+// --------------------------------------------------------------------------- //
+// 反問：選項列成按鈕，點了就接著對話往下走
+// --------------------------------------------------------------------------- //
+function renderClarify(d, body) {
+  pending = { intent: d.intent, question: d.question };
+  const q = d.question;
+
+  body.appendChild(el("p", "ask", escapeHtml(q.prompt || q.summary)));
+  if (!q.options || !q.options.length) {
+    body.appendChild(el("p", "status err", "這個條件沒有可用選項，請改用其他腳位或週邊。"));
+    scrollBottom();
+    return;
+  }
+  const opts = el("div", "opts");
+  q.options.forEach((o) => {
+    const btn = el("button", "opt");
+    btn.appendChild(el("span", "opt-label", escapeHtml(o.label)));
+    if (o.note) btn.appendChild(el("span", "opt-note", escapeHtml(o.note)));
+    btn.addEventListener("click", () => chooseOption(o, btn, opts));
+    opts.appendChild(btn);
+  });
+  body.appendChild(opts);
+  scrollBottom();
+}
+
+async function chooseOption(option, btn, optsEl) {
+  if (!pending) return;
+  const q = pending.question;
+
+  // 鎖住這組選項並標記被選的那顆（保留在對話紀錄中）
+  optsEl.querySelectorAll("button").forEach((b) => (b.disabled = true));
+  btn.classList.add("chosen");
+
+  appendUser("選擇：" + option.label);
+  const body = appendAssistant("確認中…");
+  try {
+    const { r, d } = await postSolve({
+      intent: pending.intent,
+      question: { kind: q.kind, item_index: q.item_index, pin: q.pin },
+      option,
+    });
+    render(r, d, body);
+  } catch (e) {
+    setStatus(body, "請求失敗：" + e.message, "err");
+  }
+}
+
+// --------------------------------------------------------------------------- //
+// 最終結果
+// --------------------------------------------------------------------------- //
+function renderDone(d, body) {
+  pending = null;
+
+  if (d.chosen && d.chosen.length) {
+    const c = el("p", "chosen");
+    c.innerHTML =
+      '<span class="tag">自動選擇</span>' +
+      d.chosen
+        .map((x) => {
+          const reused = x.reused_boot || [];
+          const fresh = (x.new !== undefined ? x.new : x.instances) || [];
+          const segs = [];
+          if (reused.length)
+            segs.push(`<b>${escapeHtml(reused.join(", "))}</b> <em>(沿用開機)</em>`);
+          if (fresh.length) segs.push(`<b>${escapeHtml(fresh.join(", "))}</b>`);
+          return `${escapeHtml(x.family)}×${x.count} → ${segs.join(" ＋ ") || "—"}` +
+            (x.mode ? ` <em>(${escapeHtml(x.mode)})</em>` : "");
+        })
+        .join("　·　");
+    body.appendChild(c);
+  }
+
+  if (!d.sat) {                              // 無解：當一般回答（不用紅字）
+    const p = el("p", "note");
+    p.textContent = "找不到可行的腳位配置" + (d.reason ? "：" + d.reason : "。");
+    body.appendChild(p);
+    scrollBottom();
+    return;
+  }
+
+  if (!d.assignment || !d.assignment.length) {   // 沒有可放置的訊號（如不支援的週邊）
+    const p = el("p", "note");
+    p.textContent =
+      "沒有可以放置的訊號——你要的週邊可能不在這顆 SoC 上，或需求沒被辨識出來，換個說法再試試看。";
+    body.appendChild(p);
+    scrollBottom();
+    return;
+  }
+
+  // 固定板：開機走線被迫搬離官方腳 -> 醒目提示需實體改線（放在統計與表格之前）
+  if (d.boot_relaxed && d.boot_moved && d.boot_moved.length) {
+    body.appendChild(buildBootWarn(d));
+  }
+
+  if (d.source === "baseline") {            // 官方預設版：未經求解，不顯示 solver 統計
+    body.appendChild(el("p", "status ok",
+      `預設版本 — ${d.assignment.length} signals`));
+  } else {
+    body.appendChild(el("p", "status ok",
+      `OK — ${d.assignment.length} signals（${d.stats.ms} ms, ` +
+      `AC-propagated=${d.stats.propagated}, backtrack k=${d.stats.k}）`));
+  }
+
+  // 提示：有自動保留的開機 signals（require.json）
+  const bootCount = d.assignment.filter((a) => a.boot_reserved).length;
+  if (bootCount) {
+    body.appendChild(el("p", "chosen",
+      '<span class="tag">boot-reserved</span>已自動保留 ' + bootCount +
+      ' 個開機必要 signals（require.json），避免被其他週邊佔用。'));
+  }
+
+  body.appendChild(buildResultBlock(d.assignment, d.plan_fingerprint || null));
+  scrollBottom();
+}
+
+// 固定板的「需改線」警告卡片：列出被搬離官方腳的開機 signal（from → to），依週邊分組
+function buildBootWarn(d) {
+  const card = el("div", "boot-warn");
+  card.appendChild(el("p", "boot-warn-head", "⚠ 需實體改線才能套用此配置"));
+  card.appendChild(el("p", null,
+    "在不動走線下無法佈線；下列開機介面已被搬離官方腳，需把實體走線改到新腳位："));
+
+  const order = [], map = {};
+  (d.boot_moved || []).forEach((m) => {
+    if (!(m.peripheral in map)) { map[m.peripheral] = []; order.push(m.peripheral); }
+    map[m.peripheral].push(m);
+  });
+
+  const ul = el("ul");
+  order.forEach((p) => {
+    const li = el("li");
+    li.appendChild(el("b", null, escapeHtml(p)));
+    const inner = el("ul");
+    map[p].forEach((m) => {
+      inner.appendChild(el("li", "mv",
+        `${escapeHtml(m.signal)}：<b>${escapeHtml(m.from)}</b> → <b>${escapeHtml(m.to)}</b>`));
+    });
+    li.appendChild(inner);
+    ul.appendChild(li);
+  });
+  card.appendChild(ul);
+  return card;
+}
+
+// 把 assignment 依 peripheral 分組（保留出現順序），供 rowspan 合併用
+function groupByPeripheral(rows) {
+  const order = [], map = {};
+  rows.forEach((a) => {
+    if (!(a.peripheral in map)) { map[a.peripheral] = []; order.push(a.peripheral); }
+    map[a.peripheral].push(a);
+  });
+  return order.map((p) => ({ peripheral: p, rows: map[p] }));
+}
+
+// 工具列(複製) + 表格(peripheral 合併成一大格) + 下載 CSV/XLSX/CubeMX 驗證結果
+function buildResultBlock(rows, watchFp) {
+  const block = el("div", "result-block");
+
+  // 有任何 row 帶板上外部 IC 才顯示 ic 欄（G7；無 IC 的板子表格維持四欄）
+  const hasIc = rows.some((a) => a.ic);
+  const table = el("table", "result");
+  let html = "<thead><tr><th>peripheral</th><th>signal</th><th>pin</th><th>af</th>" +
+             (hasIc ? "<th>ic</th>" : "") + "</tr></thead><tbody>";
+  groupByPeripheral(rows).forEach((g) => {
+    g.rows.forEach((a, i) => {
+      html += "<tr>";
+      if (i === 0) {
+        html += `<td class="periph" rowspan="${g.rows.length}">${escapeHtml(g.peripheral)}</td>`;
+      }
+      const badge = a.boot_reserved
+        ? ' <span class="badge-boot" title="require.json 自動保留的開機必要 signal">boot</span>'
+        : "";
+      const af = a.af == null ? "" : a.af;
+      html += `<td>${escapeHtml(a.signal)}${badge}</td><td class="pin">${escapeHtml(a.pin)}</td><td>${escapeHtml(af)}</td>`;
+      if (hasIc) {
+        // 同 peripheral 的 ic 相同：合併成一大格（與 peripheral 欄同 rowspan）
+        if (i === 0) {
+          html += `<td class="ic" rowspan="${g.rows.length}" title="板上外部 IC（board_components.json）">${escapeHtml(g.rows[0].ic || "")}</td>`;
+        }
+      }
+      html += "</tr>";
+    });
+  });
+  table.innerHTML = html + "</tbody>";
+  block.appendChild(table);
+
+  const dl = el("div", "downloads");
+  const csvBtn = el("button", "icon-btn", "⤓ 下載 CSV");
+  const xlsxBtn = el("button", "icon-btn", "⤓ 下載 XLSX");
+  const copyBtn = el("button", "icon-btn", "⧉ 複製");
+  csvBtn.addEventListener("click", () => downloadExport(rows, "csv", csvBtn));
+  xlsxBtn.addEventListener("click", () => downloadExport(rows, "xlsx", xlsxBtn));
+  copyBtn.addEventListener("click", () => copyRows(rows, copyBtn));
+  dl.appendChild(csvBtn);
+  dl.appendChild(xlsxBtn);
+  dl.appendChild(copyBtn);
+  const vBtn = buildValidatorDownloadBtn();
+  dl.appendChild(vBtn);
+  block.appendChild(dl);
+
+  // 每個新 plan 伺服器都會自動排入背景 CubeMX 驗證：這裡輪詢直到「result 的
+  // 指紋 == 這份 plan 的指紋」，把驗證卡片掛在表格下方、亮起下載鈕。
+  if (watchFp) watchAutoValidation(block, vBtn, watchFp);
+
+  return block;
+}
+
+// 輪詢背景自動驗證（fingerprint 對上才算「驗的是這份 plan」）。
+// 使用者連續求解時，舊 plan 的 watcher 會在看到「閒置且指紋屬於別份 plan」時
+// 靜默退場——永遠只有最新 plan 的卡片會出現。
+async function watchAutoValidation(block, vBtn, watchFp) {
+  const line = el("div", "loading");
+  line.appendChild(el("span", "spinner"));
+  line.appendChild(el("span", "loading-label", "CubeMX 自動驗證中…（約 1–3 分鐘）"));
+  block.appendChild(line);
+
+  const deadline = Date.now() + 8 * 60 * 1000;
+  while (Date.now() < deadline) {
+    try {
+      const d = await (await fetch("/api/validator/status")).json();
+      const fp = d.exists && d.result && d.result.validated
+        ? d.result.validated.fingerprint : null;
+      if (!d.running && fp === watchFp) {          // 驗完，而且驗的就是這份
+        line.remove();
+        block.appendChild(buildValidatorCard(d.result));
+        setValidatorBadge(d.result.status);
+        vBtn.disabled = !d.downloadable;
+        if (d.downloadable) vBtn.title = VDL_TITLE_READY;
+        scrollBottom();
+        return;
+      }
+      if (!d.running && fp && fp !== watchFp) {    // 已被更新的 plan 取代
+        line.remove();
+        return;
+      }
+    } catch (e) { /* 網路抖動：下一輪再試 */ }
+    await new Promise((r) => setTimeout(r, 8000));
+  }
+  line.querySelector(".loading-label").textContent =
+    "（驗證仍在進行——完成後可由「⤓ CubeMX 驗證結果」下載）";
+  line.querySelector(".spinner").remove();
+}
+
+// 「下載 STM32CubeMX 編譯結果」：打包 output/validator/ 的 zip；無產物時 disabled
+const VDL_TITLE_READY =
+  "下載最近一次 STM32CubeMX 驗證的完整產物（log / pinout.csv / result.json / devicetree：kernel・u-boot・tf-a・optee-os）";
+const VDL_TITLE_EMPTY =
+  "尚無驗證產物——在對話中要求「驗證」跑一次 CubeMX 後即可下載";
+
+function buildValidatorDownloadBtn() {
+  const btn = el("button", "icon-btn", "⤓ CubeMX 驗證結果");
+  btn.disabled = true;
+  btn.title = VDL_TITLE_EMPTY;
+  fetch("/api/validator/status")
+    .then((r) => r.json())
+    .then((d) => {
+      btn.disabled = !d.downloadable;
+      btn.title = d.downloadable ? VDL_TITLE_READY : VDL_TITLE_EMPTY;
+    })
+    .catch(() => {});
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try {
+      const r = await fetch("/api/validator/download");
+      if (!r.ok) throw new Error("no artifacts");
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "stm32cubemx_validation.zip";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = "尚無驗證產物";
+      setTimeout(() => (btn.innerHTML = orig), 1400);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  return btn;
+}
+
+function copyRows(rows, btn) {
+  const hasIc = rows.some((a) => a.ic);
+  const head = "peripheral\tsignal\tpin\taf" + (hasIc ? "\tic" : "");
+  const text = [head,
+    ...rows.map((a) => `${a.peripheral}\t${a.signal}\t${a.pin}\t${a.af == null ? "" : a.af}` +
+                       (hasIc ? `\t${a.ic || ""}` : ""))].join("\n");
+  const flash = () => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = "✓ 已複製";
+    setTimeout(() => (btn.innerHTML = orig), 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(() => fallbackCopy(text, flash));
+  } else {
+    fallbackCopy(text, flash);
+  }
+}
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); done(); } catch (e) { /* ignore */ }
+  ta.remove();
+}
+
+async function downloadExport(rows, fmt, btn) {
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  try {
+    const r = await fetch("/api/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rows, format: fmt }),
+    });
+    if (!r.ok) throw new Error("export failed");
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "plan." + fmt;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    btn.innerHTML = "下載失敗";
+    setTimeout(() => (btn.innerHTML = orig), 1400);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// --------------------------------------------------------------------------- //
+// 事件
+// --------------------------------------------------------------------------- //
+$("go").addEventListener("click", send);
+
+$("q").addEventListener("keydown", (e) => {
+  // Enter 送出；Shift+Enter 換行；輸入法組字中（IME）不送出
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
+    e.preventDefault();
+    send();
+  }
+});
+
+// 輸入框隨內容自動長高
+$("q").addEventListener("input", function () {
+  this.style.height = "auto";
+  this.style.height = Math.min(this.scrollHeight, 180) + "px";
+});
+
+// 範例 chip：點一下就填入並送出
+document.querySelectorAll(".examples .chip").forEach((chip) => {
+  chip.addEventListener("click", () => {
+    $("q").value = chip.textContent;
+    send();
+  });
+});
+
+// 模式切換（Agent 對話 / 直接求解）。切換等於開新話題：清掉反問與對話 session。
+$("mode-toggle").addEventListener("click", (e) => {
+  const btn = e.target.closest(".mode-btn");
+  if (!btn || btn.classList.contains("active")) return;
+  mode = btn.dataset.mode;
+  $("mode-toggle").querySelectorAll(".mode-btn").forEach((b) =>
+    b.classList.toggle("active", b === btn));
+  pending = null;
+  chatSessionId = null;
+});
+
+// 啟動：載入可選板子清單 + 以伺服器最近一次驗證結果初始化 CubeMX 徽章
+loadBoards();
+initValidatorBadge();

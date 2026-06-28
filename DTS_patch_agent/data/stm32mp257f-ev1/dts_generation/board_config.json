@@ -1,0 +1,358 @@
+{
+  "board": "stm32mp257f-ev1",
+  "description": "Board-specific peripheral configuration from the baseline board DTS overrides (all depth-1 non-pinctrl props + child slave devices + /delete-property directives). DTS-derived; nothing guessed. `status` reflects the override.",
+  "source": "data/stm32mp257f-ev1/baseline/dts/stm32mp257f-ev1.dts",
+  "_needs_board_doc": [
+    "connector_routing (which CN/header a peripheral routes to) — not in DTS.",
+    "alternate pin choices for peripherals not already wired on the board."
+  ],
+  "peripherals": {
+    "eth1": {
+      "family": "eth",
+      "status": "okay",
+      "source_line": 346,
+      "board_knobs": {
+        "phy-mode": "\"rgmii-id\"",
+        "max-speed": "<1000>",
+        "phy-handle": "<&phy1_eth1>",
+        "st,eth-clk-sel": null,
+        "snps,ext-systime": null
+      },
+      "deleted_properties": [],
+      "child_devices": [
+        {
+          "name": "mdio1",
+          "label": null,
+          "compatible": "snps,dwmac-mdio",
+          "status": null,
+          "props": {
+            "compatible": "\"snps,dwmac-mdio\""
+          },
+          "children": [
+            {
+              "name": "ethernet-phy@4",
+              "label": "phy1_eth1",
+              "compatible": "ethernet-phy-id001c.c916",
+              "status": null,
+              "props": {
+                "compatible": "\"ethernet-phy-id001c.c916\"",
+                "reset-gpios": "<&gpioj 9 GPIO_ACTIVE_LOW>",
+                "reset-assert-us": "<10000>",
+                "reset-deassert-us": "<80000>",
+                "realtek,eee-disable": null,
+                "reg": "<4>"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "eth2": {
+      "family": "eth",
+      "status": "okay",
+      "source_line": 372,
+      "board_knobs": {
+        "phy-mode": "\"rgmii-id\"",
+        "max-speed": "<1000>",
+        "phy-handle": "<&phy1_eth2>",
+        "st,eth-ptp-from-rcc": null
+      },
+      "deleted_properties": [],
+      "child_devices": [
+        {
+          "name": "mdio1",
+          "label": null,
+          "compatible": "snps,dwmac-mdio",
+          "status": null,
+          "props": {
+            "compatible": "\"snps,dwmac-mdio\""
+          },
+          "children": [
+            {
+              "name": "ethernet-phy@1",
+              "label": "phy1_eth2",
+              "compatible": "ethernet-phy-id001c.c916",
+              "status": null,
+              "props": {
+                "compatible": "\"ethernet-phy-id001c.c916\"",
+                "reset-gpios": "<&gpiog 6 GPIO_ACTIVE_LOW>",
+                "reset-assert-us": "<10000>",
+                "reset-deassert-us": "<80000>",
+                "realtek,eee-disable": null,
+                "reg": "<1>"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "i2c2": {
+      "family": "i2c",
+      "status": "okay",
+      "source_line": 414,
+      "board_knobs": {
+        "i2c-scl-rising-time-ns": "<100>",
+        "i2c-scl-falling-time-ns": "<13>",
+        "clock-frequency": "<400000>"
+      },
+      "deleted_properties": [
+        "dmas",
+        "dma-names"
+      ],
+      "child_devices": [
+        {
+          "name": "camera@1a",
+          "label": "imx335",
+          "compatible": "sony,imx335",
+          "status": "okay",
+          "props": {
+            "compatible": "\"sony,imx335\"",
+            "reg": "<0x1a>",
+            "clocks": "<&clk_ext_camera>",
+            "avdd-supply": "<&scmi_v3v3>",
+            "ovdd-supply": "<&scmi_v3v3>",
+            "dvdd-supply": "<&scmi_v3v3>",
+            "reset-gpios": "<&gpioi 7 (GPIO_ACTIVE_LOW | GPIO_PUSH_PULL)>",
+            "powerdown-gpios": "<&gpioi 0 (GPIO_ACTIVE_HIGH | GPIO_PUSH_PULL)>"
+          },
+          "children": [
+            {
+              "name": "port",
+              "label": null,
+              "compatible": null,
+              "status": null,
+              "props": {},
+              "children": [
+                {
+                  "name": "endpoint",
+                  "label": "imx335_ep",
+                  "compatible": null,
+                  "status": null,
+                  "props": {
+                    "remote-endpoint": "<&csi_sink>",
+                    "clock-lanes": "<0>",
+                    "data-lanes": "<1 2>",
+                    "link-frequencies": "/bits/ 64 <594000000>"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "hdmi@3d",
+          "label": "adv753x",
+          "compatible": "adi,adv7533",
+          "status": "disabled",
+          "props": {
+            "compatible": "\"adi,adv7533\"",
+            "reg": "<0x3d>, <0x3c>, <0x3f>, <0x38>",
+            "reg-names": "\"main\", \"cec\", \"edid\", \"packet\"",
+            "clocks": "<&cec_clock>",
+            "clock-names": "\"cec\"",
+            "interrupt-parent": "<&gpiod>",
+            "interrupts": "<10 IRQ_TYPE_EDGE_FALLING>",
+            "adi,dsi-lanes": "<4>",
+            "reset-gpios": "<&gpiog 14 GPIO_ACTIVE_LOW>",
+            "avdd-supply": "<&scmi_v1v8>",
+            "dvdd-supply": "<&scmi_v1v8>",
+            "pvdd-supply": "<&scmi_v1v8>",
+            "a2vdd-supply": "<&scmi_v1v8>",
+            "v3p3-supply": "<&scmi_v3v3>",
+            "v1p2-supply": "<&scmi_v1v8>"
+          },
+          "children": [
+            {
+              "name": "ports",
+              "label": null,
+              "compatible": null,
+              "status": null,
+              "props": {},
+              "children": [
+                {
+                  "name": "port@0",
+                  "label": null,
+                  "compatible": null,
+                  "status": null,
+                  "props": {
+                    "reg": "<0>"
+                  }
+                },
+                {
+                  "name": "port@1",
+                  "label": null,
+                  "compatible": null,
+                  "status": null,
+                  "props": {
+                    "reg": "<1>"
+                  }
+                },
+                {
+                  "name": "port@2",
+                  "label": null,
+                  "compatible": null,
+                  "status": null,
+                  "props": {
+                    "reg": "<2>"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "ili2511@41",
+          "label": "ili2511",
+          "compatible": "ilitek,ili251x",
+          "status": "okay",
+          "props": {
+            "compatible": "\"ilitek,ili251x\"",
+            "reg": "<0x41>",
+            "interrupt-parent": "<&gpioi>",
+            "interrupts": "<13 IRQ_TYPE_EDGE_FALLING>",
+            "reset-gpios": "<&gpiog 14 GPIO_ACTIVE_LOW>"
+          }
+        }
+      ]
+    },
+    "i2c8": {
+      "family": "i2c",
+      "status": "disabled",
+      "source_line": 506,
+      "board_knobs": {
+        "i2c-scl-rising-time-ns": "<57>",
+        "i2c-scl-falling-time-ns": "<7>",
+        "clock-frequency": "<400000>"
+      },
+      "deleted_properties": [
+        "dmas",
+        "dma-names"
+      ],
+      "child_devices": []
+    },
+    "lpuart1": {
+      "family": "lpuart",
+      "status": "disabled",
+      "source_line": 568,
+      "board_knobs": {
+        "uart-has-rtscts": null
+      },
+      "deleted_properties": [
+        "dmas",
+        "dma-names"
+      ],
+      "child_devices": []
+    },
+    "ommanager": {
+      "family": "octospi",
+      "status": "okay",
+      "source_line": 703,
+      "board_knobs": {
+        "memory-region": "<&mm_ospi1>",
+        "memory-region-names": "\"mm_ospi1\""
+      },
+      "deleted_properties": [],
+      "child_devices": [
+        {
+          "name": "spi@40430000",
+          "label": null,
+          "compatible": null,
+          "status": "okay",
+          "props": {
+            "memory-region": "<&mm_ospi1>"
+          },
+          "children": [
+            {
+              "name": "flash@0",
+              "label": "flash0",
+              "compatible": "jedec,spi-nor",
+              "status": null,
+              "props": {
+                "compatible": "\"jedec,spi-nor\"",
+                "reg": "<0>",
+                "spi-rx-bus-width": "<4>",
+                "spi-tx-bus-width": "<4>",
+                "spi-max-frequency": "<84000000>"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "sdmmc1": {
+      "family": "sdmmc",
+      "status": "okay",
+      "source_line": 785,
+      "board_knobs": {
+        "cd-gpios": "<&gpiod 9 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>",
+        "disable-wp": null,
+        "st,neg-edge": null,
+        "bus-width": "<4>",
+        "vmmc-supply": "<&scmi_vdd_sdcard>",
+        "vqmmc-supply": "<&scmi_vddio1>",
+        "sd-uhs-sdr12": null,
+        "sd-uhs-sdr25": null,
+        "sd-uhs-sdr50": null,
+        "sd-uhs-ddr50": null,
+        "sd-uhs-sdr104": null
+      },
+      "deleted_properties": [],
+      "child_devices": []
+    },
+    "sdmmc2": {
+      "family": "sdmmc",
+      "status": "okay",
+      "source_line": 804,
+      "board_knobs": {
+        "non-removable": null,
+        "no-sd": null,
+        "no-sdio": null,
+        "st,neg-edge": null,
+        "bus-width": "<8>",
+        "vmmc-supply": "<&scmi_vdd_emmc>",
+        "vqmmc-supply": "<&scmi_vddio2>",
+        "mmc-ddr-1_8v": null,
+        "mmc-hs200-1_8v": null
+      },
+      "deleted_properties": [],
+      "child_devices": []
+    },
+    "sdmmc3": {
+      "family": "sdmmc",
+      "status": "disabled",
+      "source_line": 821,
+      "board_knobs": {
+        "broken-cd": null,
+        "disable-wp": null,
+        "st,neg-edge": null,
+        "bus-width": "<4>",
+        "vmmc-supply": "<&scmi_v3v3>"
+      },
+      "deleted_properties": [],
+      "child_devices": []
+    },
+    "usart2": {
+      "family": "usart",
+      "status": "okay",
+      "source_line": 857,
+      "board_knobs": {
+        "bootph-all": null
+      },
+      "deleted_properties": [
+        "dmas",
+        "dma-names"
+      ],
+      "child_devices": []
+    },
+    "usart6": {
+      "family": "usart",
+      "status": "disabled",
+      "source_line": 878,
+      "board_knobs": {
+        "uart-has-rtscts": null
+      },
+      "deleted_properties": [],
+      "child_devices": []
+    }
+  }
+}

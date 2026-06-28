@@ -1,0 +1,144 @@
+{
+  "soc": "STM32MP257F",
+  "source": "DS14284 Rev 5 (STM32MP257x datasheet) cross-referenced with stm32mp251/255.dtsi and stm32mp257f-ev1.dts",
+  "description": "開機必備",
+  "notes": [
+    "Clocks and regulators on STM32MP25 are virtualized through SCMI/OP-TEE: the kernel requests them from the secure world (scmi node), the real RCC/PWR/PMIC programming happens in TF-A. Disabling the secure clock/regulator providers bricks the boot just as surely as disabling RCC.",
+    "DDRCTRL/DDRPHY and STGEN are initialized by TF-A (BL2/BL31) and are NOT present as enabled nodes in the kernel DTS - they are mandatory firmware blocks, listed here for completeness.",
+    "The active boot-source peripheral depends on the BOOT0..BOOT3 pins + OTP. On the EV1 board the default is the SD card via SDMMC1; eMMC uses SDMMC2, serial NOR uses OCTOSPI (ommanager/ospi1). Exactly one boot source must be functional."
+  ],
+  "board_pin_locked": {
+    "description": "這片板子實體已繞線、必須鎖回官方腳位 (must_bind) 的介面。腳位取自 baseline/signal_to_pin.json 的官方 pinout。此為『板級』設定：換別片板子這份清單會不同，與 LLM 輸入無關。solver 會把這些腳從其他訊號的候選域移除，確保不被搶走。",
+    "peripherals": ["SDMMC1", "SDMMC2", "OCTOSPIM_P1"],
+    "why": {
+      "SDMMC1": "micro-SD 卡槽（EV1 預設開機源）",
+      "SDMMC2": "eMMC（embedded Linux rootfs 所在）",
+      "OCTOSPIM_P1": "serial NOR / QSPI（替代開機源）"
+    }
+  },
+  "peripherals": {
+    "pwr": {
+      "block": "PWR - power controller & supply supervision",
+      "why": "Datasheet 3.9.1: the system requires supply on VDD, VDDA18AON, VDDCPU and VDDCORE to start; POR/PDR/BOR supervisors (3.9.2) hold the SoC in reset until thresholds are met.",
+      "signals": ["PWR_ON", "PWR_CPU_ON", "PWR_LP", "PDR_ON", "NRST", "PVD_IN"],
+      "required_supplies": ["VDD", "VDDA18AON", "VDDCPU", "VDDCORE", "VDDQDDR"],
+      "dts_node": "pwr",
+      "managed_by": "kernel (syscon) + TF-A",
+      "ds_ref": "DS14284 sec 3.9, p19-21"
+    },
+    "rcc": {
+      "block": "RCC - reset & clock controller",
+      "why": "Generates every clock and reset in the SoC (3.12). No RCC = no clock/reset to any IP, including the A35 that runs the boot code.",
+      "signals": ["NRST", "NRSTC1MS"],
+      "dts_node": "rcc",
+      "managed_by": "kernel + TF-A/SCMI",
+      "ds_ref": "DS14284 sec 3.12, p21-22"
+    },
+    "oscillators": {
+      "block": "HSE / LSE external oscillators (HSI/LSI internal)",
+      "why": "Low-level boot starts on the internal HSI (~64 MHz), but major external interfaces (DDR, USB) require the external HSE crystal (3.12.1, p19). LSE/LSI feed RTC and the independent watchdog.",
+      "signals": ["OSC_IN", "OSC_OUT", "OSC32_IN", "OSC32_OUT"],
+      "dts_node": "(clocks provided via rcc/scmi; crystals are board components)",
+      "managed_by": "TF-A/RCC",
+      "ds_ref": "DS14284 sec 3.12.1, p22"
+    },
+    "ddr": {
+      "block": "DDRCTRL + DDRPHYC - DDR memory controller/PHY (with PLL2)",
+      "why": "TF-A loads OP-TEE/U-Boot/OS into external DRAM; DDR init is mandatory for second-stage boot (3.7). Clocked by the dedicated PLL2, powered by VDDQDDR.",
+      "signals": ["DDR address/command/data bus + DDR clocks (board-routed)"],
+      "dts_node": "(TF-A firmware device tree - not a kernel node)",
+      "managed_by": "TF-A (firmware)",
+      "ds_ref": "DS14284 sec 3.7, p16"
+    },
+    "sdmmc1": {
+      "block": "Boot source - SDMMC1 (default SD-card boot on EV1)",
+      "why": "The ROM code loads the FSBL from the boot source selected by BOOT0..3 + OTP (3.8). Exactly one boot interface must work; EV1 defaults to the micro-SD on SDMMC1 (eMMC -> SDMMC2, serial NOR -> OCTOSPI).",
+      "signals": ["SDMMC1_CK", "SDMMC1_CMD", "SDMMC1_D0", "SDMMC1_D1", "SDMMC1_D2", "SDMMC1_D3"],
+      "boot_select_pins": ["BOOT0", "BOOT1", "BOOT2", "BOOT3"],
+      "dts_node": "sdmmc1",
+      "managed_by": "ROM + TF-A + kernel",
+      "ds_ref": "DS14284 sec 3.8, Table 4/5/6, p16-19"
+    },
+    "bsec": {
+      "block": "BSEC - OTP fuse & boot/security control",
+      "why": "Holds the boot-mode and security configuration OTP read by the ROM code; reserved to the boot/trusted CPU (3.47). Powered from VDDA18AON.",
+      "signals": [],
+      "internal": true,
+      "dts_node": "bsec",
+      "managed_by": "ROM + TF-A (kernel sees efuse node)",
+      "ds_ref": "DS14284 sec 3.47, p35"
+    },
+    "stgen": {
+      "block": "STGEN - system time generator (A35 generic-timer base)",
+      "why": "Provides the 64-bit time base for all Cortex-A35 generic timers; initialized early by TF-A (3.49 / 3.48.8). Without it the A35 timer/scheduler does not advance.",
+      "signals": [],
+      "internal": true,
+      "dts_node": "(TF-A firmware - not a kernel node)",
+      "managed_by": "TF-A (firmware)",
+      "ds_ref": "DS14284 sec 3.49, p38"
+    },
+    "intc": {
+      "block": "GIC - generic interrupt controller",
+      "why": "The Cortex-A35 cluster interrupt controller (3.1.2.9); configured by TF-A. No GIC = no interrupts for the boot software.",
+      "signals": [],
+      "internal": true,
+      "dts_node": "intc",
+      "managed_by": "kernel + TF-A",
+      "ds_ref": "DS14284 sec 3.1.2.9, p14"
+    },
+    "rifsc": {
+      "block": "RIFSC - resource isolation framework (peripheral firewall)",
+      "why": "TF-A/OP-TEE must program RIFSC to grant the boot software access to peripherals; an unconfigured RIF leaves IPs inaccessible (3.11). Most peripheral nodes sit on the rifsc bus in the DTS.",
+      "signals": [],
+      "internal": true,
+      "dts_node": "rifsc",
+      "managed_by": "TF-A/OP-TEE (kernel sees the bus)",
+      "ds_ref": "DS14284 sec 3.11, p21"
+    },
+    "risaf": {
+      "block": "RISAF - resource isolation for memory (DDR/memory firewall)",
+      "why": "Guards DRAM and memory regions; TF-A configures RISAF so the boot stages and OS can access DDR (3.11). Includes on-the-fly DDR encryption (DDRMCE).",
+      "signals": [],
+      "internal": true,
+      "dts_node": "risaf1 / risaf4",
+      "managed_by": "TF-A/OP-TEE",
+      "ds_ref": "DS14284 sec 3.11, p21"
+    },
+    "syscfg": {
+      "block": "SYSCFG - system configuration",
+      "why": "System/pin/SRAM and interconnect configuration used during early boot (block diagram p12, RIF list p21).",
+      "signals": [],
+      "internal": true,
+      "dts_node": "syscfg",
+      "managed_by": "kernel + TF-A",
+      "ds_ref": "DS14284 p12/p21"
+    },
+    "tamp": {
+      "block": "TAMP - tamper & backup registers",
+      "why": "Backup registers in the VSW/VBAT domain carry boot/secure state across reset; the boot chain reads/writes them (3.51). Anti-tamper inputs are optional.",
+      "signals": [],
+      "internal": true,
+      "optional_signals": ["TAMP_IN1..8", "TAMP_OUT1..8"],
+      "dts_node": "tamp",
+      "managed_by": "TF-A + kernel",
+      "ds_ref": "DS14284 sec 3.51, p39"
+    },
+    "scmi": {
+      "block": "SCMI / OP-TEE secure clock & regulator provider",
+      "why": "On STM32MP25 the kernel obtains clocks and regulators (incl. CPU/DDR rails, ultimately the external PMIC e.g. STPMIC2) through SCMI to the secure world. If the secure provider is absent the kernel cannot bring up any clocked peripheral.",
+      "signals": [],
+      "internal": true,
+      "dts_node": "scmi (scmi_clk / scmi_regu / scmi_voltd)",
+      "managed_by": "OP-TEE (secure firmware)",
+      "ds_ref": "DS14284 sec 3.9/3.10 (PMIC control), p19-21"
+    }
+  },
+  "recommended_not_strictly_mandatory": {
+    "usart2": {
+      "block": "USART2 - default debug/boot console (EV1)",
+      "why": "Not required for the SoC to boot, but it is the EV1 default serial console; without it the boot proceeds blind (no log/recovery).",
+      "signals": ["USART2_TX", "USART2_RX"],
+      "dts_node": "usart2"
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "description": "STM32MP257F-EV1 (MB1936 rev D-02) 板上外部 IC 對照：周邊 instance ↔ IC ↔ Device Tree binding。無外部 IC 的周邊（純 SoC 內部）不列。ic 欄進 plan；compatible/binding_doc 供 lookup_binding 與 DTS 產生。",
+  "sources": {
+    "schematics": "mb1936-schematics.pdf (MB1936, rev D-02, 21-MAY-25)",
+    "board_dts": "https://github.com/STMicroelectronics/linux/blob/v6.6-stm32mp/arch/arm64/boot/dts/st/stm32mp257f-ev1.dts",
+    "bindings_tree": "https://github.com/STMicroelectronics/linux/tree/v6.6-stm32mp/Documentation/devicetree/bindings"
+  },
+  "components": {
+    "ETH1": {
+      "ic": "RTL8211F-CG",
+      "role": "RGMII Gigabit Ethernet PHY，位址 0x04",
+      "compatible": "ethernet-phy-id001c.c916",
+      "binding_doc": "net/ethernet-phy.yaml",
+      "source": "schematics sheet 7 (U39, PHY AD[2:0]=100)；board_dts &eth1/mdio phy reg=<4>, phy-mode=rgmii-id",
+      "notes": "RJ45 含磁性元件（RJ45_48F-01GYDXNL）；MAC 端 binding 見 net/stm32-dwmac.yaml"
+    },
+    "ETH2": {
+      "ic": "RTL8211F-CG",
+      "role": "RGMII Gigabit Ethernet PHY，位址 0x01",
+      "compatible": "ethernet-phy-id001c.c916",
+      "binding_doc": "net/ethernet-phy.yaml",
+      "source": "schematics sheet 8 (U38, PHY AD[2:0]=001)；board_dts &eth2/mdio phy reg=<1>, phy-mode=rgmii-id",
+      "notes": "MAC 端 binding 見 net/stm32-dwmac.yaml"
+    },
+    "ETH3": {
+      "ic": "RTL8211F-CG",
+      "role": "RGMII Gigabit Ethernet PHY，位址 0x05（MDIO 掛在 ETH1 的 MDC/MDIO 匯流排）",
+      "compatible": "ethernet-phy-id001c.c916",
+      "binding_doc": "net/ethernet-phy.yaml",
+      "source": "schematics sheet 9 (U40, PHY AD[2:0]=101；MDIO/MDC 接 ETH1.MDIO/ETH1.MDC)",
+      "notes": "官方 v6.6 EV1 DT 未啟用 ETH3；啟用時 PHY 節點要放在 eth1 的 mdio 下"
+    },
+    "FDCAN1": {
+      "ic": "MCP2562FD",
+      "role": "CAN FD 收發器（U23，接 DB9）",
+      "compatible": null,
+      "binding_doc": "net/can/bosch,m_can.yaml",
+      "source": "schematics sheet 10 (U23 MCP2562FDT-H/SN)",
+      "notes": "傳統收發器無專屬 DT 節點；控制器為 bosch m_can。需要時可用 phy/can-transceiver 表示"
+    },
+    "FDCAN2": {
+      "ic": "MCP2562FD",
+      "role": "CAN FD 收發器（U31，接 DB9）",
+      "compatible": null,
+      "binding_doc": "net/can/bosch,m_can.yaml",
+      "source": "schematics sheet 10 (U31 MCP2562FDT-H/SN)",
+      "notes": "同 FDCAN1"
+    },
+    "SDMMC2": {
+      "ic": "THGBMTG5D1LBAIL",
+      "role": "eMMC（Kioxia/Toshiba，8-bit HS200，U24）",
+      "compatible": "mmc-card",
+      "binding_doc": "mmc/mmc-card.yaml",
+      "source": "schematics sheet 13 (U24)；board_dts &sdmmc2 8-bit no-sd no-sdio non-removable",
+      "notes": "控制器 binding 見 mmc/arm,pl18x.yaml（st,stm32-sdmmc2 variant）"
+    },
+    "USBH": {
+      "ic": "USB2514B-AEZC",
+      "role": "USB 2.0 4-port Hub（U34；上行接 USBH_HS，下行 2 埠 USB-A、1 埠 mini-PCIe）",
+      "compatible": "usb424,2514",
+      "binding_doc": "usb/usb-device.yaml",
+      "source": "schematics sheet 12 (U34)；board_dts &usbh_ehci 下 hub@1 compatible \"usb424,2514\"",
+      "notes": "usb424 = Microchip/SMSC 的 USB vendor id 0x0424"
+    },
+    "USART2": {
+      "ic": "STLINK-V3EC",
+      "role": "板載除錯器的 Virtual COM Port（console）",
+      "compatible": null,
+      "binding_doc": null,
+      "source": "schematics sheet 18 (STLK_VCP1_RX/TX ↔ USART2_TX/RX)",
+      "notes": "橋接晶片，不需 DT 節點；USART2 控制器 binding 見 serial/st,stm32-uart.yaml"
+    },
+    "I2C7": {
+      "ic": "STPMIC25",
+      "role": "電源管理 PMIC（secure world / OP-TEE 持有）",
+      "compatible": null,
+      "binding_doc": null,
+      "source": "schematics sheet 4 (Power PMIC，I2C7.SDA/SCL)；board_dts 由 SCMI regulators 呈現，kernel 不直連",
+      "notes": "reserve_only 周邊：不會出現在 kernel plan，此條目僅供文件化"
+    },
+    "OCTOSPIM_P1": {
+      "ic": "MX25L51245GXDI",
+      "role": "512Mb QSPI NOR flash（U22，U-Boot/bootloader 持有）",
+      "compatible": "jedec,spi-nor",
+      "binding_doc": "mtd/jedec,spi-nor.yaml",
+      "source": "schematics sheet 14 (U22 MX25L51245GXDI)",
+      "notes": "reserve_only 周邊：不會出現在 kernel plan，此條目僅供文件化"
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "soc": "STM32MP257F",
+  "description": "solver 讀取:boot_pin_locked = 開機必備周邊,pin_map 的 [signal, pin, af] 為固定常數 → 直接寫入解、將這些 pin 自所有其他訊號的候選域移除,且整個 peripheral instance 一併保留(不得拿去滿足一般周邊請求,例:『給我一組 I2C』不得選 I2C7、『給我一組 UART』不得選 USART2)。in_kernel_dt=false 的群組由 secure/bootloader 持有 → 腳位與 instance 只保留、不輸出到 plan。gpio_must_pins = 必須保持 GPIO,不可 pin assign。",
+  "boot_pin_locked": {
+    "policy": "fixed_pins_are_constants; reserve_peripheral_instance",
+    "pin_map_columns": ["signal", "pin", "af"],
+    "groups": {
+      "SDMMC1": {
+        "role": "SD-card boot (EV1 default)",
+        "in_kernel_dt": true,
+        "solver_action": "emit_fixed_assignment",
+        "dt_pin_groups": ["sdmmc1_b4_pins_a"],
+        "pin_source": "af_table unique solution",
+        "pin_map": [
+          ["SDMMC1_CK", "PE3", 10],
+          ["SDMMC1_CMD", "PE2", 10],
+          ["SDMMC1_D0", "PE4", 10],
+          ["SDMMC1_D1", "PE5", 10],
+          ["SDMMC1_D2", "PE0", 10],
+          ["SDMMC1_D3", "PE1", 10]
+        ]
+      },
+      "SDMMC2": {
+        "role": "eMMC boot (8-bit)",
+        "in_kernel_dt": true,
+        "solver_action": "emit_fixed_assignment",
+        "dt_pin_groups": ["sdmmc2_b4_pins_a", "sdmmc2_d47_pins_a"],
+        "pin_source": "af_table unique solution",
+        "pin_map": [
+          ["SDMMC2_CK", "PE14", 12],
+          ["SDMMC2_CMD", "PE15", 12],
+          ["SDMMC2_D0", "PE13", 12],
+          ["SDMMC2_D1", "PE11", 12],
+          ["SDMMC2_D2", "PE8", 12],
+          ["SDMMC2_D3", "PE12", 12],
+          ["SDMMC2_D4", "PE10", 12],
+          ["SDMMC2_D5", "PE9", 12],
+          ["SDMMC2_D6", "PE6", 12],
+          ["SDMMC2_D7", "PE7", 12]
+        ]
+      },
+      "OCTOSPIM_P1": {
+        "role": "serial NOR boot",
+        "owner": "U-Boot / OP-TEE (ommanager)",
+        "in_kernel_dt": false,
+        "solver_action": "reserve_only",
+        "dt_pin_groups": ["ospi_port1_clk_pins_a", "ospi_port1_io03_pins_a", "ospi_port1_cs0_pins_a"],
+        "pin_source": "af_table unique solution",
+        "pin_map": [
+          ["OCTOSPIM_P1_CLK", "PD0", 10],
+          ["OCTOSPIM_P1_IO0", "PD4", 10],
+          ["OCTOSPIM_P1_IO1", "PD5", 10],
+          ["OCTOSPIM_P1_IO2", "PD6", 10],
+          ["OCTOSPIM_P1_IO3", "PD7", 10],
+          ["OCTOSPIM_P1_NCS1", "PD3", 10]
+        ]
+      },
+      "USART2": {
+        "role": "console (all boot stages) + ROM UART serial boot",
+        "in_kernel_dt": true,
+        "solver_action": "emit_fixed_assignment",
+        "dt_pin_groups": ["usart2_pins_a"],
+        "pin_source": "stm32mp25-pinctrl.dtsi usart2_pins_a (af_table 多候選,取官方展開)",
+        "pin_map": [
+          ["USART2_TX", "PA4", 6],
+          ["USART2_RX", "PA8", 8]
+        ]
+      },
+      "I2C7": {
+        "role": "PMIC STPMIC25 control bus (TF-A BL2 拉電軌 / OP-TEE runtime 持有)",
+        "owner": "TF-A BL2 / OP-TEE (secure)",
+        "in_kernel_dt": false,
+        "solver_action": "reserve_only",
+        "dt_pin_groups": ["i2c7_pins_a"],
+        "pin_source": "stm32mp25-pinctrl.dtsi i2c7_pins_a (af_table 多候選,取官方展開)",
+        "pin_map": [
+          ["I2C7_SCL", "PD15", 10],
+          ["I2C7_SDA", "PD14", 10]
+        ]
+      }
+    }
+  },
+  "gpio_must_pins": {
+    "action": "keep_as_gpio; remove_from_candidate_domain",
+    "pins": ["PA0", "PD2", "PD9", "PG14", "PG15", "PG6", "PH5", "PI0", "PI13", "PI5", "PI7", "PI8", "PJ7", "PJ8", "PJ9"],
+    "silicon_fixed": { "PA0": "WKUP1", "PI8": "TAMP_IN" }
+  }
+}
