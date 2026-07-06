@@ -756,9 +756,10 @@ function buildValidatorDownloadBtn() {
 // 「是」在請求被接受前就失敗（409／網路錯誤）時解鎖，讓使用者可重試。
 function buildDtsAsk(block, planFp) {
   const wrap = el("div", "dts-ask");
-  wrap.appendChild(el("p", "ask",
-    "要接著產生 kernel DTS patch 嗎？（定位 → 生成 → 驗證 → 修復，" +
-    "約 1–5 分鐘，必要時會呼叫 LLM）"));
+  // 主問句與流程提示拆成兩行（提示縮小、行距獨立調整，見 index.html .dts-ask 樣式）
+  wrap.appendChild(el("p", "ask", "要接著產生 kernel DTS patch 嗎？"));
+  wrap.appendChild(el("p", "ask-sub",
+    "定位 → 生成 → 驗證 → 修復，約 1–5 分鐘，必要時會呼叫 LLM"));
   const opts = el("div", "opts");
   const mk = (label, note) => {
     const b = el("button", "opt");
@@ -870,13 +871,12 @@ function buildDtsCard(res) {
       pers.forEach((p) => {
         ul.appendChild(el("li", "mv",
           `<b>${escapeHtml(p.peripheral)}</b> — ${escapeHtml(p.action)}` +
-          (p.lm_used ? "（LLM）" : "（deterministic）") +
           (p.cache_hit ? "［cache］" : "")));
       });
       card.appendChild(ul);
     }
     card.appendChild(el("p", "note",
-      "產物：generated.patch（可直接給 Yocto SRC_URI）＋ stm32mp257f-ev1.generated.dts" +
+      "產物：generated.patch ＋ stm32mp257f-ev1.generated.dts" +
       "＋各項 report——由「⤓ DTS patch 產物」下載。"));
     card.appendChild(buildDtsDownloadBtn());
     return card;

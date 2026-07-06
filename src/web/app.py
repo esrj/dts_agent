@@ -362,6 +362,13 @@ def _dts_worker(board: str, fp: str, snapshot_csv: str):
                                 if res.art is not None else []),
             "summary": summarize(res),
         }
+        # 全程未呼叫 LLM（純 deterministic 路徑，通常 <1 秒就跑完）時，補一段
+        # 等待再回報——使用者要求生成過程至少呈現約 30 秒的進行狀態，避免
+        # 「按下去瞬間完成」的體感落差。有呼叫 LLM（含修復輪）就不加。
+        used_llm = (any(p.get("lm_used") for p in result["peripherals"])
+                    or bool(res.repair_usage))
+        if not used_llm:
+            time.sleep(30)
     except Exception as exc:                          # pipeline 例外（缺 key、壞資料…）
         result = {"passed": False, "stop_reason": "exception", "error": str(exc),
                   "ask_user": [], "repair_rounds": 0, "compiled": False,
