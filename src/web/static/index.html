@@ -287,15 +287,17 @@
     .icon-btn.dts-dl { margin-top: .6rem; line-height: 1.6; }
 
     /* ---- DTS 生成完成：無外框，只保留綠色標題 ---- */
-    .dts-done { margin-top: .3rem; }
+    .dts-done { margin-top: 2rem; }
     .dts-done-head { margin: 0 0 .1rem; font-weight: 600; color: var(--ok); }
     .dts-done ul { margin: .35rem 0 0; padding-left: 1.2rem; }
     .dts-done li.mv { font-size: .85rem; color: var(--text-soft); line-height: 1.55; }
     .dts-done li.mv b { color: var(--text); }
 
+    /* 產生的 device tree 介紹句：與上方 peripheral 清單拉開一點間距 */
+    .dts-done .dts-intro { margin-top: .7rem; }
     /* 產物檔展開：toggle 按鈕沿用 .opt（同「是，產生 DTS patch」），
        程式碼區塊掛在按鈕下方 */
-    .dts-files { display: flex; flex-direction: column; gap: .6rem; margin-top: .7rem; }
+    .dts-files { display: flex; flex-direction: column; gap: .6rem; margin-top: .5rem; }
     .dts-file { display: flex; flex-direction: column; gap: .5rem; }
 
     /* ChatGPT 風格程式碼區塊：標題列（檔名＋複製）＋行號 gutter＋程式碼。

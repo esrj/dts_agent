@@ -865,6 +865,8 @@ function buildDtsCard(res) {
     done.appendChild(el("p", "dts-done-head",
       `✓ DTS patch 生成完成（修復 ${res.repair_rounds} 輪` +
       (res.compiled ? "，dtc 編譯通過" : "，未編譯——本機無 dtc/gcc") + "）"));
+    // 完成說明：緊接標題（下載鈕在區塊最下方）
+    done.appendChild(el("p", "note", "完整產物（含各項 report）由下方按鈕下載。"));
     const pers = res.peripherals || [];
     if (pers.length) {
       const ul = el("ul");
@@ -875,13 +877,16 @@ function buildDtsCard(res) {
       });
       done.appendChild(ul);
     }
-    // 兩個產物檔的行內展開檢視（按鈕樣式同「是，產生 DTS patch」；
-    // 點擊展開程式碼區塊、再點收合）
+    // 產生的 device tree 介紹 + 兩個產物檔的行內展開檢視（按鈕樣式同
+    // 「是，產生 DTS patch」；點擊展開程式碼區塊、再點收合）
+    done.appendChild(el("p", "note dts-intro",
+      "以下是根據你的需求週邊所產生、對應的 device tree —— " +
+      "generated.patch 為 kernel DT patch，.dts 為套用後的完整 device tree，" +
+      "點開按鈕即可檢視完整內容："));
     const files = el("div", "dts-files");
     files.appendChild(buildDtsFileToggle("generated.patch"));
     files.appendChild(buildDtsFileToggle("stm32mp257f-ev1.generated.dts"));
     done.appendChild(files);
-    done.appendChild(el("p", "note", "完整產物（含各項 report）由下方按鈕下載。"));
     done.appendChild(buildDtsDownloadBtn());
     return done;
   }
