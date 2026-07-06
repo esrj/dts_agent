@@ -12,7 +12,7 @@
 【第一段】pin-mux 求解（src/solver + orchestrator + service）
    │  plan 表格顯示（＋CubeMX 自動驗證徽章）
    ▼
-使用者確認 ──「產生 DTS patch」按鈕──►【第二段】DTS patch pipeline（src/patch_agent）
+使用者確認 ──行內反問「要產生 DTS patch 嗎？」點「是」──►【第二段】DTS patch pipeline（src/patch_agent）
    │ 否：停在 plan.csv                     │ 定位→生成→結構/dtc 編譯驗證→修復(≤3輪)
    ▼                                      ▼
 output/plan/plan.csv                 output/generated/generated.patch
@@ -25,7 +25,7 @@ output/plan/plan.csv                 output/generated/generated.patch
 venv/bin/python src/web/app.py          # web UI：http://127.0.0.1:5001
 ```
 
-在輸入框描述需求 → 得到 plan 表格 → 點「⚙ 產生 DTS patch」→
+在輸入框描述需求 → 得到 plan 表格 → 表格下方反問「要接著產生 kernel DTS patch 嗎？」點「是」→
 下載 `generated.patch`（可直接給 Yocto：`SRC_URI += "file://generated.patch"`）。
 
 CLI 入口：

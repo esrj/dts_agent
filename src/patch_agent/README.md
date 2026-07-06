@@ -18,7 +18,7 @@
 
 ## 使用方式
 
-Web：第一段 plan 表格 →「⚙ 產生 DTS patch」按鈕（`/api/dts/generate`，
+Web：第一段 plan 表格 → 表格下方的是/否行內反問（`/api/dts/generate`，
 背景執行、前端輪詢）。CLI（於專案根目錄）：
 
 ```bash

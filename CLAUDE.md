@@ -52,7 +52,7 @@ PYTHONPATH=src venv/bin/python -m patch_agent dry-run # 印 LLM prompt，不呼�
 | `src/validator/` | CubeMX 官方驗證：script_gen → runner → report（csv diff 唯一真相）+ DT 生成 |
 | `src/patch_agent/` | 第二段：m5 定位（無 LLM）→ m6 生成（LLM＋deterministic 渲染）→ m7 結構/編譯驗證 → m8 修復迴圈（≤3 輪）；路徑集中 `config.py` |
 | `src/llm_provider/` | 多 provider 抽象（`llm_modules.ini` 選型，兩段共用）；parse 的 IntentIR prompt |
-| `src/web/` | Flask + 前端（聊天、plan 表格、建議卡片、clarify 按鈕、下載、產生 DTS 按鈕與輪詢） |
+| `src/web/` | Flask + 前端（聊天、plan 表格、建議卡片、clarify 按鈕、下載、產生 DTS 行內反問（是/否）與輪詢） |
 | `data/<board>/` | 知識庫：`base/`（手工核心）、`dts/`（官方 DTS 解析）、`bindings/`（IC 知識）、`cache/`（可拋棄）、`baseline/`＋`dts_generation/`（第二段專用） |
 | `output/` | 執行期產物（覆寫制、gitignore 排除）：`plan/`（交棒點）、`validator/`、`generated/` |
 | `tools/` | 第二段 data/ 重建工具（平常不需執行） |

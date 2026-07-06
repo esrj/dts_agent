@@ -659,19 +659,11 @@ function buildResultBlock(rows, watchFp, planFp) {
   dl.appendChild(copyBtn);
   const vBtn = buildValidatorDownloadBtn();
   dl.appendChild(vBtn);
-  if (dtsAvailable) {
-    const dtsBtn = el("button", "icon-btn", "⚙ 產生 DTS patch");
-    if (planFp) {
-      dtsBtn.title = "以這份 plan 產生 kernel DTS patch（結構驗證＋dtc 編譯，" +
-                     "需要 LLM 的週邊會呼叫 API，約 1–5 分鐘）";
-      dtsBtn.addEventListener("click", () => startDtsGeneration(block, dtsBtn, planFp));
-    } else {
-      dtsBtn.disabled = true;
-      dtsBtn.title = "此結果缺 plan 指紋（舊版回應）——請重新求解後再產生 DTS";
-    }
-    dl.appendChild(dtsBtn);
-  }
   block.appendChild(dl);
+
+  // 產生 DTS 的行內反問（是/否，clarify 同款 UI）：僅該板具備第二段知識庫
+  // 且這份結果帶 plan 指紋時顯示。
+  if (dtsAvailable && planFp) block.appendChild(buildDtsAsk(block, planFp));
 
   // 每個新 plan 伺服器都會自動排入背景 CubeMX 驗證：這裡輪詢直到「result 的
   // 指紋 == 這份 plan 的指紋」，把驗證卡片掛在表格下方、亮起下載鈕。
@@ -758,13 +750,46 @@ function buildValidatorDownloadBtn() {
   return btn;
 }
 
-// 「產生 DTS」：確認 → POST /api/dts/generate（只帶指紋，rows 一律由伺服器
-// 保存的解供給——防偽）→ 輪詢 /api/dts/status → 掛結果卡片與下載。
-async function startDtsGeneration(block, btn, planFp) {
-  if (!confirm("將以目前這份 plan 產生 kernel DTS patch。\n" +
-               "過程包含定位、生成（必要時呼叫 LLM）、結構與編譯驗證，" +
-               "約需 1–5 分鐘。要繼續嗎？")) return;
-  btn.disabled = true;
+// 產生 DTS 的行內確認——與 clarify（指定 pin 反問）同一套 UI，取代舊的
+// 工具列按鈕＋confirm() 彈窗：點「是」直接開跑、點「否」停在 plan 階段。
+// 與 clarify 相同的互動慣例：選後鎖定整組、被選項標 .chosen、留在對話紀錄；
+// 「是」在請求被接受前就失敗（409／網路錯誤）時解鎖，讓使用者可重試。
+function buildDtsAsk(block, planFp) {
+  const wrap = el("div", "dts-ask");
+  wrap.appendChild(el("p", "ask",
+    "要接著產生 kernel DTS patch 嗎？（定位 → 生成 → 驗證 → 修復，" +
+    "約 1–5 分鐘，必要時會呼叫 LLM）"));
+  const opts = el("div", "opts");
+  const mk = (label, note) => {
+    const b = el("button", "opt");
+    b.appendChild(el("span", "opt-label", label));
+    b.appendChild(el("span", "opt-note", note));
+    opts.appendChild(b);
+    return b;
+  };
+  const yes = mk("是，產生 DTS patch", "以這份 plan 繼續（伺服器只認最新的解）");
+  const no = mk("否，先到這裡", "停在 plan 階段；之後重新求解可再次選擇");
+  const lock = (chosen) => {
+    opts.querySelectorAll("button").forEach((b) => (b.disabled = true));
+    chosen.classList.add("chosen");
+  };
+  const unlock = () => opts.querySelectorAll("button").forEach((b) => {
+    b.disabled = false;
+    b.classList.remove("chosen");
+  });
+  yes.addEventListener("click", () => {
+    lock(yes);
+    runDtsGeneration(block, planFp, unlock);
+  });
+  no.addEventListener("click", () => lock(no));
+  wrap.appendChild(opts);
+  return wrap;
+}
+
+// 開跑 DTS 生成：POST /api/dts/generate（只帶指紋，rows 一律由伺服器保存的
+// 解供給——防偽）→ 輪詢 /api/dts/status → 掛結果卡片與下載。
+// onEarlyFail：請求未被接受（409／網路錯誤）時呼叫，用來解鎖反問按鈕。
+async function runDtsGeneration(block, planFp, onEarlyFail) {
   let d;
   try {
     const r = await fetch("/api/dts/generate", {
@@ -778,7 +803,7 @@ async function startDtsGeneration(block, btn, planFp) {
       const p = el("p", "note");
       p.textContent = "無法產生 DTS：" + (d.error || "HTTP " + r.status);
       block.appendChild(p);
-      btn.disabled = false;
+      if (onEarlyFail) onEarlyFail();
       scrollBottom();
       return;
     }
@@ -786,7 +811,7 @@ async function startDtsGeneration(block, btn, planFp) {
     const p = el("p", "note");
     p.textContent = "請求失敗：" + e.message;   // textContent：勿當 HTML
     block.appendChild(p);
-    btn.disabled = false;
+    if (onEarlyFail) onEarlyFail();
     scrollBottom();
     return;
   }
@@ -806,7 +831,6 @@ async function startDtsGeneration(block, btn, planFp) {
       if (!s.running && s.result && s.result.fingerprint === planFp) {
         line.remove();
         block.appendChild(buildDtsCard(s.result));
-        btn.disabled = false;
         scrollBottom();
         return;
       }
@@ -814,21 +838,18 @@ async function startDtsGeneration(block, btn, planFp) {
         line.remove();
         const p = el("p", "note");
         p.textContent = s.result
-          ? "生成結果屬於另一份 plan——請重試一次。"
+          ? "生成結果屬於另一份 plan——請重新求解後再試一次。"
           : "伺服器可能已重啟，這次生成的狀態遺失——請重新求解後再產生一次。";
         block.appendChild(p);
-        btn.disabled = false;
         return;
       }
     } catch (e) { /* 網路抖動：下一輪再試 */ }
   }
-  // 逾時（15 分鐘）：停止輪詢，但附上常駐下載鈕——否則訊息指到的按鈕
-  // 只存在於成功卡片裡，永遠不會出現（逆向驗證發現的死路）。
+  // 逾時（15 分鐘）：停止輪詢，但附上常駐下載鈕——完成後仍可取得產物。
   line.querySelector(".loading-label").textContent =
     "（生成仍在進行或狀態已遺失——完成後可用下方按鈕下載產物）";
   line.querySelector(".spinner").remove();
   block.appendChild(buildDtsDownloadBtn());
-  btn.disabled = false;
 }
 
 // DTS 生成結果卡片（樣式重用 CubeMX 的 val-card）。三種收尾：
