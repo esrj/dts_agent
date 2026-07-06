@@ -286,6 +286,55 @@
     /* 產物下載鈕（生成結果卡片內／逾時後）：與上一行說明拉開間距 */
     .icon-btn.dts-dl { margin-top: .6rem; line-height: 1.6; }
 
+    /* ---- DTS 生成完成：無外框，只保留綠色標題 ---- */
+    .dts-done { margin-top: .3rem; }
+    .dts-done-head { margin: 0 0 .1rem; font-weight: 600; color: var(--ok); }
+    .dts-done ul { margin: .35rem 0 0; padding-left: 1.2rem; }
+    .dts-done li.mv { font-size: .85rem; color: var(--text-soft); line-height: 1.55; }
+    .dts-done li.mv b { color: var(--text); }
+
+    /* 產物檔展開：toggle 按鈕沿用 .opt（同「是，產生 DTS patch」），
+       程式碼區塊掛在按鈕下方 */
+    .dts-files { display: flex; flex-direction: column; gap: .6rem; margin-top: .7rem; }
+    .dts-file { display: flex; flex-direction: column; gap: .5rem; }
+
+    /* ChatGPT 風格程式碼區塊：標題列（檔名＋複製）＋行號 gutter＋程式碼。
+       不設高度上限／垂直捲軸——內容多就讓整頁往下延伸；僅超長行才水平捲動。 */
+    .code-block {
+      border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+      background: var(--bg-soft);
+    }
+    .code-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .5rem; padding: .4rem .5rem .4rem .75rem;
+      border-bottom: 1px solid var(--border); background: var(--bg);
+    }
+    .code-name {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .78rem; color: var(--text-soft); overflow-wrap: anywhere;
+    }
+    .code-copy {
+      flex: 0 0 auto; font: inherit; font-size: .76rem; cursor: pointer;
+      padding: .22rem .6rem; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg-soft); color: var(--text-soft);
+      transition: border-color .15s, color .15s;
+    }
+    .code-copy:hover { border-color: var(--accent); color: var(--text); }
+    .code-body { display: flex; align-items: stretch; }
+    /* gutter 與 code 必須同 font-size/line-height/垂直 padding → 行號對齊程式碼 */
+    .code-gutter, .code-pre {
+      margin: 0; padding-top: .7rem; padding-bottom: .7rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .8rem; line-height: 1.55; white-space: pre; tab-size: 4;
+    }
+    .code-gutter {
+      flex: 0 0 auto; padding-left: .7rem; padding-right: .7rem;
+      text-align: right; color: var(--text-soft); opacity: .6;
+      user-select: none; border-right: 1px solid var(--border);
+    }
+    .code-scroll { flex: 1 1 auto; overflow-x: auto; }
+    .code-pre { padding-left: .85rem; padding-right: .85rem; color: var(--text); }
+
     /* ---- result block: table + action buttons (download / copy) ---- */
     .result-block { margin-top: .85rem; }
     .icon-btn {

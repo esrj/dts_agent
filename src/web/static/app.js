@@ -853,16 +853,16 @@ async function runDtsGeneration(block, planFp, onEarlyFail) {
   block.appendChild(buildDtsDownloadBtn());
 }
 
-// DTS 生成結果卡片（樣式重用 CubeMX 的 val-card）。三種收尾：
-// passed → 綠卡＋產物下載；needs-human（locator_blocked / needs_info /
-// boot_conflict）→ 黃卡列出待補資訊；其他 → 紅卡附摘要。
+// DTS 生成結果卡片。三種收尾：
+// passed → 無外框、綠色標題＋產物展開／下載；needs-human（locator_blocked /
+// needs_info / boot_conflict）→ 黃卡列出待補資訊；其他 → 紅卡附摘要。
 function buildDtsCard(res) {
   const NEEDS_HUMAN = ["locator_blocked", "needs_info", "boot_conflict"];
-  const card = el("div", res.passed ? "val-card pass"
-    : (NEEDS_HUMAN.includes(res.stop_reason) ? "val-card err" : "val-card fail"));
 
+  // 成功：不用 val-card 綠框，只保留綠色標題文字。
   if (res.passed) {
-    card.appendChild(el("p", "val-head",
+    const done = el("div", "dts-done");
+    done.appendChild(el("p", "dts-done-head",
       `✓ DTS patch 生成完成（修復 ${res.repair_rounds} 輪` +
       (res.compiled ? "，dtc 編譯通過" : "，未編譯——本機無 dtc/gcc") + "）"));
     const pers = res.peripherals || [];
@@ -873,15 +873,21 @@ function buildDtsCard(res) {
           `<b>${escapeHtml(p.peripheral)}</b> — ${escapeHtml(p.action)}` +
           (p.cache_hit ? "［cache］" : "")));
       });
-      card.appendChild(ul);
+      done.appendChild(ul);
     }
-    card.appendChild(el("p", "note",
-      "產物：generated.patch ＋ stm32mp257f-ev1.generated.dts" +
-      "＋各項 report——由「⤓ DTS patch 產物」下載。"));
-    card.appendChild(buildDtsDownloadBtn());
-    return card;
+    // 兩個產物檔的行內展開檢視（按鈕樣式同「是，產生 DTS patch」；
+    // 點擊展開程式碼區塊、再點收合）
+    const files = el("div", "dts-files");
+    files.appendChild(buildDtsFileToggle("generated.patch"));
+    files.appendChild(buildDtsFileToggle("stm32mp257f-ev1.generated.dts"));
+    done.appendChild(files);
+    done.appendChild(el("p", "note", "完整產物（含各項 report）由下方按鈕下載。"));
+    done.appendChild(buildDtsDownloadBtn());
+    return done;
   }
 
+  const card = el("div",
+    NEEDS_HUMAN.includes(res.stop_reason) ? "val-card err" : "val-card fail");
   if (NEEDS_HUMAN.includes(res.stop_reason)) {
     card.appendChild(el("p", "val-head",
       `⚠ 需要人工介入（${escapeHtml(res.stop_reason)}）`));
@@ -909,6 +915,87 @@ function buildDtsCard(res) {
     card.appendChild(pre);
   }
   return card;
+}
+
+// 單一產物檔的行內展開檢視：按鈕（樣式同「是，產生 DTS patch」的 .opt）＋
+// 收合的程式碼區塊。點擊切換展開/收合；內容懶載入一次（fetch 純文字）。
+function buildDtsFileToggle(name) {
+  const wrap = el("div", "dts-file");
+  const btn = el("button", "opt dts-view");
+  btn.appendChild(el("span", "opt-label", name));
+  btn.appendChild(el("span", "opt-note", "點擊展開／收合完整內容"));
+  const holder = el("div", "code-holder");
+  holder.hidden = true;
+  let loaded = false;
+  btn.addEventListener("click", async () => {
+    if (!holder.hidden) {                         // 已展開 → 收合
+      holder.hidden = true;
+      btn.classList.remove("chosen");
+      return;
+    }
+    if (!loaded) {                                // 首次展開先載入內容
+      btn.disabled = true;
+      try {
+        const r = await fetch("/api/dts/file?name=" + encodeURIComponent(name));
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        holder.appendChild(buildCodeBlock(name, await r.text()));
+      } catch (e) {
+        const p = el("p", "note");
+        p.textContent = "讀取失敗：" + e.message;   // textContent：勿當 HTML
+        holder.appendChild(p);
+      } finally {
+        btn.disabled = false;
+        loaded = true;
+      }
+    }
+    holder.hidden = false;
+    btn.classList.add("chosen");
+    scrollBottom();
+  });
+  wrap.appendChild(btn);
+  wrap.appendChild(holder);
+  return wrap;
+}
+
+// ChatGPT 風格程式碼區塊：標題列（檔名＋複製鈕）＋行號 gutter＋程式碼。
+// 不設高度上限：內容多就讓整頁往下延伸（無區塊內垂直捲軸）；只有超長行才
+// 由 .code-scroll 水平捲動。行號與程式碼共用同一套字級/行高 → 逐行對齊。
+function buildCodeBlock(name, text) {
+  const block = el("div", "code-block");
+
+  const head = el("div", "code-head");
+  head.appendChild(el("span", "code-name", escapeHtml(name)));
+  const copy = el("button", "code-copy", "複製");
+  copy.addEventListener("click", () => copyText(text, copy, "複製"));
+  head.appendChild(copy);
+  block.appendChild(head);
+
+  const body = el("div", "code-body");
+  const shown = text.replace(/\n$/, "");          // 去掉單一尾端換行，免多一個空行號
+  const nlines = shown.split("\n").length;
+  const gutter = el("div", "code-gutter");
+  gutter.textContent = Array.from({ length: nlines }, (_, i) => i + 1).join("\n");
+  const scroll = el("div", "code-scroll");
+  const pre = el("pre", "code-pre");
+  pre.textContent = shown;                        // textContent：程式碼勿當 HTML
+  scroll.appendChild(pre);
+  body.appendChild(gutter);
+  body.appendChild(scroll);
+  block.appendChild(body);
+  return block;
+}
+
+// 複製純文字（複製整個檔案的原始內容），成功後短暫回饋。
+function copyText(text, btn, restore) {
+  const flash = () => {
+    btn.textContent = "✓ 已複製";
+    setTimeout(() => (btn.textContent = restore), 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(() => fallbackCopy(text, flash));
+  } else {
+    fallbackCopy(text, flash);
+  }
 }
 
 function buildDtsDownloadBtn() {

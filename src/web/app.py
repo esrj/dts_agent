@@ -451,6 +451,27 @@ def dts_status():
                    started_fingerprint=started_fp, result=result)
 
 
+@app.get("/api/dts/file")
+def dts_file():
+    """回傳單一產物檔的純文字內容（前端行內展開看程式碼用）。name 一律以
+    basename 比對白名單（只有 generated.patch 與生成的 .dts 可讀），杜絕路徑
+    穿越。無檔 → 404。"""
+    try:
+        from patch_agent import config as pconfig
+    except Exception:
+        return jsonify(error="DTS 功能不可用"), 404
+    allowed = {pconfig.GENERATED_PATCH.name: pconfig.GENERATED_PATCH,
+               pconfig.GENERATED_DTS.name: pconfig.GENERATED_DTS}
+    path = allowed.get(os.path.basename(request.args.get("name") or ""))
+    if path is None:
+        return jsonify(error="不允許的檔名"), 400
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return jsonify(error="檔案尚未生成"), 404
+    return Response(text, mimetype="text/plain; charset=utf-8")
+
+
 @app.get("/api/dts/download")
 def dts_download():
     """打包 output/generated/（generated.patch、*.generated.dts、各 report、
