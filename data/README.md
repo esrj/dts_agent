@@ -52,6 +52,9 @@ data/<board>/
 ic 欄留空、lookup_binding 回 no_ic / 現查）；`baseline/`、`dts_generation/`
 是**第二段（DTS patch）的選配檔**——缺夾時 plan 流程照常，只有「產生 DTS」
 功能不可用（web 依 `/api/dts/status` 的 available 決定是否顯示按鈕）。
+注意：第二段目前**單板**（`patch_agent/config.py` 的 `BOARD` 寫死
+stm32mp257f-ev1）——新板即使備齊這兩夾也要同步改 config，多板化見
+MERGE_PLAN §10.2。
 
 ## 為什麼這樣分類
 

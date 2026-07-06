@@ -10,8 +10,10 @@ eMMC, …). The file answers three questions per connection, deterministically:
   2. may the Patch Agent manage it (enable/disable via plan)  -> `manageable`
   3. what binding info is needed to enable it (IC compatible / reg / props)
 
-`manageable` is false when the node is boot-required (require.json) or
-board-pin-locked (boot sources). Everything comes from the DTS + require.json;
+`manageable` is false when the node is boot-required or board-pin-locked
+(boot sources), per data/<board>/dts_generation/boot_requirements.json
+(config.REQUIRE; the former patch-side require.json — NOT the solver's
+unrelated base/require.json). Everything comes from the DTS + that file;
 nothing is guessed.
 
 Run:  PYTHONPATH=src python3 tools/extract_fixed_connections.py

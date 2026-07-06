@@ -44,7 +44,7 @@ PYTHONPATH=src venv/bin/python -m patch_agent locate # 只定位，不用 LLM
 | `.env` | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` / `LOCAL_LM_API_KEY` |
 | `llm_modules.ini` | 各模組 LLM 選型：`[parse]`（需求解析）、`[orchestrator]`（對話編排）、`[dts_patch]`（DTS 生成/修復） |
 | STM32CubeMX | 選配——未安裝時 pin 驗證徽章顯示離線，其餘功能不受影響 |
-| `dtc`＋`gcc` | 選配（`brew install dtc`）——缺席時 DTS patch 跳過編譯驗證（結構檢查照跑） |
+| `dtc`＋`gcc` | 選配（`brew install dtc`）——**web 路徑**缺席時自動跳過編譯驗證（結構檢查照跑、回報 compiled=false）；**CLI** `patch_agent run` 不會自動跳過，需自行加 `--no-compile` |
 
 ## 目錄結構
 

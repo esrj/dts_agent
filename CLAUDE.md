@@ -63,5 +63,6 @@ PYTHONPATH=src venv/bin/python -m patch_agent dry-run # 印 LLM prompt，不呼�
   四個 gate 點與恢復方式見 PROJECT_OVERVIEW.md §6。
 - `STM32CUBEMX_PATH`：覆寫 CubeMX 執行檔位置；未安裝時 validator 回 error、
   DT 生成靜默跳過，不影響其他功能。
-- `dtc`／`gcc` 缺席時：第二段自動跳過編譯驗證（結構檢查照跑），
-  狀態回報 `compiled=false`。
+- `dtc`／`gcc` 缺席時：**web 路徑**自動跳過編譯驗證（結構檢查照跑），
+  狀態回報 `compiled=false`；**CLI** `patch_agent run` 不會自動跳過，
+  需自行加 `--no-compile`（否則編譯層 FileNotFoundError）。

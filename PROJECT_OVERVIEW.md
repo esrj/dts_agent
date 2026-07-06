@@ -148,7 +148,7 @@ DTS_agent/
 | `GET /api/validator/status` | 最近一次驗證結果摘要（result.json）＋ `running`（背景自動驗證進行中，前端輪詢用） |
 | `GET /api/validator/download` | 打包 output/validator/ 為 zip（遞迴含 devicetree/） |
 | `POST /api/dts/generate` | 第二段觸發：以**伺服器保存的最後一份 SAT plan** 產生 kernel DTS patch（client 只傳 fingerprint 指認畫面上的 plan，不一致回 409——防偽紅線延伸）；single-flight 背景執行 |
-| `GET /api/dts/status` | `{available, running, result}`——available=該板具備 baseline/＋dts_generation/；result 帶 fingerprint 對回它所根據的 plan |
+| `GET /api/dts/status` | `{available, running, result}`——available=該板具備 baseline/＋dts_generation/ **且等於 patch_agent/config.py 的 BOARD（現寫死 stm32mp257f-ev1；多板化見 MERGE_PLAN §10.2）**；result 帶 fingerprint 對回它所根據的 plan |
 | `GET /api/dts/download` | 打包 output/generated/ 為 zip（generated.patch、generated.dts、各 report） |
 
 **編排工具**（鎖定動作集，`src/orchestrator/tools.py`）：
@@ -169,9 +169,11 @@ DTS_agent/
 第一段（求解）產生兩組產物；第二段（`src/patch_agent/`）經同一顆 `output/`
 自動銜接，不再需要人工複製檔案：
 
-**`output/plan/plan.csv`**（+同內容的 plan.xlsx）——pin assignment 的正式輸出，
-也是第二段的唯一輸入。web 流程中由 `POST /api/dts/generate` 在觸發當下以
-**伺服器保存的解**覆寫落地（防偽），CLI 流程則由 `emit_plan`／`write_plan` 產生：
+**`output/plan/plan.csv`**——pin assignment 的正式輸出，也是第二段的唯一輸入
+（plan.xlsx 由 `write_plan`／`emit_plan(fmt=xlsx)` 另行產生，非每條路徑都更新）。
+web 流程中由 `POST /api/dts/generate` 在觸發當下以**伺服器保存的解**覆寫落地
+（防偽；同時在 output/generated/plan.used.csv 留一份 run 專屬快照供 pipeline
+讀取與溯源），CLI 流程則由 `emit_plan`／`write_plan` 產生：
 
 ```csv
 peripheral,signal,pin,af

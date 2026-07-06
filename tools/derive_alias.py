@@ -12,7 +12,13 @@ HOW it derives (no hard-coded guesses):
   3. For each peripheral in the CSVs, find the enabled node whose referenced
      groups cover the CSV's (pin, af) set. That node IS the alias.
 
-Output: data/<board>/peripheral_node_alias.json
+Output: data/<board>/dts_generation/peripheral_node_alias.json
+
+NOTE (merged repo): output/plan/plan.csv is now the LIVE solver output —
+every /api/solve overwrites it. Regenerating this alias map therefore
+depends on whatever was last solved; the committed file may contain
+entries derived from historical plans (e.g. I2C1) that a fresh run would
+drop. Diff before overwriting the committed knowledge file.
 """
 import re, csv, os, json, sys
 

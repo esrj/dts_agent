@@ -325,15 +325,29 @@ def _dts_files() -> list:
     return _validator_files(os.path.join(OUTPUT, "generated"))
 
 
-def _dts_worker(board: str, fp: str):
+def _dts_worker(board: str, fp: str, snapshot_csv: str):
     started = time.time()
     try:
         from patch_agent import config as pconfig
         from patch_agent.cli import _write_locator_reports, summarize
         from patch_agent.m8_repairer import run as m8_run
+        # 清掉上一輪 run 的產物檔（保留 llm_cache/ 與本輪的 plan.used.csv）：
+        # 失敗的 run 不會覆寫全部檔案，若不清理，artifacts 會把舊 plan 的
+        # generated.patch 掛在新 fingerprint 下（逆向驗證發現的錯標問題）。
+        for stale in (pconfig.GENERATED_PATCH, pconfig.GENERATED_DTS,
+                      pconfig.STRUCTURED_EDITS, pconfig.GENERATION_REPORT,
+                      pconfig.VALIDATION_REPORT, pconfig.FAILURE_REPORT,
+                      pconfig.DIFF_PLAN, pconfig.LOCATOR_REPORT):
+            try:
+                stale.unlink()
+            except FileNotFoundError:
+                pass
         # dtc/gcc 缺席時退化為不編譯（結構檢查照跑），狀態如實回報 compiled=False
         run_compile = bool(shutil.which(pconfig.DTC)) and bool(shutil.which("gcc"))
-        res = m8_run(plan_csv=str(pconfig.PLAN_CSV), write=True,
+        # pipeline 讀 run 專屬快照而非共用的 output/plan/plan.csv——後者隨時可能
+        # 被並行的 /api/solve、emit_plan 覆寫（TOCTOU），會讓產物與 fingerprint
+        # 指認的 plan 不一致。plan.used.csv 同時留在產物夾作為溯源紀錄。
+        res = m8_run(plan_csv=snapshot_csv, write=True,
                      run_compile=run_compile)
         _write_locator_reports(res)                  # diff_plan / locator_report 落地
         result = {
@@ -374,7 +388,12 @@ def dts_generate():
         have_fp = _last_plan["fp"]
     if not rows:
         return jsonify(error="伺服器尚無已求解的 plan——請先求解一次。"), 409
-    if fp and fp != have_fp:
+    if not fp:
+        # fingerprint 必填：紅線是「client 指認畫面上的 plan、與伺服器保存解
+        # 不符即拒絕」；缺席視同無法指認，不得當萬用符通過。
+        return jsonify(error="缺少 plan fingerprint——請從最新求解結果的"
+                             "「產生 DTS」按鈕觸發。"), 409
+    if fp != have_fp:
         return jsonify(error="這份 plan 已不是伺服器上最新的解——"
                              "請重新求解後，再從最新結果產生 DTS。"), 409
     if not _dts_available(board):
@@ -386,14 +405,28 @@ def dts_generate():
                            running=True), 409
         _dts["running"] = True
         _dts["started_fp"] = have_fp
-    # 交棒介面落地：plan.csv 只寫伺服器保存的 rows（防偽），覆寫制單一位置
-    plan_dir = os.path.join(OUTPUT, "plan")
-    os.makedirs(plan_dir, exist_ok=True)
-    with open(os.path.join(plan_dir, "plan.csv"), "w", newline="",
-              encoding="utf-8") as fh:
-        fh.write(plan_csv_text(rows))
-    threading.Thread(target=_dts_worker, args=(board, have_fp),
-                     daemon=True).start()
+    try:
+        csv_text = plan_csv_text(rows)
+        # 交棒介面落地：plan.csv 只寫伺服器保存的 rows（防偽），覆寫制單一位置
+        plan_dir = os.path.join(OUTPUT, "plan")
+        os.makedirs(plan_dir, exist_ok=True)
+        with open(os.path.join(plan_dir, "plan.csv"), "w", newline="",
+                  encoding="utf-8") as fh:
+            fh.write(csv_text)
+        # 另存 run 專屬快照給 pipeline 讀（plan.csv 隨時可能被並行的求解覆寫；
+        # 快照留在產物夾兼作「這份 patch 是根據哪份 plan 生成」的溯源紀錄）
+        gen_dir = os.path.join(OUTPUT, "generated")
+        os.makedirs(gen_dir, exist_ok=True)
+        snapshot_csv = os.path.join(gen_dir, "plan.used.csv")
+        with open(snapshot_csv, "w", newline="", encoding="utf-8") as fh:
+            fh.write(csv_text)
+        threading.Thread(target=_dts_worker, args=(board, have_fp, snapshot_csv),
+                         daemon=True).start()
+    except Exception as exc:                     # 落地/啟動失敗：釋放 single-flight
+        with _dts["lock"]:
+            _dts["running"] = False
+            _dts["started_fp"] = None
+        return jsonify(error=f"無法啟動 DTS 生成：{exc}"), 500
     return jsonify(started=True, fingerprint=have_fp), 202
 
 

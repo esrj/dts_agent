@@ -774,13 +774,18 @@ async function startDtsGeneration(block, btn, planFp) {
     });
     d = await r.json();
     if (!r.ok) {
-      block.appendChild(el("p", "note", "無法產生 DTS：" + (d.error || "HTTP " + r.status)));
+      // textContent：d.error 可能含伺服器例外文字（< > 等），不可當 HTML
+      const p = el("p", "note");
+      p.textContent = "無法產生 DTS：" + (d.error || "HTTP " + r.status);
+      block.appendChild(p);
       btn.disabled = false;
       scrollBottom();
       return;
     }
   } catch (e) {
-    block.appendChild(el("p", "note", "請求失敗：" + e.message));
+    const p = el("p", "note");
+    p.textContent = "請求失敗：" + e.message;   // textContent：勿當 HTML
+    block.appendChild(p);
     btn.disabled = false;
     scrollBottom();
     return;
@@ -806,16 +811,23 @@ async function startDtsGeneration(block, btn, planFp) {
         return;
       }
       if (!s.running && (!s.result || s.result.fingerprint !== planFp)) {
-        line.remove();                       // 結果屬於別份 plan（理論上不會發生）
-        block.appendChild(el("p", "note", "生成結果與這份 plan 不符，請重試。"));
+        line.remove();
+        const p = el("p", "note");
+        p.textContent = s.result
+          ? "生成結果屬於另一份 plan——請重試一次。"
+          : "伺服器可能已重啟，這次生成的狀態遺失——請重新求解後再產生一次。";
+        block.appendChild(p);
         btn.disabled = false;
         return;
       }
     } catch (e) { /* 網路抖動：下一輪再試 */ }
   }
+  // 逾時（15 分鐘）：停止輪詢，但附上常駐下載鈕——否則訊息指到的按鈕
+  // 只存在於成功卡片裡，永遠不會出現（逆向驗證發現的死路）。
   line.querySelector(".loading-label").textContent =
-    "（生成仍在進行——完成後可由「⤓ DTS patch 產物」下載）";
+    "（生成仍在進行或狀態已遺失——完成後可用下方按鈕下載產物）";
   line.querySelector(".spinner").remove();
+  block.appendChild(buildDtsDownloadBtn());
   btn.disabled = false;
 }
 

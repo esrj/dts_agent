@@ -5,6 +5,12 @@ description: stm_agent (BSP Agent) 的整體專案目標、三階段定義與現
 
 # stm_agent — BSP Agent 專案目標與現況
 
+> ⚠ **過時聲明（2026-06 合併時標記）**：本文所述的 `stm_agent/` 17 模組樹
+> 已不存在。現行專案是合併後的 `DTS_agent/`（src/ = solver、orchestrator、
+> validator、patch_agent、llm_provider、util、web），架構請以根目錄
+> README.md 與 PROJECT_OVERVIEW.md 為準。本文僅保留「三階段目標」的
+> 歷史脈絡參考，模組對應關係一律勿再引用。
+
 ## 1. 專案目的 (來自《清大產碩 — 專案需求說明》PDF)
 
 開發**通用的 BSP Agent**,協助 RD 在 STM32MP25 系列 MPU 開發初期,從自然語言需求自動完成:
