@@ -817,7 +817,7 @@ async function runDtsGeneration(block, planFp, onEarlyFail) {
     return;
   }
 
-  const line = el("div", "loading validating");
+  const line = el("div", "loading validating dts-progress");
   line.appendChild(el("span", "spinner"));
   line.appendChild(el("span", "loading-label",
     "DTS patch 生成中…（定位 → 生成 → 驗證 → 修復，約 1–5 分鐘）"));
@@ -912,7 +912,7 @@ function buildDtsCard(res) {
 }
 
 function buildDtsDownloadBtn() {
-  const btn = el("button", "icon-btn", "⤓ DTS patch 產物");
+  const btn = el("button", "icon-btn dts-dl", "⤓ DTS patch 產物");
   btn.title = "下載 output/generated/ 全部產物（generated.patch、generated.dts、各 report）";
   btn.addEventListener("click", async () => {
     btn.disabled = true;
