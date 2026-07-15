@@ -202,32 +202,30 @@ def locate(plan_rows, extra_columns, *, index, af_table, profiles, gpio_pins,
             dp.warnings.append(f"{per}: has validation errors; Generator must "
                                f"not emit it until they are resolved")
 
-    # -- 4. to_disable: absent-from-plan manageable + M2 pin-conflict owners --
-    manageable = {}
-    if fixed:
-        manageable = {lbl: c.get("manageable", False)
-                      for lbl, c in fixed.get("connections", {}).items()}
+    # -- 4. to_disable: 只由腳位衝突觸發（2026-07-15 語意變更）----------------
+    # 舊語意「官方有、plan 沒有 → 整個 node disable」已移除：absent-from-plan
+    # 的官方節點一律保留（untouched），只有 plan 把該節點正在用的腳搶去做
+    # 別的功能時（M2 的 baseline_owner 衝突偵測；boot/board-locked 擁有者在
+    # M2 是硬錯 boot_conflict，不會流到這裡）才 disable 整個 node——缺腳的
+    # 週邊本來就動不了。最終 DT ＝ 官方預設 ＋ plan 疊加。
     disabled, seen = [], set()
+    for label in s1.peripherals_to_disable:          # conflict-driven only
+        if label in plan_nodes:
+            continue
+        disabled.append({"node": f"&{label}", "family": family_of(label),
+                         "reason": "enabled baseline owner of a pin the plan takes",
+                         "source": "pin_conflict"})
+        seen.add(label)
+    dp.to_disable = disabled
     for label, ov in sorted(index.enabled_overrides().items()):
         fam = family_of(label)
-        if fam is None or index.group(label) or label in plan_nodes:
+        if fam is None or index.group(label) or label in plan_nodes or label in seen:
             continue
-        is_manageable = manageable.get(label, label not in unsafe)
-        if is_manageable:
-            disabled.append({"node": f"&{label}", "family": fam,
-                             "reason": "enabled in baseline, absent from plan, manageable",
-                             "source": "absent_from_plan"})
-            seen.add(label)
-        else:
-            why = "boot-required" if label in boot_nodes else "board-locked"
-            dp.untouched.append({"node": f"&{label}",
-                                 "reason": f"absent from plan but {why}; kept as-is"})
-    for label in s1.peripherals_to_disable:          # conflict-driven (subset)
-        if label not in seen and label not in plan_nodes:
-            disabled.append({"node": f"&{label}", "family": family_of(label),
-                             "reason": "enabled baseline owner of a pin the plan takes",
-                             "source": "pin_conflict"})
-    dp.to_disable = disabled
+        why = ("boot-required" if label in boot_nodes
+               else "board-locked" if label in unsafe
+               else "official default")
+        dp.untouched.append({"node": f"&{label}",
+                             "reason": f"absent from plan; {why} kept (no pin conflict)"})
 
     # -- 5. untouched: every other enabled override, with a reason --
     for label, ov in sorted(index.enabled_overrides().items()):

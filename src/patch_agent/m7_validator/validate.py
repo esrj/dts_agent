@@ -426,6 +426,15 @@ def validate(generated_dts, diff_plan, structured_edits=None, *, index=None,
     rep = ValidationReport()
     art = _Artifact(generated_dts)
     if art.region is None:
+        # 無事可做的合法情境：plan 與 baseline 一致（全 noop、零 disable、
+        # 零 edits）→ 沒有 managed region 是正確結果，不是 SCHEMA_VIOLATION。
+        # （歷史 bug：「官方預設」plan 在此被誤判成 unrepairable。）
+        actionable = ([t for t in (dp.get("to_enable_or_update") or [])
+                       if t.get("action") != "noop"]
+                      or dp.get("to_disable"))
+        if not structured_edits and not actionable:
+            rep.checks["managed_region"] = "skipped (no changes needed)"
+            return rep                                # passed=True：不需要 patch
         rep.passed, rep.failed_layer = False, 0
         rep.errors.append(VError(SCHEMA_VIOLATION, "no stm-agent managed region found", 0))
         rep.checks["managed_region"] = "fail"

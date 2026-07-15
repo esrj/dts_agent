@@ -352,6 +352,7 @@ def _dts_worker(board: str, fp: str, snapshot_csv: str):
         _write_locator_reports(res)                  # diff_plan / locator_report 落地
         result = {
             "passed": bool(res.passed),
+            "no_changes": bool(getattr(res, "no_changes", False)),
             "stop_reason": res.stop_reason,
             "ask_user": [a if isinstance(a, (dict, str)) else str(a)
                          for a in (res.ask_user or [])],

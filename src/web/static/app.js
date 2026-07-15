@@ -862,11 +862,20 @@ function buildDtsCard(res) {
   // 成功：不用 val-card 綠框，只保留綠色標題文字。
   if (res.passed) {
     const done = el("div", "dts-done");
-    done.appendChild(el("p", "dts-done-head",
-      `✓ DTS patch 生成完成（修復 ${res.repair_rounds} 輪` +
-      (res.compiled ? "，dtc 編譯通過" : "，未編譯——本機無 dtc/gcc") + "）"));
-    // 完成說明：緊接標題（下載鈕在區塊最下方）
-    done.appendChild(el("p", "note", "完整產物（含各項 report）由下方按鈕下載。"));
+    // no_changes：plan 與官方預設一致——不需要 patch，仍展示完整 device tree
+    if (res.no_changes) {
+      done.appendChild(el("p", "dts-done-head",
+        "✓ 不需要 patch——官方預設 device tree 已涵蓋這份 plan"));
+      done.appendChild(el("p", "note",
+        "plan 中的週邊在官方預設中都已啟用且腳位一致，無需任何修改；" +
+        "完整產物（含各項 report）由下方按鈕下載。"));
+    } else {
+      done.appendChild(el("p", "dts-done-head",
+        `✓ DTS patch 生成完成（修復 ${res.repair_rounds} 輪` +
+        (res.compiled ? "，dtc 編譯通過" : "，未編譯——本機無 dtc/gcc") + "）"));
+      // 完成說明：緊接標題（下載鈕在區塊最下方）
+      done.appendChild(el("p", "note", "完整產物（含各項 report）由下方按鈕下載。"));
+    }
     const pers = res.peripherals || [];
     if (pers.length) {
       const ul = el("ul");
@@ -877,14 +886,16 @@ function buildDtsCard(res) {
       });
       done.appendChild(ul);
     }
-    // 產生的 device tree 介紹 + 兩個產物檔的行內展開檢視（按鈕樣式同
-    // 「是，產生 DTS patch」；點擊展開程式碼區塊、再點收合）
-    done.appendChild(el("p", "note dts-intro",
-      "以下是根據你的需求週邊所產生、對應的 device tree —— " +
-      "generated.patch 為 kernel DT patch，.dts 為套用後的完整 device tree，" +
-      "點開按鈕即可檢視完整內容："));
+    // 產生的 device tree 介紹 + 產物檔的行內展開檢視（按鈕樣式同
+    // 「是，產生 DTS patch」；點擊展開程式碼區塊、再點收合）。
+    // no_changes 時沒有 generated.patch，只展示完整 .dts（＝官方預設）。
+    done.appendChild(el("p", "note dts-intro", res.no_changes
+      ? "以下是這塊板的完整 device tree（與官方預設一致，未做修改）："
+      : "以下是根據你的需求週邊所產生、對應的 device tree —— " +
+        "generated.patch 為 kernel DT patch，.dts 為套用後的完整 device tree，" +
+        "點開按鈕即可檢視完整內容："));
     const files = el("div", "dts-files");
-    files.appendChild(buildDtsFileToggle("generated.patch"));
+    if (!res.no_changes) files.appendChild(buildDtsFileToggle("generated.patch"));
     files.appendChild(buildDtsFileToggle("stm32mp257f-ev1.generated.dts"));
     done.appendChild(files);
     done.appendChild(buildDtsDownloadBtn());

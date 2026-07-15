@@ -509,6 +509,10 @@ def write_outputs(art):
     open(config.GENERATED_DTS, "w").write(art.generated_dts)
     if art.patch:
         open(config.GENERATED_PATCH, "w").write(art.patch)
+    else:
+        # 本輪沒有 patch（no-changes）→ 清掉上一輪殘留的 patch 檔，
+        # 避免舊產物被誤當成這份 plan 的結果
+        config.GENERATED_PATCH.unlink(missing_ok=True)
     json.dump(art.structured_edits, open(config.STRUCTURED_EDITS, "w"),
               indent=2, ensure_ascii=False)
     json.dump(art.report, open(config.GENERATION_REPORT, "w"),

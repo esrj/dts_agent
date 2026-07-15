@@ -54,6 +54,17 @@ data/…/baseline/dts ──► m1_dts_parser 共用 baseline DTS parser / node 
 只有 m6_generator 與 m8_repairer 會呼叫 LLM；能重用 baseline 設定的 peripheral 走純
 deterministic 路徑。LLM 回應會快取在 `output/generated/llm_cache/`。
 
+**產出語意（2026-07-15 起）**：最終 DT ＝ **官方預設 ＋ plan 疊加**。
+
+- 官方 baseline 已啟用、但 plan 沒提到的節點**一律保留**（untouched），
+  **只有** plan 把該節點正在用的腳搶去做別的功能時（M2 `baseline_owner`
+  衝突偵測）才 disable 整個節點（`source: pin_conflict`）；boot/board-locked
+  節點被搶腳是硬錯（`boot_conflict`），不會被靜默關閉。
+- plan 與 baseline 完全一致（全 noop、零 disable）是**合法成功**：
+  `no patch needed`——不產 `generated.patch`（並清掉舊殘留），
+  `*.generated.dts` ＝ baseline 全文，M7 回報
+  `managed_region: skipped (no changes needed)`（web 顯示「不需要 patch」）。
+
 ## 資料與路徑
 
 **所有路徑集中在 [`config.py`](config.py)**（唯一權威，模組一律 import 常數，

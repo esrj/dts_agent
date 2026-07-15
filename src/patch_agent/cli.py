@@ -85,8 +85,12 @@ def cmd_run(args, provider=None, repair_provider=None):
         for a in res.ask_user:
             print(f"  {a}")
     if res.passed:
-        print(f"\nwrote {config.GENERATED_DTS}")
-        print(f"wrote {config.GENERATED_PATCH}")
+        if getattr(res, "no_changes", False):
+            print("\nno patch needed — baseline already satisfies the plan")
+            print(f"wrote {config.GENERATED_DTS}  (== baseline)")
+        else:
+            print(f"\nwrote {config.GENERATED_DTS}")
+            print(f"wrote {config.GENERATED_PATCH}")
         print(f"wrote {config.STRUCTURED_EDITS}")
         print(f"wrote {config.GENERATION_REPORT}")
         print(f"wrote {config.VALIDATION_REPORT}")

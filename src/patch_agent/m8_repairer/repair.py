@@ -188,6 +188,7 @@ def _call_llm_with_system(provider, messages, system, model=None):
 @dataclass
 class RepairResult:
     passed: bool = False
+    no_changes: bool = False              # plan 與 baseline 一致：不需要 patch
     rounds: int = 0                       # repair rounds actually executed
     stop_reason: str = None               # None | locator_blocked | needs_info |
                                           # boot_conflict | unrepairable | retry_exhausted
@@ -278,6 +279,10 @@ def run(plan_csv=None, provider=None, repair_provider=None, model=None,
     art = m6_generate(dp, provider=provider, index=index, model=model,
                       use_cache=use_cache)
     res.art = art
+    # 零 edits（全 noop、零 disable）＝ baseline 已滿足 plan：M7 會以
+    # 「skipped (no changes needed)」放行，這裡標旗標讓 CLI/web 能明說
+    # 「不需要 patch」而不是含糊的成功。
+    res.no_changes = bool(art.passed and not art.structured_edits)
     edits_by_target = _extract_edits(art)
 
     for rnd in range(0, max_rounds + 1):
