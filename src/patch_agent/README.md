@@ -56,6 +56,13 @@ deterministic 路徑。LLM 回應會快取在 `output/generated/llm_cache/`。
 
 **產出語意（2026-07-15 起）**：最終 DT ＝ **官方預設 ＋ plan 疊加**。
 
+- plan.csv 可含**明確停用指令列** `<peripheral>,DISABLE,,`（signal 欄放關鍵字
+  `DISABLE`、大小寫不拘，pin/af 留空，不加欄位）：該週邊在最終 DT 一定被
+  `status = "disabled"`（M6 deterministic 渲染、M7 第 4 層逐筆驗證
+  `DISABLE_NOT_APPLIED`）。boot-required／board-locked 節點不准關（硬錯）；
+  與一般腳位列同時出現同一週邊是自相矛盾（硬錯）；baseline 本來就沒開則為
+  冪等 no-op（warning，歸入 untouched）。
+
 - 官方 baseline 已啟用、但 plan 沒提到的節點**一律保留**（untouched），
   **只有** plan 把該節點正在用的腳搶去做別的功能時（M2 `baseline_owner`
   衝突偵測）才 disable 整個節點（`source: pin_conflict`）；boot/board-locked

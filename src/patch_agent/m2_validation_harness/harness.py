@@ -31,6 +31,8 @@ PROTECTED_GPIO_CONFLICT = "PROTECTED_GPIO_CONFLICT"
 PIN_DOUBLE_BOOKED = "PIN_DOUBLE_BOOKED"
 INCOMPLETE_PERIPHERAL = "INCOMPLETE_PERIPHERAL"
 REQUIRE_CONFLICT = "REQUIRE_CONFLICT"
+UNKNOWN_PERIPHERAL = "UNKNOWN_PERIPHERAL"
+PLAN_CONTRADICTION = "PLAN_CONTRADICTION"
 
 
 @dataclass
@@ -69,6 +71,8 @@ def load_plan(path):
     for r in csv.DictReader(open(path, encoding="utf-8-sig")):
         if not r.get("peripheral"):
             continue
+        if (r.get("signal") or "").strip().upper() == "DISABLE":
+            continue    # disable 指令列（pin/af 為空）——由 m5 Locator 消費
         rows.append({"peripheral": r["peripheral"].strip(),
                      "signal": r["signal"].strip(),
                      "pin": r["pin"].strip(),

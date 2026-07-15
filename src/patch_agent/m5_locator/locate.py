@@ -6,10 +6,12 @@ Deterministic front half of the v3 pipeline. Wraps M2 (plan validation) + M3
   1. flexible plan.csv parsing — L1 columns (peripheral,signal,pin,af) are
      validated deterministically; any extra columns (L2-L5: connected_ic,
      ic_address, dt_property, …) are carried through verbatim per row.
+     A row whose signal is the keyword `DISABLE` (pin/af empty) is a
+     directive: "this peripheral MUST be disabled in the final DT".
   2. the diff plan — plan.csv is the complete intent:
        to_enable_or_update : every peripheral in the plan (+ context pack)
-       to_disable          : enabled in baseline ∧ manageable ∧ absent from plan
-                             (plus M2's pin-conflict owners)
+       to_disable          : explicit DISABLE rows (source: user_request)
+                             + M2's pin-conflict owners (source: pin_conflict)
        untouched           : everything else enabled, each with a reason
   3. a per-target context pack: baseline node source, declared pinctrl states,
      existing groups with electrical props, fixed-connection / board-config /
@@ -24,7 +26,8 @@ from .. import config
 from ..m1_dts_parser import build_index
 from ..m1_dts_parser.index import family_of
 from ..m2_validation_harness.harness import (
-    validate_plan, load_plan, _boot_required_nodes, _locked_nodes)
+    validate_plan, load_plan, _boot_required_nodes, _locked_nodes,
+    Error, REQUIRE_CONFLICT, UNKNOWN_PERIPHERAL, PLAN_CONTRADICTION)
 from ..m3_target_resolution import resolve
 
 L1_COLS = ("peripheral", "signal", "pin", "af")
@@ -34,25 +37,32 @@ L1_COLS = ("peripheral", "signal", "pin", "af")
 def load_plan_flexible(path):
     """Parse a variable-schema plan.csv.
 
-    Returns (rows, extra_columns): each row has the four L1 keys plus an
-    `extras` dict holding every non-empty non-L1 column verbatim.
+    Returns (rows, extra_columns, disable_requests): each row has the four L1
+    keys plus an `extras` dict holding every non-empty non-L1 column verbatim.
+    A row whose signal is `DISABLE`（大小寫不拘、pin/af 留空）不是腳位列而是
+    指令列——其 peripheral 收進 disable_requests（去重、保序），不進 rows。
     """
-    rows, extra_cols = [], []
+    rows, extra_cols, disables = [], [], []
     with open(path, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         extra_cols = [c for c in (reader.fieldnames or []) if c and c not in L1_COLS]
         for r in reader:
-            if not (r.get("peripheral") or "").strip():
+            per = (r.get("peripheral") or "").strip()
+            if not per:
+                continue
+            if (r.get("signal") or "").strip().upper() == "DISABLE":
+                if per not in disables:
+                    disables.append(per)
                 continue
             rows.append({
-                "peripheral": r["peripheral"].strip(),
+                "peripheral": per,
                 "signal": r["signal"].strip(),
                 "pin": r["pin"].strip(),
                 "af": int(r["af"]),
                 "extras": {c: r[c].strip() for c in extra_cols
                            if (r.get(c) or "").strip()},
             })
-    return rows, extra_cols
+    return rows, extra_cols, disables
 
 
 # ---- result types ----------------------------------------------------------
@@ -145,7 +155,7 @@ def _context_pack(per, info, res, index, fixed, board_cfg, bindings):
 # ---- core -------------------------------------------------------------------
 def locate(plan_rows, extra_columns, *, index, af_table, profiles, gpio_pins,
            require, signal_to_pin, alias, fixed=None, board_cfg=None,
-           bindings=None, baseline_rows=None):
+           bindings=None, baseline_rows=None, disable_requests=None):
     """Run the deterministic Locator over already-parsed flexible plan rows."""
     alias_map = alias.get("aliases", {})
     boot_nodes = _boot_required_nodes(require)
@@ -202,15 +212,52 @@ def locate(plan_rows, extra_columns, *, index, af_table, profiles, gpio_pins,
             dp.warnings.append(f"{per}: has validation errors; Generator must "
                                f"not emit it until they are resolved")
 
-    # -- 4. to_disable: 只由腳位衝突觸發（2026-07-15 語意變更）----------------
+    # -- 4. to_disable: 使用者 DISABLE 指令列 ＋ 腳位衝突 ---------------------
     # 舊語意「官方有、plan 沒有 → 整個 node disable」已移除：absent-from-plan
     # 的官方節點一律保留（untouched），只有 plan 把該節點正在用的腳搶去做
     # 別的功能時（M2 的 baseline_owner 衝突偵測；boot/board-locked 擁有者在
     # M2 是硬錯 boot_conflict，不會流到這裡）才 disable 整個 node——缺腳的
     # 週邊本來就動不了。最終 DT ＝ 官方預設 ＋ plan 疊加。
+    # 例外是 plan.csv 的明確指令列 `<peripheral>,DISABLE,,`（source:
+    # user_request）：boot/board-locked 不准關（硬錯）、與一般列同時出現是
+    # 自相矛盾（硬錯）、baseline 本來就沒開則為冪等 no-op（warning）。
     disabled, seen = [], set()
-    for label in s1.peripherals_to_disable:          # conflict-driven only
-        if label in plan_nodes:
+    enabled = index.enabled_overrides()
+    for name in (disable_requests or []):
+        tn = (alias_map.get(name.upper()) or {}).get("target_node")
+        label = tn.lstrip("&") if tn else name.lower()
+        if label in seen:
+            continue
+        if label not in index.all_labels:
+            dp.errors.append(Error(UNKNOWN_PERIPHERAL,
+                f"DISABLE {name}: no such peripheral/node in baseline DTS",
+                peripheral=name))
+        elif label in plan_nodes:
+            dp.errors.append(Error(PLAN_CONTRADICTION,
+                f"DISABLE {name}: the plan also configures &{label} — "
+                f"cannot both enable and disable it", peripheral=name))
+        elif label in unsafe:
+            why = "boot-required" if label in boot_nodes else "board-locked"
+            dp.errors.append(Error(REQUIRE_CONFLICT,
+                f"DISABLE {name}: &{label} is {why} — cannot disable",
+                peripheral=name))
+        elif label not in enabled:
+            dp.warnings.append(f"DISABLE {name}: &{label} is already disabled "
+                               f"in baseline — nothing to do")
+            dp.untouched.append({"node": f"&{label}",
+                                 "reason": "plan requests disable; already "
+                                           "disabled in baseline (no change)"})
+            seen.add(label)
+        else:
+            disabled.append({"node": f"&{label}", "family": family_of(label),
+                             "reason": f"explicitly disabled by plan "
+                                       f"({name},DISABLE row)",
+                             "source": "user_request"})
+            seen.add(label)
+    if len(dp.errors) > len(s1.errors):
+        dp.passed = False
+    for label in s1.peripherals_to_disable:          # conflict-driven
+        if label in plan_nodes or label in seen:
             continue
         disabled.append({"node": f"&{label}", "family": family_of(label),
                          "reason": "enabled baseline owner of a pin the plan takes",
@@ -263,10 +310,10 @@ def run(plan_csv=None):
     """Convenience entry: load everything from config and locate.
     Returns (DiffPlan, Stage1Result, Stage2Result)."""
     plan_csv = plan_csv or config.PLAN_CSV
-    rows, extra_cols = load_plan_flexible(plan_csv)
+    rows, extra_cols, disables = load_plan_flexible(plan_csv)
     index = build_index()
     return locate(
-        rows, extra_cols, index=index,
+        rows, extra_cols, index=index, disable_requests=disables,
         af_table=_load(config.AF_TABLE),
         profiles=_load(config.PERIPHERAL_PROFILES),
         gpio_pins=_load(config.GPIO_PINS),
