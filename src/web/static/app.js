@@ -1,14 +1,9 @@
 const $ = (id) => document.getElementById(id);
 
-// 反問進行中時，暫存這一輪的 intent + 待確認問題，等使用者點候選再帶回伺服器
-let pending = null;
-
 // 目前選定的目標板子；每個請求都會帶上它（無狀態後端依此載入對應 /data）
 let currentBoard = null;
 
-// 模式：'agent'（LLM 編排器，多輪對話）或 'solve'（確定性單輪）。預設 agent。
-let mode = "agent";
-// Agent 對話的伺服器端 session id（後端首次回傳後保存；換板/換模式時清掉開新對話）
+// Agent 對話的伺服器端 session id（後端首次回傳後保存；換板時清掉開新對話）
 let chatSessionId = null;
 
 // --------------------------------------------------------------------------- //
@@ -39,9 +34,8 @@ async function loadBoards() {
 
 function onBoardChange(e) {
   currentBoard = e.target.value;
-  // 換板等於開新話題：丟掉未完成的反問 + Agent 對話 session，避免拿新板的 Σ/DTS
+  // 換板等於開新話題：丟掉 Agent 對話 session，避免拿新板的 Σ/DTS
   // 去回答舊板的問題（後端 session 綁定某塊板的對話歷史）。
-  pending = null;
   chatSessionId = null;
   initDts();                                  // DTS 生成可用性依板而定
 }
@@ -98,9 +92,9 @@ function appendUser(text) {
 }
 
 // 建一則 assistant 訊息，回傳它的 .body 供後續填內容（先放一個轉圈圈載入占位）。
-// validatePhase=true（agent 模式）：請求超過閾值仍未回 → 幾乎必是在跑 CubeMX
+// validatePhase=true：請求超過閾值仍未回 → 幾乎必是在跑 CubeMX
 // （系統中唯一的慢操作，1–3 分鐘）→ 把標籤切成「CubeMX 驗證中」。回應到達時
-// 由 render/renderChat/setStatus 呼叫 body._stopLoading() 收掉計時器。
+// 由 renderChat/setStatus 呼叫 body._stopLoading() 收掉計時器。
 const VALIDATE_HINT_MS = 6000;
 function appendAssistant(label, { validatePhase = false } = {}) {
   const msg = el("div", "msg assistant");
@@ -149,16 +143,6 @@ function setNote(body, text) {
 // --------------------------------------------------------------------------- //
 // 網路
 // --------------------------------------------------------------------------- //
-async function postSolve(payload) {
-  if (currentBoard) payload.board = currentBoard;   // 單一進出口：start 與 answer 都自動帶上 board
-  const r = await fetch("/api/solve", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  return { r, d: await r.json() };
-}
-
 async function postChat(message) {
   const payload = { message, board: currentBoard };
   if (chatSessionId) payload.session_id = chatSessionId;
@@ -171,7 +155,7 @@ async function postChat(message) {
 }
 
 // --------------------------------------------------------------------------- //
-// 送出一則使用者訊息（依模式分流）
+// 送出一則使用者訊息（Agent 對話）
 // --------------------------------------------------------------------------- //
 async function send() {
   const ta = $("q");
@@ -183,18 +167,12 @@ async function send() {
   ta.focus();                                 // 保持 focus，方便繼續輸入
 
   appendUser(text);
-  const body = appendAssistant(mode === "agent" ? "思考中…" : "求解中…",
-                               { validatePhase: mode === "agent" });
+  const body = appendAssistant("思考中…", { validatePhase: true });
   $("go").disabled = true;
   setBoardEnabled(false);                      // 進行中鎖住板子選單，避免中途切板
   try {
-    if (mode === "agent") {
-      const { r, d } = await postChat(text);
-      renderChat(r, d, body);
-    } else {
-      const { r, d } = await postSolve({ text });
-      render(r, d, body);
-    }
+    const { r, d } = await postChat(text);
+    renderChat(r, d, body);
   } catch (e) {
     setStatus(body, "請求失敗：" + e.message, "err");
   } finally {
@@ -445,162 +423,6 @@ function renderMarkdown(src) {
   }
   if (inList) html += "</ul>";
   return html || "<p></p>";
-}
-
-// 把一則伺服器回應渲染進指定的 assistant body
-function render(r, d, body) {
-  if (body._stopLoading) body._stopLoading();
-  body.innerHTML = "";
-  // 後端的業務性回覆（422：不支援的週邊、腳位衝突…）當成一般回答，不用紅字
-  if (!r.ok) { setNote(body, d.error || ("發生問題（HTTP " + r.status + "）")); return; }
-  if (d.board) syncBoard(d.board);            // 以後端回帶的 board 為準同步前端
-  if (d.status === "clarify") return renderClarify(d, body);
-  return renderDone(d, body);
-}
-
-// --------------------------------------------------------------------------- //
-// 反問：選項列成按鈕，點了就接著對話往下走
-// --------------------------------------------------------------------------- //
-function renderClarify(d, body) {
-  pending = { intent: d.intent, question: d.question };
-  const q = d.question;
-
-  body.appendChild(el("p", "ask", escapeHtml(q.prompt || q.summary)));
-  if (!q.options || !q.options.length) {
-    body.appendChild(el("p", "status err", "這個條件沒有可用選項，請改用其他腳位或週邊。"));
-    scrollBottom();
-    return;
-  }
-  const opts = el("div", "opts");
-  q.options.forEach((o) => {
-    const btn = el("button", "opt");
-    btn.appendChild(el("span", "opt-label", escapeHtml(o.label)));
-    if (o.note) btn.appendChild(el("span", "opt-note", escapeHtml(o.note)));
-    btn.addEventListener("click", () => chooseOption(o, btn, opts));
-    opts.appendChild(btn);
-  });
-  body.appendChild(opts);
-  scrollBottom();
-}
-
-async function chooseOption(option, btn, optsEl) {
-  if (!pending) return;
-  const q = pending.question;
-
-  // 鎖住這組選項並標記被選的那顆（保留在對話紀錄中）
-  optsEl.querySelectorAll("button").forEach((b) => (b.disabled = true));
-  btn.classList.add("chosen");
-
-  appendUser("選擇：" + option.label);
-  const body = appendAssistant("確認中…");
-  try {
-    const { r, d } = await postSolve({
-      intent: pending.intent,
-      question: { kind: q.kind, item_index: q.item_index, pin: q.pin },
-      option,
-    });
-    render(r, d, body);
-  } catch (e) {
-    setStatus(body, "請求失敗：" + e.message, "err");
-  }
-}
-
-// --------------------------------------------------------------------------- //
-// 最終結果
-// --------------------------------------------------------------------------- //
-function renderDone(d, body) {
-  pending = null;
-
-  if (d.chosen && d.chosen.length) {
-    const c = el("p", "chosen");
-    c.innerHTML =
-      '<span class="tag">自動選擇</span>' +
-      d.chosen
-        .map((x) => {
-          const reused = x.reused_boot || [];
-          const fresh = (x.new !== undefined ? x.new : x.instances) || [];
-          const segs = [];
-          if (reused.length)
-            segs.push(`<b>${escapeHtml(reused.join(", "))}</b> <em>(沿用開機)</em>`);
-          if (fresh.length) segs.push(`<b>${escapeHtml(fresh.join(", "))}</b>`);
-          return `${escapeHtml(x.family)}×${x.count} → ${segs.join(" ＋ ") || "—"}` +
-            (x.mode ? ` <em>(${escapeHtml(x.mode)})</em>` : "");
-        })
-        .join("　·　");
-    body.appendChild(c);
-  }
-
-  if (!d.sat) {                              // 無解：當一般回答（不用紅字）
-    const p = el("p", "note");
-    p.textContent = "找不到可行的腳位配置" + (d.reason ? "：" + d.reason : "。");
-    body.appendChild(p);
-    scrollBottom();
-    return;
-  }
-
-  if (!d.assignment || !d.assignment.length) {   // 沒有可放置的訊號（如不支援的週邊）
-    const p = el("p", "note");
-    p.textContent =
-      "沒有可以放置的訊號——你要的週邊可能不在這顆 SoC 上，或需求沒被辨識出來，換個說法再試試看。";
-    body.appendChild(p);
-    scrollBottom();
-    return;
-  }
-
-  // 固定板：開機走線被迫搬離官方腳 -> 醒目提示需實體改線（放在統計與表格之前）
-  if (d.boot_relaxed && d.boot_moved && d.boot_moved.length) {
-    body.appendChild(buildBootWarn(d));
-  }
-
-  if (d.source === "baseline") {            // 官方預設版：未經求解，不顯示 solver 統計
-    body.appendChild(el("p", "status ok",
-      `預設版本 — ${d.assignment.length} signals`));
-  } else {
-    body.appendChild(el("p", "status ok",
-      `OK — ${d.assignment.length} signals（${d.stats.ms} ms, ` +
-      `AC-propagated=${d.stats.propagated}, backtrack k=${d.stats.k}）`));
-  }
-
-  // 提示：有自動保留的開機 signals（require.json）
-  const bootCount = d.assignment.filter((a) => a.boot_reserved).length;
-  if (bootCount) {
-    body.appendChild(el("p", "chosen",
-      '<span class="tag">boot-reserved</span>已自動保留 ' + bootCount +
-      ' 個開機必要 signals（require.json），避免被其他週邊佔用。'));
-  }
-
-  body.appendChild(buildResultBlock(d.assignment, d.plan_fingerprint || null,
-                                    d.plan_fingerprint || null));
-  scrollBottom();
-}
-
-// 固定板的「需改線」警告卡片：列出被搬離官方腳的開機 signal（from → to），依週邊分組
-function buildBootWarn(d) {
-  const card = el("div", "boot-warn");
-  card.appendChild(el("p", "boot-warn-head", "⚠ 需實體改線才能套用此配置"));
-  card.appendChild(el("p", null,
-    "在不動走線下無法佈線；下列開機介面已被搬離官方腳，需把實體走線改到新腳位："));
-
-  const order = [], map = {};
-  (d.boot_moved || []).forEach((m) => {
-    if (!(m.peripheral in map)) { map[m.peripheral] = []; order.push(m.peripheral); }
-    map[m.peripheral].push(m);
-  });
-
-  const ul = el("ul");
-  order.forEach((p) => {
-    const li = el("li");
-    li.appendChild(el("b", null, escapeHtml(p)));
-    const inner = el("ul");
-    map[p].forEach((m) => {
-      inner.appendChild(el("li", "mv",
-        `${escapeHtml(m.signal)}：<b>${escapeHtml(m.from)}</b> → <b>${escapeHtml(m.to)}</b>`));
-    });
-    li.appendChild(inner);
-    ul.appendChild(li);
-  });
-  card.appendChild(ul);
-  return card;
 }
 
 // 把 assignment 依 peripheral 分組（保留出現順序），供 rowspan 合併用
@@ -1128,17 +950,6 @@ document.querySelectorAll(".examples .chip").forEach((chip) => {
     $("q").value = chip.textContent;
     send();
   });
-});
-
-// 模式切換（Agent 對話 / 直接求解）。切換等於開新話題：清掉反問與對話 session。
-$("mode-toggle").addEventListener("click", (e) => {
-  const btn = e.target.closest(".mode-btn");
-  if (!btn || btn.classList.contains("active")) return;
-  mode = btn.dataset.mode;
-  $("mode-toggle").querySelectorAll(".mode-btn").forEach((b) =>
-    b.classList.toggle("active", b === btn));
-  pending = null;
-  chatSessionId = null;
 });
 
 // 啟動：載入可選板子清單 + 以伺服器最近一次驗證結果初始化 CubeMX 徽章

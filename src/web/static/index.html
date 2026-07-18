@@ -104,25 +104,6 @@
     }
     .board-picker:has(#board-select:disabled)::after { opacity: .5; }
 
-    /* mode toggle — Agent 對話 vs 直接求解（segmented pill, top-right of header） */
-    .mode-toggle {
-      margin-left: auto;
-      display: inline-flex; gap: 2px;
-      background: var(--bg-soft);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 2px;
-    }
-    .mode-btn {
-      font: inherit; font-size: .82rem; font-weight: 600;
-      color: var(--text-soft); background: transparent;
-      border: none; border-radius: 999px;
-      padding: .3rem .85rem; cursor: pointer;
-      transition: background .15s, color .15s;
-    }
-    .mode-btn.active { background: var(--accent); color: var(--accent-text); }
-    .mode-btn:disabled { opacity: .5; cursor: default; }
-
     /* assistant reply rich text (markdown-ish from the orchestrator) */
     .reply { margin: 0; font-size: .95rem; color: var(--text); }
     .reply p { margin: 0 0 .5rem; }
@@ -234,25 +215,6 @@
       color: var(--text-soft); background: var(--bg-soft);
       border: 1px solid var(--border); vertical-align: middle;
     }
-
-    /* boot-relaxed warning card — 固定板：開機介面被搬離官方腳，需實體改線 */
-    .boot-warn {
-      margin: .75rem 0 0;
-      padding: .65rem .85rem;
-      border: 1px solid var(--warn-border);
-      border-left: 3px solid var(--warn);
-      border-radius: 10px;
-      background: var(--warn-bg);
-      font-size: .88rem;
-    }
-    .boot-warn .boot-warn-head { font-weight: 600; color: var(--warn); }
-    .boot-warn ul { margin: .4rem 0 0; padding-left: 1.2rem; }
-    .boot-warn li { margin: .1rem 0; }
-    .boot-warn .mv {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: .82rem;
-    }
-    .boot-warn .mv b { color: var(--text); }
 
     /* ---- clarification question + options ---- */
     .ask { margin: 0 0 .6rem; font-size: .95rem; }
@@ -515,12 +477,6 @@
     </label>
     <span id="validator-badge" class="v-badge err" hidden
           title="STM32CubeMX 環境異常（找不到或損壞的執行檔）——驗證功能暫不可用">CubeMX 離線</span>
-    <span class="mode-toggle" id="mode-toggle" role="group" aria-label="模式">
-      <button class="mode-btn active" data-mode="agent"
-              title="LLM 編排器：可多輪對話、自動調用求解器、給修改建議">Agent 對話</button>
-      <button class="mode-btn" data-mode="solve"
-              title="確定性流程：單輪解析→求解（fallback）">直接求解</button>
-    </span>
   </header>
 
   <main class="chat" id="chat">
