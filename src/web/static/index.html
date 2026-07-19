@@ -207,8 +207,9 @@
       color: var(--text-soft);
     }
 
-    /* boot-reserved signal badge (require.json 自動保留的開機 signal) */
-    .badge-boot {
+    /* boot-reserved signal badge (require.json 自動保留的開機 signal)
+       ＋ official-default badge（bootable_default 疊加時自動保留的官方列） */
+    .badge-boot, .badge-official {
       display: inline-block; margin-left: .45rem;
       padding: .02rem .4rem; border-radius: 8px;
       font-size: .68rem; font-weight: 600;

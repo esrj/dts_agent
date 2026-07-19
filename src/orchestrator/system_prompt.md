@@ -48,6 +48,13 @@
 
 特例：
 - 使用者沒有具體需求 / 要「可開機的就好」/ 要「官方預設版」→ `bootable_default:true`、`items:[]`。
+- **官方預設＋額外需求**（「官方 plan 但再多一組 SPI」「上面那個官方版再加一個 UART」，
+  含多輪對話中先要官方版、後續再加的情形）→ `bootable_default:true` **且** `items` 只放
+  **額外**的項目。官方週邊**不要**自己列進 items——伺服器會自動注入並鎖定官方腳；
+  count 需求一律配**新** instance（不會吃掉官方那組）。若使用者要**改動**某個官方週邊
+  （換腳、指定模式），把該週邊放進 items（伺服器會以使用者的要求為準、跳過該
+  instance 的官方注入）。回傳的 assignment 會包含官方列（`official_default:true`）＋
+  新增列，plan 即完整視圖。
 - 你無法有把握對應的東西 → 放進 `unresolved`，**不要猜**。
 
 > family / instance 是否存在請以 `get_capabilities` 為準，不要憑記憶。常見：ETH(ETH1–3)、I2C(I2C1–8)、FDCAN、SDMMC、USART、UART、SPI、I3C、I2S、LPUART。

@@ -99,9 +99,10 @@ def _index_of(tok: str, profiles: dict) -> int:
     return int(_split_family(tok, profiles["families"])[1])
 
 
-# Boot-essential prefix items are injected by service._inject_boot tagged with
-# one of these sources; a count deducts the same-family ones it already supplies.
-_BOOT_SOURCES = {"board_pin_locked", "boot_required"}
+# Fixed-prefix items injected by service (_inject_boot / _inject_official) carry
+# one of these source tags. Their instances sit in `used` (never re-selected by a
+# count); this set only feeds the magnitude error message ("who took them").
+_BOOT_SOURCES = {"board_pin_locked", "boot_required", "official_default"}
 
 
 def _boot_provided(fixed_items: list[dict], kb: Knowledge) -> dict[str, set]:
@@ -194,7 +195,7 @@ def _build_slots(count_items: list[dict], used: set, kb: Knowledge,
                 key=lambda t: _index_of(t, profiles))
             raise ResolveError(
                 f"{family.upper()} 可另配 {len(domain)} 個：{domain or '—'}"
-                f"（開機/secure 已保留，不可沿用：{blocked or '—'}），"
+                f"（開機/secure/官方預設已佔用，不可沿用：{blocked or '—'}），"
                 f"無法滿足要求的 {count} 個。"
             )
 

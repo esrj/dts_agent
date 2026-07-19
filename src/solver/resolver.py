@@ -332,9 +332,12 @@ def resolve(intent: dict, kb: Knowledge | None = None, *, must_gpio=None,
     reserved = frozenset(str(r).upper() for r in (reserved_instances or ()))
     spec = SolveSpec(must_gpio=set(must_gpio or ()))
 
-    if intent.get("bootable_default"):
-        # The boot-essential set is handled downstream (require.json); there is
-        # nothing to resolve into signals here.
+    if intent.get("bootable_default") and not (intent.get("items") or []):
+        # Pure official-default request: the boot-essential set is handled
+        # downstream (require.json); nothing to resolve into signals here.
+        # With items present（「官方 plan 再加…」）the flag is additive — the
+        # official rows arrive as injected signal items (service._inject_official)
+        # and everything resolves normally.
         return spec
 
     for item in intent.get("items") or []:

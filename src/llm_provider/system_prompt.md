@@ -44,6 +44,12 @@ level; if a single request mixes levels, set request_type = "mixed".
   requirements at all. e.g. 給我一份可以開機的 DTS 就好 / 我不需要任何需求 /
   我要預設版本 / 給我官方的就好 / default / whatever boots.
   (The boot-essential set is handled downstream.)
+- Official/default plan PLUS extras ("官方 plan 但再多一組 SPI" / "官方預設之上
+  加一個 UART" / "keep the defaults and add …") -> bootable_default = true AND
+  items = ONLY the extras. Do NOT list the official peripherals as items — the
+  server injects them (pinned to their official pads) automatically; the extras
+  are then solved around them, and a count always allocates a NEW instance
+  (it never consumes an official one).
 - has_pin_constraint = true if the user pins ANY pad (count.pins, signal.pin,
   or any pin_assignments[].pin).
 - A pad the user wants used but does NOT tie to a specific signal/peripheral
@@ -160,6 +166,11 @@ Output:
 Input: 我不需要任何需求，給我預設版本就好
 Output:
 {"request_type":"count","bootable_default":true,"has_pin_constraint":false,"outputs":["solution","dts"],"items":[],"loose_pins":[],"raw_input":"我不需要任何需求，給我預設版本就好","unresolved":[]}
+
+## Example 6c — official plan PLUS extras (bootable_default + items)
+Input: 我要官方 plan，但另外再幫我多開一組 UART，順便加一組 SPI
+Output:
+{"request_type":"count","bootable_default":true,"has_pin_constraint":false,"outputs":["solution","dts"],"items":[{"level":"count","family":"UART","mode":null,"count":1,"pins":[],"pin_mode":null,"af":null},{"level":"count","family":"SPI","mode":null,"count":1,"pins":[],"pin_mode":null,"af":null}],"loose_pins":[],"raw_input":"我要官方 plan，但另外再幫我多開一組 UART，順便加一組 SPI","unresolved":[]}
 
 ## Example 8 — mixed levels
 Input: 我要兩個 FDCAN、ETH1，還有把 USART2_TX 放在 PA2

@@ -202,11 +202,55 @@ class Pipeline:
         intent["items"] = injected + kept       # 前置，當成已指定的固定 prefix
         return intent
 
+    def _inject_official(self, intent: dict, b: _Board) -> dict:
+        """bootable_default 與額外需求並存（「官方 plan 再加一組 SPI」）時，把官方
+        預設週邊以「已綁官方腳的 signal item」*前置* 注入 intent。
+
+        來源是該板 signal_to_pin.json（官方 DTS 解析），逐 signal 帶 pin、
+        pin_mode="required" -> resolver 轉成 must_bind：官方腳被釘死、並從其他
+        訊號的候選域移除，新需求天生避開官方腳。counts 的 `used` 集合會把注入的
+        instance 排除在 count domain 外，所以「再多一組 X」一定配新 instance，
+        不會吃掉官方那組。
+
+        跳過三類：(1) boot 範圍（boot_set）——那是 _inject_boot 的職責（含
+        relax 機制，不可越權釘死）；(2) reserve_only（secure/bootloader 持有）；
+        (3) 使用者點名的 instance（peripheral/signal item）——以使用者要求為準，
+        該 instance 的官方列不注入，避免與使用者的腳位指定互相矛盾。
+
+        冪等：先清掉自己上輪注入的（source 標記），再重注入——clarify 來回、
+        answer() 折返都乾淨可重入。"""
+        intent = copy.deepcopy(intent)
+        kept = [it for it in (intent.get("items") or [])
+                if it.get("source") != "official_default"]
+        claimed = set()                      # 使用者點名的 instance token
+        for it in kept:
+            lvl = (it.get("level") or "").lower()
+            if lvl == "peripheral" and it.get("instance"):
+                claimed.add(str(it["instance"]).upper())
+            elif lvl == "signal" and it.get("signal"):
+                claimed.add(str(it["signal"]).upper().split("_", 1)[0])
+        injected = []
+        for sig, pin in b.baseline.items():
+            if (sig in b.boot_set or sig not in b.kb.sigma
+                    or reserved_owner(sig, b.reserved_instances) is not None
+                    or sig.split("_", 1)[0].upper() in claimed):
+                continue
+            injected.append({
+                "level": "signal", "family": sig.split("_", 1)[0],
+                "signal": sig, "pin": pin, "af": None,
+                "pin_mode": "required", "source": "official_default",
+            })
+        intent["items"] = injected + kept
+        return intent
+
     def _continue(self, intent: dict, b: _Board, board: str) -> dict:
         """有歧義就回一題待確認；否則注入開機需求後求解並回最終結果。"""
         # 無具體需求 / 要可開機 / 要預設版 -> 直接給官方 baseline，不注入、不反問、不求解。
+        # 官方預設「加上」額外需求（items 非空）-> 注入官方列後照常求解（官方腳鎖定）。
         if intent.get("bootable_default"):
-            return self._baseline_result(intent, b, board)
+            if not (intent.get("items") or []):
+                return self._baseline_result(intent, b, board)
+            intent = self._inject_official(intent, b)
         # 全鎖版：先以此偵測歧義（鎖腳的是已指定 signal+pin，不影響 clarify 判斷）。
         injected = self._inject_boot(intent, b.boot_required, b.pin_locked)
         res = validate_clarify(injected, b.kb, must_gpio=b.must_gpio,
@@ -362,6 +406,13 @@ class Pipeline:
         boot_in_spec = [s for s in spec.required if s in b.boot_set]
         if boot_in_spec:
             spec.notes.append("自動保留開機必要 signals（require.json）：" + ", ".join(boot_in_spec))
+        # 官方預設注入列（bootable_default + 額外需求）：官方腳鎖定、標記輸出 row
+        off_sigs = {(it.get("signal") or "").upper()
+                    for it in (intent.get("items") or [])
+                    if it.get("source") == "official_default"}
+        if off_sigs:
+            insts = sorted({s.split("_", 1)[0] for s in off_sigs})
+            spec.notes.append("已保留官方預設週邊（官方腳鎖定）：" + ", ".join(insts))
         required, result = solve_signals(
             b.af, spec.required, spec.must_gpio, spec.must_bind, af_map=b.kb.af_map)
         return {
@@ -382,6 +433,7 @@ class Pipeline:
                     "pin": result.assignment[sig],
                     "af": af_of(b.kb.af_map, result.assignment[sig], sig),
                     "boot_reserved": sig in b.boot_set,
+                    "official_default": sig in off_sigs,
                     # G4 停用時不帶 ic 鍵：表格/匯出的 ic 欄都是資料驅動地消失
                     **({"ic": b.ic_of(sig)} if dataio.IC_BINDING_ENABLED else {}),
                 }
@@ -404,6 +456,7 @@ class Pipeline:
         assignment = [
             {"peripheral": sig.split("_", 1)[0], "signal": sig, "pin": pin,
              "af": af_of(b.kb.af_map, pin, sig), "boot_reserved": sig in b.boot_set,
+             "official_default": sig not in b.boot_set,
              **({"ic": b.ic_of(sig)} if dataio.IC_BINDING_ENABLED else {})}
             for sig, pin in b.baseline.items()
             if reserved_owner(sig, b.reserved_instances) is None

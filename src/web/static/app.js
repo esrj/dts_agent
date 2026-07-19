@@ -454,7 +454,9 @@ function buildResultBlock(rows, watchFp, planFp) {
       }
       const badge = a.boot_reserved
         ? ' <span class="badge-boot" title="require.json 自動保留的開機必要 signal">boot</span>'
-        : "";
+        : (a.official_default
+            ? ' <span class="badge-official" title="官方預設週邊，自動保留並鎖定官方腳位">官方</span>'
+            : "");
       const af = a.af == null ? "" : a.af;
       html += `<td>${escapeHtml(a.signal)}${badge}</td><td class="pin">${escapeHtml(a.pin)}</td><td>${escapeHtml(af)}</td>`;
       if (hasIc) {
