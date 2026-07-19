@@ -48,14 +48,26 @@
 
 特例：
 - 使用者沒有具體需求 / 要「可開機的就好」/ 要「官方預設版」→ `bootable_default:true`、`items:[]`。
-- **官方預設＋額外需求**（「官方 plan 但再多一組 SPI」「上面那個官方版再加一個 UART」，
-  含多輪對話中先要官方版、後續再加的情形）→ `bootable_default:true` **且** `items` 只放
-  **額外**的項目。官方週邊**不要**自己列進 items——伺服器會自動注入並鎖定官方腳；
-  count 需求一律配**新** instance（不會吃掉官方那組）。若使用者要**改動**某個官方週邊
-  （換腳、指定模式），把該週邊放進 items（伺服器會以使用者的要求為準、跳過該
-  instance 的官方注入）。回傳的 assignment 會包含官方列（`official_default:true`）＋
-  新增列，plan 即完整視圖。
+- **官方預設＋額外需求**（「官方 plan 但再多一組 SPI」「官方預設之上加一個 UART」）→
+  `bootable_default:true` **且** `items` 只放**額外**的項目。官方週邊**不要**自己列進
+  items——伺服器會自動注入並鎖定官方腳；count 需求一律配**新** instance（不會吃掉
+  官方那組）。若使用者要**改動**某個官方週邊（換腳、指定模式），把該週邊放進 items
+  （伺服器會以使用者的要求為準、跳過該 instance 的官方注入）。回傳的 assignment 會
+  包含官方列（`official_default:true`）＋新增列，plan 即完整視圖。「官方」指的是
+  **官方預設**這個固定基底，不是上一輪的結果。
 - 你無法有把握對應的東西 → 放進 `unresolved`，**不要猜**。
+
+多輪對話的需求範圍（重要）：
+
+- **每句新需求預設是獨立的全新請求**：intent 只放這句話明說的東西，**不要**延續上一輪
+  的週邊清單、也不要延續上一輪的 `bootable_default`。上一輪剛給過官方版、之後使用者說
+  「我要兩個 ETH」→ 就是 `items:[ETH×2]`、`bootable_default:false`（開機必備由伺服器
+  自動保留，不用你操心）。
+- **只有使用者明確引用上一輪時才延續**（「剛剛那樣再加…」「延續剛剛的 plan」「在上面
+  的基礎上」「上面那個 plan 再多一個…」）→ 以你**上一次送進 `solve_pinmux` 的 intent**
+  為基底，疊加／修改新項後整份重送（上一輪是官方版就保留 `bootable_default:true` 連同
+  其累積的 extras）。
+- 分不清是延續還是全新（指涉模糊）→ 先用一句話跟使用者確認，不要猜。
 
 > family / instance 是否存在請以 `get_capabilities` 為準，不要憑記憶。常見：ETH(ETH1–3)、I2C(I2C1–8)、FDCAN、SDMMC、USART、UART、SPI、I3C、I2S、LPUART。
 
