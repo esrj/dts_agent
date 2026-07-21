@@ -19,6 +19,11 @@ class LocalLMProvider(LLMProvider):
 
     DEFAULT_MODEL = "qwen3.6-8k"
     DEFAULT_BASE_URL = "http://localhost:11434/v1"
+    # Matches this repo's own reference server (see LOCAL_LM_API.md); a
+    # different local server is very likely configured with a different
+    # context window, hence LOCAL_LM_CONTEXT_WINDOW below rather than a
+    # bare literal wherever this number is needed.
+    DEFAULT_CONTEXT_WINDOW = 8192
 
     def __init__(
         self,
@@ -40,6 +45,9 @@ class LocalLMProvider(LLMProvider):
             or os.getenv("LOCAL_LM_MODEL")
             or os.getenv("DEFAULT_LLM_MODEL")
             or self.DEFAULT_MODEL
+        )
+        self.context_window = int(
+            os.getenv("LOCAL_LM_CONTEXT_WINDOW") or self.DEFAULT_CONTEXT_WINDOW
         )
         # Local serving is single-request; first token can lag tens of
         # seconds under contention / cold load (~9.4s). Keep timeout wide.
@@ -98,13 +106,18 @@ class LocalLMProvider(LLMProvider):
         *,
         model: str | None = None,
         temperature: float = 0.2,
-        max_tokens: int = 8192,
+        max_tokens: int | None = None,
         json_mode: bool = False,
         reasoning_effort: str = "none",
     ) -> LLMResponse:
         client = self._get_client()
         selected_model = model or self.model_name
         chat = self._to_openai_messages(messages)
+        # Default to the configured server's context window rather than a
+        # fixed literal, so the truncation guard below stays accurate for
+        # whatever server LOCAL_LM_BASE_URL actually points at.
+        if max_tokens is None:
+            max_tokens = self.context_window
 
         if json_mode:
             # response_format alone does not guarantee clean JSON on this
@@ -150,7 +163,8 @@ class LocalLMProvider(LLMProvider):
         # downstream json.loads fail with a cryptic message.
         if getattr(choice, "finish_reason", None) == "length":
             raise LLMError(
-                f"模型輸出/輸入被截斷（max_tokens={max_tokens}，context 上限 8192）。"
+                f"模型輸出/輸入被截斷（max_tokens={max_tokens}，"
+                f"context 上限 {self.context_window}）。"
                 f"請把需求拆成多筆，或縮短輸入。"
             )
 
