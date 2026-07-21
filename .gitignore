@@ -11,5 +11,7 @@ __pycache__/
 node_modules/
 output/
 plan.inc
-
+.claude
+CLAUDE.md
 .env
+
