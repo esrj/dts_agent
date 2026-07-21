@@ -204,8 +204,7 @@ class ChatReply:
 class Orchestrator:
     def __init__(self):
         self.tools = SolverTools()
-        # [orchestrator] -> anthropic / claude-opus-4-8 (see llm_modules.ini)
-        self.provider = get_provider(name="anthropic", module="orchestrator")
+        self.provider = get_provider(module="orchestrator")  # 讀 llm_modules.ini[orchestrator] 選 provider/model
         with open(_PROMPT_PATH, encoding="utf-8") as fh:
             self._system = fh.read()
 
