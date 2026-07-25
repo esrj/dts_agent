@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import copy
 import json
-import threading
 import os
 import re
 import sys
@@ -42,9 +41,7 @@ from solver.peripherals import _split_family
 from solver.solve import Instance, hall_violator
 
 # st linux 的 DT bindings 樹（G4 的唯一外部來源；raw 供抓取、blob 供人看）。
-# CubeMX 一次只能跑一個（產物目錄覆寫制）；鎖住整段驗證+落檔。
-_VALIDATOR_LOCK = threading.Lock()
-
+# （CubeMX 序列化鎖已隨引擎搬至 validator/engines.py 的 _CUBEMX_LOCK。）
 BINDINGS_REF = "v6.6-stm32mp"
 BINDINGS_RAW = ("https://raw.githubusercontent.com/STMicroelectronics/linux/"
                 f"{BINDINGS_REF}/Documentation/devicetree/bindings/")
@@ -383,90 +380,29 @@ class SolverTools:
                 }}
 
     # ----------------------------------------------------------------------- #
-    # DETERMINISTIC (green): STM32CubeMX official validation (G5)              #
+    # DETERMINISTIC (green): official板級驗證（G5；引擎依 board.yaml 分派）      #
     # ----------------------------------------------------------------------- #
     def run_validator(self, assignment: list | None,
                       board: str | None = None) -> dict:
-        """把一份已 SAT 的 assignment 交給官方 STM32CubeMX 驗證（腳位規則、
-        衝突——solver 知識庫外的官方約束）。產物與 log 覆寫至 output/validator/。
+        """把一份已 SAT 的 assignment 交給該板 manifest 指定的驗證引擎
+        （data/<board>/board.yaml validation：cubemx / script / none——見
+        validator/engines.py）。產物與 result.json 覆寫至 output/validator/。
 
-        回傳 {status:"pass"|"fail"|"error", conflicts[{pin,signal,message}],
-        artifacts_dir, …}；CubeMX 未安裝 → error + 明確安裝提示（不擋既有功能）。
-        跟 emit_plan 一樣：呼叫端（agent dispatch）只餵伺服器保存的已驗證解。
-
-        CubeMX 執行序列化：自動背景驗證（web 層）與模型顯式驗證可能並發，
-        而 runner 以「整個產物目錄重建」為前提——兩個行程同時跑必互踩。"""
-        with _VALIDATOR_LOCK:
-            return self._run_validator_locked(assignment, board)
-
-    def _run_validator_locked(self, assignment: list | None,
-                              board: str | None = None) -> dict:
-        from validator import (build_script, cubemx_resources_dir, dt_mode_plan,
-                               expected_pin_map, parse_result, plan_instances,
-                               run_script)
+        回傳 {status:"pass"|"fail"|"error"|"skipped", conflicts[{pin,signal,
+        message}], artifacts_dir, …}。skipped＝該板未啟用官方驗證——終態，
+        不是失敗、不需重試。CubeMX 板行為與過去相同：未安裝 → error +
+        明確安裝提示（不擋既有功能）；CubeMX 執行由引擎內全域鎖序列化
+        （自動背景驗證與模型顯式驗證可能並發，產物目錄覆寫制必互踩）。
+        跟 emit_plan 一樣：呼叫端（agent dispatch）只餵伺服器保存的已驗證解。"""
+        from validator.engines import engine_for
 
         board = board or DEFAULT_BOARD
         rows = assignment or []
-        artifacts_dir = os.path.join(OUTPUT, "validator")
         if not rows:
-            return {"status": "error", "artifacts_dir": artifacts_dir,
+            return {"status": "error",
+                    "artifacts_dir": os.path.join(OUTPUT, "validator"),
                     "message": "沒有可驗證的分配（assignment 為空）——請先成功求解。"}
-        try:
-            b = self._pipeline._load_board(board)
-        except Exception as exc:
-            return {"status": "error", "artifacts_dir": artifacts_dir,
-                    "message": f"無法載入板子 {board}：{exc}"}
-
-        try:
-            with open(board_paths(board)["cubemx"], encoding="utf-8") as fh:
-                mcu = json.load(fh)
-        except (OSError, ValueError) as exc:
-            return {"status": "error", "artifacts_dir": artifacts_dir,
-                    "message": f"此板未提供 cubemx.json（CubeMX MCU 常數）：{exc}"}
-
-        # DT 生成（附加產物）：CubeMX 裝了、且板 ioc 找得到才附掛；缺任一項
-        # 就退回純驗證（tinyload），行為與過去完全相同。mode 對映不到的周邊
-        # 只是不進 DT——驗證判定（pinout.csv diff）永遠不受 DT 階段影響。
-        dt_cfg, dt_dir = None, os.path.join(OUTPUT, "validator", "devicetree")
-        res_dir = cubemx_resources_dir()
-        if res_dir and mcu.get("board_ioc"):
-            board_ioc = os.path.join(res_dir, mcu["board_ioc"])
-            if os.path.isfile(board_ioc):
-                dt_cfg = {
-                    "board_ioc": board_ioc,
-                    "db_path": os.path.join(res_dir, "db"),
-                    "project_name": "plan",
-                    "project_dir": os.path.join(artifacts_dir, "project"),
-                    "context": mcu.get("dt_context", "CortexA35NSOS"),
-                    "modes": dt_mode_plan(plan_instances(rows),
-                                          mcu.get("dt_modes") or {},
-                                          mcu.get("dt_instance_map") or {}),
-                    "manifest_version": mcu.get("dt_manifest_version", "1.0"),
-                    "out_dir": dt_dir,
-                }
-
-        expected = expected_pin_map(rows)
-        script = build_script(rows, mcu_name=mcu["mcu_name"],
-                              artifacts_dir=artifacts_dir,
-                              reserved_pins=b.must_gpio, dt=dt_cfg)
-        run = run_script(script, artifacts_dir)
-        out = parse_result(expected, artifacts_dir, run.get("log", ""),
-                           ran_ok=run.get("ok", False),
-                           run_error=run.get("error"),
-                           dt_requested=dt_cfg is not None, dt_dir=dt_dir)
-        out["board"] = board
-        out["mcu"] = mcu.get("mcu_name")
-        # 結果摘要持久化到產物目錄：/api/validator/status 讀它、zip 打包也帶上
-        # （runner 已在本輪重建目錄，這裡寫入不會殘留舊輪結果）。
-        try:
-            os.makedirs(artifacts_dir, exist_ok=True)
-            out["ran_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-            with open(os.path.join(artifacts_dir, "result.json"), "w",
-                      encoding="utf-8") as fh:
-                json.dump(out, fh, ensure_ascii=False, indent=2)
-        except OSError:
-            pass
-        return out
+        return engine_for(board).validate(rows, board, self._pipeline._load_board)
 
     # ----------------------------------------------------------------------- #
     # SIDE EFFECT: persist a confirmed plan to disk                            #

@@ -7,9 +7,12 @@
 
 `run` (default) drives Locator -> Generator -> Validator -> Repairer (≤3
 rounds) and writes the full artifact set to output/generated/:
-    stm32mp257f-ev1.generated.dts, generated.patch, structured_edits.json,
+    <board>.generated.dts, generated.patch, structured_edits.json,
     generation_report.json, validation_report.json, diff_plan.json,
     locator_report.json          (failure_report.json only when it fails)
+
+Multi-board: `--board <id>`（或環境變數 PATCH_BOARD）指定 data/ 下的板子；
+不帶時預設 stm32mp257f-ev1（行為與單板時期相同）。
 
 Exit codes:  0 = pass · 1 = failed (retry_exhausted / unrepairable)
              2 = needs human input (locator_blocked / needs_info / boot_conflict)
@@ -171,6 +174,9 @@ def build_parser():
     sub = ap.add_subparsers(dest="cmd")
 
     def common(p, llm=False):
+        p.add_argument("--board", default=None,
+                       help=f"target board id under data/ (default: "
+                            f"$PATCH_BOARD or {config.DEFAULT_BOARD})")
         p.add_argument("--plan", default=None,
                        help="plan.csv path (default: output/plan/plan.csv)")
         if llm:
@@ -199,6 +205,10 @@ def main(argv=None):
     if not argv or argv[0].startswith("-"):
         argv.insert(0, "run")                          # default subcommand
     args = build_parser().parse_args(argv)
+    if getattr(args, "board", None):
+        # 切板必須在任何 milestone 模組動工前完成（CLI 是一次性行程，安全）
+        config.init_board(args.board)
+        print(f"[patch_agent] board = {config.BOARD}")
     cmd = {"run": cmd_run, "locate": cmd_locate,
            "dry-run": cmd_dry_run, "validate": cmd_validate}[args.cmd]
     return cmd(args)

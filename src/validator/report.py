@@ -61,9 +61,11 @@ def plan_fingerprint(pins: dict) -> str:
                         .encode()).hexdigest()[:12]
 
 
-def _validated_summary(expected: dict) -> dict:
+def validated_summary(expected: dict) -> dict:
     """result 的「這次到底驗了什麼」區塊——沒有它，不同 plan 的 pass 報告
-    看起來一模一樣（status/數字/檔名全同），無從對外證明驗證對象。"""
+    看起來一模一樣（status/數字/檔名全同），無從對外證明驗證對象。
+    公開函式：engines.NullEngine 也用它產 skipped 結果的 validated 區塊，
+    讓前端 fingerprint 對賬機制對所有引擎一視同仁。"""
     pins = dict(sorted(expected.items()))
     insts = sorted({s.split("_", 1)[0] for s in pins.values()})
     return {"instances": insts, "pins": pins,
@@ -112,7 +114,7 @@ def parse_result(expected: dict, artifacts_dir: str, log_text: str,
                 "artifacts_dir": artifacts_dir, "message": run_error}
 
     dt = _dt_summary(dt_requested, dt_dir)
-    validated = _validated_summary(expected)
+    validated = validated_summary(expected)
 
     csv_path = os.path.join(artifacts_dir, "pinout.csv")
     errors = log_errors(log_text)

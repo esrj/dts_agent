@@ -10,6 +10,11 @@ web UI 由 `dataio.list_boards()` 自動偵測，agent / solver 架構零改動�
 
 ```
 data/<board>/
+├── board.yaml   板子策略檔（選配）：身份（vendor…）＋驗證方式（validation:
+│                cubemx | script | none）＋選配 kernel_dts_path（patch diff
+│                檔頭的 kernel 樹路徑）。**只描述策略，不描述路徑**——
+│                路徑唯一權威仍是 dataio._BOARD_FILES 與 patch_agent/config.py。
+│                缺檔預設：預設板走 CubeMX、其他板不驗證（skipped）。
 ├── base/        手工維護核心 —— solver 與 agent 判定的主要依據
 │   ├── af_table.json               pin ↔ AF ↔ signal 全表（求解候選域唯一來源）
 │   ├── require.json                開機鎖定（boot_pin_locked：pin_map + solver_action）、
@@ -51,10 +56,10 @@ data/<board>/
 `bindings/`、`cache/` 是**選配檔**（缺檔時 loader 回空值，功能優雅降級：
 ic 欄留空、lookup_binding 回 no_ic / 現查）；`baseline/`、`dts_generation/`
 是**第二段（DTS patch）的選配檔**——缺夾時 plan 流程照常，只有「產生 DTS」
-功能不可用（web 依 `/api/dts/status` 的 available 決定是否顯示「產生 DTS」反問）。
-注意：第二段目前**單板**（`patch_agent/config.py` 的 `BOARD` 寫死
-stm32mp257f-ev1）——新板即使備齊這兩夾也要同步改 config，多板化見
-MERGE_PLAN §10.2。
+功能不可用（web 依 `/api/dts/status` 的 available 決定是否顯示「產生 DTS」反問；
+判定用 `patch_agent.config.board_ready()` 純路徑檢查）。第二段已多板化
+（2026-07，MULTI_BOARD_PLAN.md Phase 2）：備齊這兩夾即可用 `--board` 或
+web 對該板產 patch，**不需改 config**。
 
 ## 為什麼這樣分類
 
@@ -72,9 +77,34 @@ MERGE_PLAN §10.2。
    「查官方預設」讀 `dts/`、「查外部 IC」讀 `bindings/`——按用途直達，
    不需要先讀說明文件猜哪個檔是什麼。
 
+## board.yaml（板子策略檔）規範
+
+```yaml
+board_id: stm32mp257f-ev1
+vendor: ST                # 也用來推 kernel 樹 vendor 目錄（ST->st、Nuvoton->nuvoton、TI->ti）
+name: STM32MP257F-EV1
+knowledge_base: .         # 階段 B（Knowledge Extractor 產 manifest）保留欄位；現固定 "."
+kernel_dts_path: null     # 選配：patch diff a/ b/ 檔頭的 kernel 樹路徑，
+                          # 缺時以 vendor 推 arch/arm64/boot/dts/<vendor>/<board>.dts
+validation:
+  enabled: true
+  type: cubemx            # cubemx | script | none（引擎見 src/validator/engines.py）
+  script: null            # type: script 時填腳本路徑（相對本資料夾；階段 B 用）
+```
+
+- 選配檔（缺檔不影響板子偵測）；讀取入口 `dataio.load_board_manifest(board)`，
+  缺檔／壞檔回預設值：**預設板 → cubemx 啟用；其他板 → none**（＝引入前行為）。
+- 驗證回 `skipped` 是**終態**不是錯誤——前端顯示「此板未啟用官方驗證」，
+  編排模型不重試。
+- 現階段除 stm32mp257f-ev1 外一律 `enabled: false`（CubeMX 僅適用 ST 平台）。
+
 ## 新增一塊板子的最小步驟
 
 1. `mkdir data/<new-board>/{base,dts}`，備齊五個必要檔（格式照本板現有檔案）。
-2. （選配）有外部 IC 知識就加 `bindings/board_components.json`；
+2. 加 `board.yaml`（照上方規範；非 ST 板 `enabled: false`）。
+3. （選配）有外部 IC 知識就加 `bindings/board_components.json`；
    要用 CubeMX validator 就加 `base/cubemx.json`。
-3. 重啟服務——板子自動出現在下拉選單（`list_boards()` 以「五個必要檔齊全」為準）。
+4. （選配）要用第二段（產 DTS patch）就備 `baseline/`（baseline.csv＋dts/）
+   與 `dts_generation/` 六檔——齊了 web 的「產生 DTS」自動亮起
+   （`/api/dts/status` 的 available 由 `patch_agent.config.board_ready()` 判定）。
+5. 重啟服務——板子自動出現在下拉選單（`list_boards()` 以「五個必要檔齊全」為準）。

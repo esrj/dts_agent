@@ -1,8 +1,9 @@
 # patch_agent — DTS Patch pipeline（DTS_agent 第二段）
 
-自動化產生並驗證 STM32MP257F-EV1 板的 Linux kernel Device Tree (DTS) patch。
-原獨立專案 DTS_patch_agent，2026-06 併入 DTS_agent 成為第二段
-（合併記錄見根目錄 [MERGE_PLAN.md](../../MERGE_PLAN.md)）。
+自動化產生並驗證目標板的 Linux kernel Device Tree (DTS) patch（多板；
+預設 stm32mp257f-ev1）。原獨立專案 DTS_patch_agent，2026-06 併入 DTS_agent
+成為第二段（合併記錄見根目錄 [MERGE_PLAN.md](../../MERGE_PLAN.md)；
+多板化見 [MULTI_BOARD_PLAN.md](../../MULTI_BOARD_PLAN.md) Phase 2）。
 
 ## 目的
 
@@ -11,7 +12,7 @@
 本 pipeline 比對官方 baseline DTS，自動產出：
 
 - `output/generated/generated.patch` — 可直接餵給 Yocto（`SRC_URI += "file://generated.patch"`）的 kernel DT patch
-- `output/generated/stm32mp257f-ev1.generated.dts` — patch 套用後的完整 DTS（可直接用 `dtc` 編譯）
+- `output/generated/<board>.generated.dts` — patch 套用後的完整 DTS（可直接用 `dtc` 編譯；檔名隨板變）
 
 並在產出前後完成定位、生成、結構驗證、`cpp`/`dtc` 編譯驗證與錯誤自動修復
 （LLM 修復迴圈，最多 3 輪）。
@@ -28,9 +29,17 @@ PYTHONPATH=src venv/bin/python -m patch_agent run    # 預設讀 output/plan/pla
 PYTHONPATH=src venv/bin/python -m patch_agent locate   # 只跑定位（不用 LLM）：產出 diff plan
 PYTHONPATH=src venv/bin/python -m patch_agent dry-run  # 印出將送給 LLM 的 prompt，不呼叫 API
 PYTHONPATH=src venv/bin/python -m patch_agent validate # 只跑驗證
+
+# 多板：--board（各子命令通用）或環境變數 PATCH_BOARD；不帶＝stm32mp257f-ev1
+PYTHONPATH=src venv/bin/python -m patch_agent run --board <id>
 ```
 
 - Exit code：`0` 成功、`1` 失敗（修復耗盡）、`2` 需要人工介入（pin 衝突／資訊不足）。
+- 板級 `.dts` 定位規則（`config._find_board_dts`）：`baseline/dts/<board>.dts`
+  存在就用；否則取目錄下**唯一**的 `*.dts`（0 或多個→回慣例路徑讓錯誤自然
+  浮現，不猜）。patch diff 檔頭的 kernel 樹路徑（`config.KERNEL_DTS_PATH`）
+  可由 board.yaml 的 `kernel_dts_path` 覆寫，缺時以 vendor 推
+  `arch/arm64/boot/dts/<vendor>/<board>.dts`。
 - LLM provider/model 設定在根目錄 `llm_modules.ini`（`[dts_patch]` 區段），API key 放根目錄 `.env`（與第一段共用 `src/llm_provider/`）。
 - 編譯驗證需要 `dtc`（`brew install dtc`）與 `gcc`；可用 `--no-compile` 跳過（web 路徑在工具缺席時自動跳過並回報 `compiled=false`）。
 
@@ -74,8 +83,12 @@ deterministic 路徑。LLM 回應會快取在 `output/generated/llm_cache/`。
 
 ## 資料與路徑
 
-**所有路徑集中在 [`config.py`](config.py)**（唯一權威，模組一律 import 常數，
-不自行拼字串）。合併後的資料佈局（詳見 [data/README.md](../../data/README.md)）：
+**所有路徑集中在 [`config.py`](config.py)**（唯一權威，模組一律 import 常數、
+以 `config.X` 屬性存取，不自行拼字串）。多板：`config.init_board(board_id)`
+重算全部板相關路徑（m1–m8 零改動）——**非執行緒安全**，只准在 CLI 入口與
+web 的 single-flight DTS 工作者呼叫；`config.board_ready(board)` 是純路徑
+檢查（web 查可用性用，不動全域）。合併後的資料佈局（詳見
+[data/README.md](../../data/README.md)）：
 
 | config 常數 | 位置 | 說明 |
 |---|---|---|
@@ -94,7 +107,7 @@ extract_fixed_connections.py、derive_alias.py），平常不需執行。
 | 檔案 | 說明 |
 |---|---|
 | `generated.patch` | 在 board DTS 結尾 append 一個 managed region 的 patch，給 Yocto bbappend 使用 |
-| `stm32mp257f-ev1.generated.dts` | baseline + patch 合併後的完整 DTS |
+| `<board>.generated.dts` | baseline + patch 合併後的完整 DTS（檔名隨板變） |
 | `structured_edits.json` | patch 的程式可讀版（每個 peripheral 一組 edit） |
 | `diff_plan.json` / `locator_report.json` | Locator 的定位結果與報告 |
 | `generation_report.json` | Generator 報告（reuse/generate、LLM 用量） |

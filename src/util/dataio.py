@@ -50,6 +50,7 @@ _BOARD_FILES_OPTIONAL = {
     "components": os.path.join("bindings", "board_components.json"),  # 板上外部 IC 對照（G4）
     "binding_cache": os.path.join("cache", "binding_cache.json"),     # lookup_binding 查過即存
     "cubemx": os.path.join("base", "cubemx.json"),                    # CubeMX validator 板級常數（G5）
+    "manifest": "board.yaml",                                         # 板子策略檔（多板：驗證方式等）
 }
 
 # G4（外部 IC binding / ic 欄）功能開關：實作完整但暫時停用（詳見
@@ -93,6 +94,52 @@ def board_paths(board: str = DEFAULT_BOARD) -> dict:
     paths.update({role: os.path.join(d, fname)
                   for role, fname in _BOARD_FILES_OPTIONAL.items()})
     return paths
+
+
+# --------------------------------------------------------------------------- #
+# Board manifest (board.yaml) — 板子策略檔                                      #
+# --------------------------------------------------------------------------- #
+# board.yaml 只描述「策略與身份」（vendor、驗證方式…），**不描述知識庫內部
+# 路徑**——路徑唯一權威仍是本檔的 _BOARD_FILES（CLAUDE.md 紅線 2）。
+# knowledge_base 欄位為階段 B（Knowledge Extractor 自動產 manifest）保留，
+# 現階段固定視為 "."（知識庫就在板子資料夾本身）。
+_VALIDATION_TYPES = {"cubemx", "script", "none"}
+
+
+def load_board_manifest(board: str = DEFAULT_BOARD) -> dict:
+    """data/<board>/board.yaml -> dict（validation 區塊保證正規化）。
+
+    缺檔／壞檔＝預設值（＝board.yaml 引入前的系統行為，零遷移成本）：
+      - DEFAULT_BOARD           -> {enabled: True,  type: "cubemx"}
+      - 其他板                   -> {enabled: False, type: "none"}
+    只正規化 validation；其餘欄位（vendor、knowledge_base…）原樣保留。
+    未知 validation.type -> warn 並降為 none（防禦式，照本檔 loader 慣例）。
+    """
+    board = board or DEFAULT_BOARD
+    path = board_paths(board).get("manifest")
+    data: dict = {}
+    if path and os.path.isfile(path):
+        try:
+            import yaml
+            with open(path, encoding="utf-8") as fh:
+                loaded = yaml.safe_load(fh)
+            if isinstance(loaded, dict):
+                data = loaded
+            else:
+                _warn(f"board.yaml is not a mapping, ignoring: {path}")
+        except Exception as exc:            # 壞 YAML / pyyaml 缺席
+            _warn(f"could not read board manifest {path}: {exc}")
+    data.setdefault("board_id", board)
+
+    v = data.get("validation") if isinstance(data.get("validation"), dict) else {}
+    is_default_board = board == DEFAULT_BOARD
+    enabled = v.get("enabled", is_default_board)
+    vtype = v.get("type", "cubemx" if is_default_board else "none")
+    if vtype not in _VALIDATION_TYPES:
+        _warn(f"unknown validation.type {vtype!r} in {path}; falling back to 'none'")
+        vtype, enabled = "none", False
+    data["validation"] = {**v, "enabled": bool(enabled), "type": vtype}
+    return data
 
 
 # Single-board path constants = the default board's files. Kept so the CLI /

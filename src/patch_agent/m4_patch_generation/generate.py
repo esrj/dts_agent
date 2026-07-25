@@ -18,7 +18,8 @@ from dataclasses import dataclass, field
 from .. import config
 from ..m1_dts_parser import build_index
 
-KERNEL_DTS_PATH = "arch/arm64/boot/dts/st/stm32mp257f-ev1.dts"
+# patch diff 檔頭的 kernel 樹路徑改由 config.KERNEL_DTS_PATH 供給（多板：
+# 隨 init_board 重算；board.yaml 可用 kernel_dts_path 欄位覆寫）。
 MARK_BEGIN = "// >>> stm-agent: managed region (DO NOT EDIT BY HAND) >>>"
 MARK_END = "// <<< stm-agent: managed region <<<"
 
@@ -283,7 +284,7 @@ def generate(validated_plan_ir, stage2, index, skip_peripherals=None, to_disable
 
     patch = "".join(difflib.unified_diff(
         baseline.splitlines(keepends=True), generated.splitlines(keepends=True),
-        fromfile=f"a/{KERNEL_DTS_PATH}", tofile=f"b/{KERNEL_DTS_PATH}"))
+        fromfile=f"a/{config.KERNEL_DTS_PATH}", tofile=f"b/{config.KERNEL_DTS_PATH}"))
 
     edits.insert(0, {"type": "append_managed_region", "file": config.BOARD_DTS.name,
                      "region_id": "stm-agent", "content": managed})

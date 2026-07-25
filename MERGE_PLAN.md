@@ -518,6 +518,8 @@ mode 完整性檢查（不再回 None 跳過）。
   可改為由 solver 檔推導，消除第二處知識重複。
 - 多板化 patch pipeline：`config.py` 的 `BOARD` 目前寫死 EV1，可改吃參數並沿用
   `dataio.board_paths()` 的偵測邏輯。
+  **→ 已執行（2026-07-22，MULTI_BOARD_PLAN.md Phase 2）**：`init_board()`／
+  `PATCH_BOARD`／CLI `--board`，web `/api/dts/*` 改 `board_ready()` 純路徑檢查。
 - 一鍵入口：根目錄加 `run.sh` 或 console_scripts，免記 `PYTHONPATH=src`。
 
 ---

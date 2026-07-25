@@ -390,6 +390,9 @@
     .val-card.err  { border-left-color: var(--warn); background: var(--warn-bg);
                      border-color: var(--warn-border); }
     .val-card.err .val-head { color: var(--warn); }
+    /* skipped：該板未啟用官方驗證（board.yaml）——中性灰，非錯誤非失敗 */
+    .val-card.skip { border-left-color: var(--text-soft); }
+    .val-card.skip .val-head { color: var(--text-soft); }
     .val-card ul { margin: .4rem 0 0; padding-left: 1.2rem; }
     .val-card li.mv {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;

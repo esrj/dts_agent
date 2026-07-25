@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from .. import config
 from ..m1_dts_parser import build_index
 from ..m4_patch_generation.generate import (
-    MARK_BEGIN, MARK_END, KERNEL_DTS_PATH, _pinmux)
+    MARK_BEGIN, MARK_END, _pinmux)
 from .schema import EMIT_TOOL, TOOL_NAME, PROMPT_VERSION
 from .prompt import SYSTEM_PROMPT, build_user_prompt, build_retry_prompt
 
@@ -471,7 +471,7 @@ def generate(diff_plan, provider=None, index=None, *, model=None,
     art.generated_dts = generated
     art.patch = "".join(difflib.unified_diff(
         baseline.splitlines(keepends=True), generated.splitlines(keepends=True),
-        fromfile=f"a/{KERNEL_DTS_PATH}", tofile=f"b/{KERNEL_DTS_PATH}"))
+        fromfile=f"a/{config.KERNEL_DTS_PATH}", tofile=f"b/{config.KERNEL_DTS_PATH}"))
     edits_out.insert(0, {"type": "append_managed_region",
                          "file": config.BOARD_DTS.name,
                          "region_id": "stm-agent", "content": managed})

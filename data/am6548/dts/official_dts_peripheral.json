@@ -1,0 +1,209 @@
+{
+ "soc": "AM6548",
+ "source": "k3-am654-base-board.dts (kernel 官方 DTS)",
+ "description": "官方 k3-am654-base-board.dts 啟用的 peripheral → signal",
+ "peripherals": {
+  "cpsw_port1": {
+   "signals": [],
+   "pinctrl_groups": []
+  },
+  "davinci_mdio": {
+   "signals": [
+    "MCU_MDIO0_MDC",
+    "MCU_MDIO0_MDIO"
+   ],
+   "pinctrl_groups": [
+    "mcu_mdio_pins_default"
+   ]
+  },
+  "ecap0": {
+   "signals": [
+    "ECAP0_IN_APWM_OUT"
+   ],
+   "pinctrl_groups": [
+    "ecap0_pins_default"
+   ]
+  },
+  "mailbox0_cluster0": {
+   "signals": [],
+   "pinctrl_groups": []
+  },
+  "mailbox0_cluster1": {
+   "signals": [],
+   "pinctrl_groups": []
+  },
+  "main_i2c0": {
+   "signals": [
+    "I2C0_SCL",
+    "I2C0_SDA"
+   ],
+   "pinctrl_groups": [
+    "main_i2c0_pins_default"
+   ]
+  },
+  "main_i2c1": {
+   "signals": [
+    "I2C1_SCL",
+    "I2C1_SDA"
+   ],
+   "pinctrl_groups": [
+    "main_i2c1_pins_default"
+   ]
+  },
+  "main_i2c2": {
+   "signals": [
+    "I2C2_SCL",
+    "I2C2_SDA"
+   ],
+   "pinctrl_groups": [
+    "main_i2c2_pins_default"
+   ]
+  },
+  "main_spi0": {
+   "signals": [
+    "SPI0_CLK",
+    "SPI0_D0",
+    "SPI0_D1",
+    "SPI0_CS0"
+   ],
+   "pinctrl_groups": [
+    "main_spi0_pins_default"
+   ]
+  },
+  "main_uart0": {
+   "signals": [
+    "UART0_RXD",
+    "UART0_TXD",
+    "UART0_CTSn",
+    "UART0_RTSn"
+   ],
+   "pinctrl_groups": [
+    "main_uart0_pins_default"
+   ]
+  },
+  "mcu_cpsw": {
+   "signals": [
+    "MCU_RGMII1_TX_CTL",
+    "MCU_RGMII1_RX_CTL",
+    "MCU_RGMII1_TD3",
+    "MCU_RGMII1_TD2",
+    "MCU_RGMII1_TD1",
+    "MCU_RGMII1_TD0",
+    "MCU_RGMII1_RD3",
+    "MCU_RGMII1_RD2",
+    "MCU_RGMII1_RD1",
+    "MCU_RGMII1_RD0",
+    "MCU_RGMII1_TXC",
+    "MCU_RGMII1_RXC"
+   ],
+   "pinctrl_groups": [
+    "mcu_cpsw_pins_default"
+   ]
+  },
+  "mcu_i2c0": {
+   "signals": [
+    "MCU_I2C0_SCL",
+    "MCU_I2C0_SDA"
+   ],
+   "pinctrl_groups": [
+    "mcu_i2c0_pins_default"
+   ]
+  },
+  "mcu_r5fss0_core0": {
+   "signals": [],
+   "pinctrl_groups": []
+  },
+  "mcu_r5fss0_core1": {
+   "signals": [],
+   "pinctrl_groups": []
+  },
+  "mcu_uart0": {
+   "signals": [
+    "MCU_UART0_RXD",
+    "MCU_UART0_TXD",
+    "MCU_UART0_CTSn",
+    "MCU_UART0_RTSn"
+   ],
+   "pinctrl_groups": [
+    "mcu_uart0_pins_default"
+   ]
+  },
+  "ospi0": {
+   "signals": [
+    "MCU_OSPI0_CLK",
+    "MCU_OSPI0_DQS",
+    "MCU_OSPI0_D0",
+    "MCU_OSPI0_D1",
+    "MCU_OSPI0_D2",
+    "MCU_OSPI0_D3",
+    "MCU_OSPI0_D4",
+    "MCU_OSPI0_D5",
+    "MCU_OSPI0_D6",
+    "MCU_OSPI0_D7",
+    "MCU_OSPI0_CSn0"
+   ],
+   "pinctrl_groups": [
+    "mcu_fss0_ospi0_pins_default"
+   ]
+  },
+  "sdhci0": {
+   "signals": [
+    "MMC0_CLK",
+    "MMC0_CMD",
+    "MMC0_DAT0",
+    "MMC0_DAT1",
+    "MMC0_DAT2",
+    "MMC0_DAT3",
+    "MMC0_DAT4",
+    "MMC0_DAT5",
+    "MMC0_DAT6",
+    "MMC0_DAT7",
+    "MMC0_SDCD",
+    "MMC0_DS"
+   ],
+   "pinctrl_groups": [
+    "main_mmc0_pins_default"
+   ]
+  },
+  "sdhci1": {
+   "signals": [
+    "MMC1_CLK",
+    "MMC1_CMD",
+    "MMC1_DAT0",
+    "MMC1_DAT1",
+    "MMC1_DAT2",
+    "MMC1_DAT3",
+    "MMC1_SDCD",
+    "MMC1_SDWP"
+   ],
+   "pinctrl_groups": [
+    "main_mmc1_pins_default"
+   ]
+  },
+  "tscadc0": {
+   "signals": [],
+   "pinctrl_groups": []
+  },
+  "tscadc1": {
+   "signals": [],
+   "pinctrl_groups": []
+  },
+  "usb1": {
+   "signals": [
+    "USB1_DRVVBUS"
+   ],
+   "pinctrl_groups": [
+    "usb1_pins_default"
+   ]
+  },
+  "wkup_i2c0": {
+   "signals": [
+    "WKUP_I2C0_SCL",
+    "WKUP_I2C0_SDA"
+   ],
+   "pinctrl_groups": [
+    "wkup_i2c0_pins_default"
+   ]
+  }
+ }
+}

@@ -1,0 +1,12 @@
+# 板子策略檔（多板支援階段 A）——只描述身份與驗證策略，
+# 不描述知識庫內部路徑（路徑唯一權威：src/util/dataio._BOARD_FILES）。
+# 缺此檔時系統對本板的預設＝完全相同的值（見 dataio.load_board_manifest），
+# 明寫出來是為了當範本：新板子照抄本檔改欄位即可。
+board_id: stm32mp257f-ev1
+vendor: ST
+name: STM32MP257F-EV1
+knowledge_base: .        # 階段 B（Knowledge Extractor 產 manifest）保留欄位；現固定 "."
+validation:
+  enabled: true
+  type: cubemx           # cubemx | script | none
+  script: null           # type: script 時填腳本路徑（相對於本資料夾）

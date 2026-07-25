@@ -33,7 +33,7 @@ optee-os）。
 | CubeMX 官方驗證 | 解出的 assignment 逐腳送 CubeMX 套用官方規則，匯出 pinout diff 判定 pass/fail |
 | Device tree 生成 | 驗證同時用 CubeMX 隱藏指令 `generate deviceTree` 產 kernel / u-boot / tf-a / optee-os 四套 DT（附加產物，失敗不影響驗證判定） |
 | 外部 IC binding（停用中） | 板上 IC 對照（如 ETH PHY = RTL8211F-CG）＋ DT binding 查詢，見「功能旗標」 |
-| 多板架構 | `data/<board>/` 一板一資料夾，自動偵測；換板不改程式 |
+| 多板架構 | `data/<board>/` 一板一資料夾，自動偵測；換板不改程式。**兩段都多板**（2026-07 階段 A）：驗證方式由各板 `board.yaml` 決定（cubemx/script/none），第二段 CLI `--board`／web 依請求板切換 |
 
 **核心設計不變式（紅線）**：
 
@@ -148,7 +148,7 @@ DTS_agent/
 | `GET /api/validator/status` | 最近一次驗證結果摘要（result.json）＋ `running`（背景自動驗證進行中，前端輪詢用） |
 | `GET /api/validator/download` | 打包 output/validator/ 為 zip（遞迴含 devicetree/） |
 | `POST /api/dts/generate` | 第二段觸發：以**伺服器保存的最後一份 SAT plan** 產生 kernel DTS patch（client 只傳 fingerprint 指認畫面上的 plan，不一致回 409——防偽紅線延伸）；single-flight 背景執行 |
-| `GET /api/dts/status` | `{available, running, result}`——available=該板具備 baseline/＋dts_generation/ **且等於 patch_agent/config.py 的 BOARD（現寫死 stm32mp257f-ev1；多板化見 MERGE_PLAN §10.2）**；result 帶 fingerprint 對回它所根據的 plan |
+| `GET /api/dts/status` | `{available, running, result}`——available=該板具備 baseline.csv＋baseline/dts/*.dts＋dts_generation/（`patch_agent.config.board_ready()` 純路徑檢查，任意板可查；實際切板由 `/api/dts/generate` 的 single-flight 工作者 `init_board()`）；result 帶 fingerprint 對回它所根據的 plan |
 | `GET /api/dts/download` | 打包 output/generated/ 為 zip（generated.patch、generated.dts、各 report） |
 
 **編排工具**（鎖定動作集，`src/orchestrator/tools.py`）：
@@ -158,7 +158,7 @@ DTS_agent/
 | `solve_pinmux(intent, board)` | 唯一取得腳位的方式；sat/unsat(+Hall)/clarify/invalid |
 | `get_capabilities(board)` | families/modes/standalone/boot_provided/reserved_instances，全資料驅動 |
 | `emit_plan(board, format)` | 寫 output/plan/（防偽：只寫伺服器保存的解） |
-| `run_validator(board)` | CubeMX 驗證＋DT 生成；每輪最多 3 次（初驗+2 輪修復，超過回 blocked，伺服器強制）。**另有自動驗證**：web 層對每個新 SAT plan 排入背景驗證（latest-wins 佇列、CubeMX 全域鎖序列化），result.json 的 `validated.fingerprint` 讓前端把結果對回正確的 plan |
+| `run_validator(board)` | 板級驗證＋DT 生成——引擎依該板 board.yaml 分派（`validator/engines.py`：CubeMX／Script／Null；Null 回 `skipped` 終態，非錯誤）；每輪最多 3 次（初驗+2 輪修復，超過回 blocked，伺服器強制）。**另有自動驗證**：web 層對每個新 SAT plan 排入背景驗證（latest-wins 佇列、CubeMX 全域鎖序列化），result.json 的 `validated.fingerprint` 讓前端把結果對回正確的 plan |
 | `propose_suggestion(summary, intent)` | 建議卡片；伺服器重解驗證 sat 才收，每輪最多 3 張 |
 | `lookup_binding(peripheral)` | 外部 IC/binding 查詢（G4，flag 停用中，見 §6） |
 
@@ -205,7 +205,12 @@ I2C2,I2C2_SDA,PB4,9
 |---|---|---|
 | `FEATURE_IC_BINDING` | `0` | G4 外部 IC binding／plan ic 欄。**實作完整但停用**。gate 四點：service 的 assignment ic 欄、emit_plan 的 ic 欄、`_active_tools()` 是否註冊 lookup_binding、system prompt 區塊剔除（`<!-- IC_BINDING:BEGIN/END -->` 標記對）。設 `1` 即全鏈路恢復。 |
 | `STM32CUBEMX_PATH` | 自動掃描 | 覆寫 CubeMX 執行檔位置。未安裝時 validator 回 error、DT 生成靜默跳過，不影響其他功能。 |
+| `PATCH_BOARD` | `stm32mp257f-ev1` | 第二段（patch_agent）CLI 的目標板；`--board` 旗標優先。web 路徑不用它（由請求的 board 決定）。 |
 | `PORT` | `5001` | Flask 埠。 |
+
+板級驗證策略（多板階段 A）：`data/<board>/board.yaml` 的 `validation.type =
+cubemx | script | none`——`run_validator` 與背景自動驗證都經
+`validator/engines.py` 分派；非 ST 板回 `skipped`（終態，前端中性顯示）。
 
 啟動：`venv/bin/python src/web/app.py`
 
@@ -248,6 +253,8 @@ I2C2,I2C2_SDA,PB4,9
 - 路徑唯一權威：`util/dataio.py` 的 `_BOARD_FILES` / `_BOARD_FILES_OPTIONAL`，
   程式一律走 `board_paths(board)`。
 - 分類語意：`base/`+`dts/` 五檔必要（缺一該板不出現在清單）；`bindings/`、
-  `cache/` 選配（缺檔優雅降級）。`cache/` 隨時可整夾刪除。
+  `cache/`、`board.yaml` 選配（缺檔優雅降級）。`cache/` 隨時可整夾刪除。
 - 新增板子：`mkdir data/<board>/{base,dts}` 備齊五檔即自動偵測，
-  agent / solver 架構零改動。
+  agent / solver 架構零改動；加 `board.yaml` 決定驗證方式（非 ST 板
+  `enabled: false`），備 `baseline/`＋`dts_generation/` 即可產 DTS patch
+  （細節見 data/README.md 的 board.yaml 規範與最小步驟）。

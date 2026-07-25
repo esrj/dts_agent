@@ -310,15 +310,15 @@ def _remember_plan(rows, board, fp):
 
 
 def _dts_available(board: str) -> bool:
-    """該板具備 DTS patch 生成的知識庫（baseline/ + dts_generation/，選配檔語意
-    ——缺夾時 plan 流程照常，只有本功能不可用）。patch pipeline 目前單板
-    （config.BOARD），多板化列於 MERGE_PLAN §10.2。"""
+    """該板具備 DTS patch 生成的知識庫（baseline.csv + baseline/dts/*.dts +
+    dts_generation/，選配檔語意——缺夾時 plan 流程照常，只有本功能不可用）。
+    多板：純路徑檢查（config.board_ready），不動 patch config 全域；
+    實際切板在 _dts_worker 起跑時 init_board。"""
     try:
         from patch_agent import config as pconfig
     except Exception:
         return False
-    return (board == pconfig.BOARD
-            and pconfig.BASELINE.is_dir() and pconfig.DTS_GEN.is_dir())
+    return pconfig.board_ready(board)
 
 
 def _dts_files() -> list:
@@ -331,13 +331,20 @@ def _dts_worker(board: str, fp: str, snapshot_csv: str):
         from patch_agent import config as pconfig
         from patch_agent.cli import _write_locator_reports, summarize
         from patch_agent.m8_repairer import run as m8_run
+        # 多板：single-flight 保證同時只有一個 DTS 工作，這裡是唯一允許
+        # 切板（改 patch config 全域）的 web 呼叫點。
+        pconfig.init_board(board)
         # 清掉上一輪 run 的產物檔（保留 llm_cache/ 與本輪的 plan.used.csv）：
         # 失敗的 run 不會覆寫全部檔案，若不清理，artifacts 會把舊 plan 的
         # generated.patch 掛在新 fingerprint 下（逆向驗證發現的錯標問題）。
-        for stale in (pconfig.GENERATED_PATCH, pconfig.GENERATED_DTS,
+        # *.generated.dts 用 glob——切板後別板的舊產物也要清，否則 zip 打包
+        # 會把 A 板的 dts 混進 B 板的產物。
+        for stale in (pconfig.GENERATED_PATCH,
                       pconfig.STRUCTURED_EDITS, pconfig.GENERATION_REPORT,
                       pconfig.VALIDATION_REPORT, pconfig.FAILURE_REPORT,
-                      pconfig.DIFF_PLAN, pconfig.LOCATOR_REPORT):
+                      pconfig.DIFF_PLAN, pconfig.LOCATOR_REPORT,
+                      *(pconfig.OUTPUT_GEN.glob("*.generated.dts")
+                        if pconfig.OUTPUT_GEN.is_dir() else ())):
             try:
                 stale.unlink()
             except FileNotFoundError:
@@ -461,10 +468,13 @@ def dts_file():
         from patch_agent import config as pconfig
     except Exception:
         return jsonify(error="DTS 功能不可用"), 404
-    allowed = {pconfig.GENERATED_PATCH.name: pconfig.GENERATED_PATCH,
-               pconfig.GENERATED_DTS.name: pconfig.GENERATED_DTS}
-    path = allowed.get(os.path.basename(request.args.get("name") or ""))
-    if path is None:
+    # 白名單改 pattern：generated.patch 或任意 <board>.generated.dts（多板：
+    # 產物名隨板變，且伺服器重啟後 config.BOARD 可能不是產物所屬板）。
+    # 一律取 basename 再對 OUTPUT_GEN 拼相對路徑，杜絕路徑穿越。
+    name = os.path.basename(request.args.get("name") or "")
+    if name == pconfig.GENERATED_PATCH.name or name.endswith(".generated.dts"):
+        path = pconfig.OUTPUT_GEN / name
+    else:
         return jsonify(error="不允許的檔名"), 400
     try:
         text = path.read_text(encoding="utf-8")

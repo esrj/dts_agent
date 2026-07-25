@@ -81,7 +81,9 @@ class Target:
 @dataclass
 class DiffPlan:
     passed: bool
-    board: str = config.BOARD
+    # default_factory：init_board() 切板後新建的 DiffPlan 要拿到當下的 BOARD，
+    # 不能在 import 時定格（多板）。
+    board: str = field(default_factory=lambda: config.BOARD)
     errors: list = field(default_factory=list)
     warnings: list = field(default_factory=list)
     to_enable_or_update: list = field(default_factory=list)   # [Target]

@@ -63,7 +63,8 @@ class VError:
     message: str
     layer: int
     peripheral: str = None
-    file: str = config.BOARD_DTS.name
+    # default_factory：切板後的 VError 要指向當下板的 .dts 名（多板）。
+    file: str = field(default_factory=lambda: config.BOARD_DTS.name)
     line: int = None            # absolute line in the generated .dts
 
     def to_dict(self):

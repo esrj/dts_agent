@@ -60,6 +60,7 @@ function syncBoard(board) {
   currentBoard = board;
   const sel = $("board-select");
   if (sel) sel.value = board;
+  initDts();                                  // DTS 生成可用性依板而定
 }
 
 function setBoardEnabled(on) {
@@ -339,6 +340,14 @@ function buildValidatorCard(v) {
       `✓ STM32CubeMX 驗證通過（${who ? who + " — " : ""}${v.checked_pins ?? "?"} 支腳，無衝突）`));
     const dt = dtSummaryLine(v);
     if (dt) card.appendChild(dt);
+    return card;
+  }
+  if (v.status === "skipped") {
+    // 該板 manifest 未啟用官方驗證（board.yaml validation.enabled=false）——
+    // 中性呈現：不是錯誤也不是失敗，腳位正確性由 solver 知識庫保證。
+    card.className = "val-card skip";
+    card.appendChild(el("p", "val-head",
+      `◦ 此板未啟用官方驗證（${who ? who + " — " : ""}${v.checked_pins ?? "?"} 支腳，依知識庫求解）`));
     return card;
   }
   if (v.status === "error") {
@@ -720,7 +729,11 @@ function buildDtsCard(res) {
         "點開按鈕即可檢視完整內容："));
     const files = el("div", "dts-files");
     if (!res.no_changes) files.appendChild(buildDtsFileToggle("generated.patch"));
-    files.appendChild(buildDtsFileToggle("stm32mp257f-ev1.generated.dts"));
+    // 產物 .dts 檔名隨板變（<board>.generated.dts）——從 result.artifacts 找，
+    // 找不到（極舊結果）退回以 result.board 拼名。
+    const dtsName = (res.artifacts || []).find((f) => f.endsWith(".generated.dts"))
+      || ((res.board || "stm32mp257f-ev1") + ".generated.dts");
+    files.appendChild(buildDtsFileToggle(dtsName.split("/").pop()));
     done.appendChild(files);
     done.appendChild(buildDtsDownloadBtn());
     return done;
