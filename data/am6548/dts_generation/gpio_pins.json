@@ -1,0 +1,33 @@
+{
+ "board": "am6548",
+ "description": "Protected GPIO pins reserved in the baseline DTS via *-gpios/gpios refs. `protected_pins` = reserved by an active consumer; `reserved_by_disabled_only` = reserved only by a disabled node (re-muxable only with care).",
+ "source": "data/am6548/baseline/dts/ (auto-extracted, status-aware)",
+ "protected_pins": [
+  "MCU_OSPI0_CSN1",
+  "MCU_OSPI1_DQS"
+ ],
+ "reserved_by_disabled_only": [],
+ "count": 2,
+ "reservations": [
+  {
+   "pin": "MCU_OSPI0_CSN1",
+   "bank": "wkup_gpio0",
+   "line": 24,
+   "property": "gpios",
+   "consumer_node": "switch-5",
+   "consumer_active": true,
+   "consumer_compatible": null,
+   "source": "k3-am654-base-board.dts"
+  },
+  {
+   "pin": "MCU_OSPI1_DQS",
+   "bank": "wkup_gpio0",
+   "line": 27,
+   "property": "gpios",
+   "consumer_node": "switch-6",
+   "consumer_active": true,
+   "consumer_compatible": null,
+   "source": "k3-am654-base-board.dts"
+  }
+ ]
+}

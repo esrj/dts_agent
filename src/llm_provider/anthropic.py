@@ -200,8 +200,17 @@ class AnthropicProvider(LLMProvider):
     _STRIPPABLE = ("temperature", "top_p", "top_k")
 
     def _create(self, client, kwargs: dict):
-        """Call messages.create, progressively stripping any sampling param the
-        model rejects, then retrying.
+        """Call the model, progressively stripping any sampling param it rejects.
+
+        We always STREAM (messages.stream + get_final_message) rather than the
+        plain messages.create: the SDK refuses a *non-streaming* request whose
+        max_tokens is large enough to risk a >10-minute response ("Streaming is
+        required for operations that may take longer than 10 minutes"), and the
+        knowledge_extract extraction prompts routinely ask for tens of thousands
+        of tokens (af/profiles use max_tokens=32768). Streaming accumulates the
+        same final Message object, so callers (_extract_text / _extract_usage /
+        complete_raw and its tool_use blocks) are unchanged.（自 extractor fork
+        porting，llm_provider 統一時併入——EXTRACTOR_MERGE_PLAN D2。）
 
         Newer models (e.g. claude-opus-4-8) reject `temperature` outright with a
         400 'temperature is deprecated for this model'. Rather than hard-code which
@@ -213,7 +222,8 @@ class AnthropicProvider(LLMProvider):
         attempt = dict(kwargs)
         while True:
             try:
-                return client.messages.create(**attempt)
+                with client.messages.stream(**attempt) as stream:
+                    return stream.get_final_message()
             except Exception as exc:
                 msg = str(exc).lower()
                 victim = next((p for p in self._STRIPPABLE

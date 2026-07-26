@@ -206,7 +206,10 @@ def _pin_map_rows(name: str, block) -> list:
         if not (isinstance(row, (list, tuple)) and len(row) >= 2):
             _warn(f"boot_pin_locked[{name}]: malformed pin_map row {row!r}; skipped")
             continue
-        sig, pin = str(row[0]).strip().upper(), str(row[1]).strip().upper()
+        # signal 保留原大小寫——TI 等板的訊號名含小寫（UART0_CTSn），Σ 以
+        # af_table 原文為準，硬大寫會對不上（2026-07-25 am6548 事故）。
+        # ST 的訊號本來就全大寫，行為不變。pin（pad 鍵）維持大寫正規化。
+        sig, pin = str(row[0]).strip(), str(row[1]).strip().upper()
         if sig and pin:
             out.append((sig, pin))
     return out
@@ -326,7 +329,7 @@ def load_board_components(path) -> dict:
     return {str(k).upper(): v for k, v in comp.items() if isinstance(v, dict)}
 
 
-def load_pin_locked(require_path) -> dict:
+def load_pin_locked(require_path, sigma=None) -> dict:
     """Fixed boot assignments -> a must_bind map {pin: signal}, straight from
     the emit_fixed_assignment groups' pin_map in require.json (the [signal,
     pin, af] triples are board constants — no signal_to_pin lookup involved).
@@ -334,17 +337,26 @@ def load_pin_locked(require_path) -> dict:
     signal's candidate domain. reserve_only groups contribute nothing here:
     their pads are reserved via load_reserved() and never bound in the kernel
     plan. Returns {} when the section is absent (no fixed routing declared).
+
+    sigma（可選）：給了就把 signal 不在 Σ 的列剔除並警告——與
+    load_require_signals 對稱的防禦；否則壞 require.json 列會一路流進
+    resolver 才以難懂的 unknown-signal 炸開（2026-07-25 am6548 事故）。
     """
-    locked = {}
+    locked, dropped = {}, []
     for name, block in _load_boot_groups(require_path).items():
         if _solver_action(block) != "emit_fixed_assignment":
             continue
         for sig, pin in _pin_map_rows(name, block):
+            if sigma is not None and sig not in sigma:
+                dropped.append(sig)
+                continue
             if pin in locked and locked[pin] != sig:
                 _warn(f"boot_pin_locked: {pin} mapped to both {locked[pin]} "
                       f"and {sig}; keeping {locked[pin]}")
                 continue
             locked[pin] = sig
+    if dropped:
+        _warn(f"require.json: dropped {len(dropped)} non-Σ boot pin_map rows: {dropped}")
     return locked
 
 

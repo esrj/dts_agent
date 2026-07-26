@@ -26,7 +26,7 @@ from .. import config
 from ..m1_dts_parser import build_index
 from ..m1_dts_parser.index import family_of
 from ..m2_validation_harness.harness import (
-    validate_plan, load_plan, _boot_required_nodes, _locked_nodes,
+    validate_plan, load_plan, _boot_required_nodes, _locked_nodes, _load,
     Error, REQUIRE_CONFLICT, UNKNOWN_PERIPHERAL, PLAN_CONTRADICTION)
 from ..m3_target_resolution import resolve
 
@@ -46,7 +46,7 @@ def load_plan_flexible(path):
     with open(path, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         extra_cols = [c for c in (reader.fieldnames or []) if c and c not in L1_COLS]
-        for r in reader:
+        for lineno, r in enumerate(reader, start=2):
             per = (r.get("peripheral") or "").strip()
             if not per:
                 continue
@@ -54,11 +54,17 @@ def load_plan_flexible(path):
                 if per not in disables:
                     disables.append(per)
                 continue
+            af = (r.get("af") or "").strip()
+            if not af.lstrip("-").isdigit():
+                # 與 m2.load_plan 同規則：空欄/非整數 AF 要可定位，不裸炸 int('')
+                raise ValueError(
+                    f"{path} 第 {lineno} 行：af 欄必須是整數，實際為 {af!r}"
+                    f"（{per},{r.get('signal')},{r.get('pin')}）")
             rows.append({
                 "peripheral": per,
                 "signal": r["signal"].strip(),
                 "pin": r["pin"].strip(),
-                "af": int(r["af"]),
+                "af": int(af),
                 "extras": {c: r[c].strip() for c in extra_cols
                            if (r.get(c) or "").strip()},
             })
@@ -154,12 +160,40 @@ def _context_pack(per, info, res, index, fixed, board_cfg, bindings):
     }
 
 
+# ---- peripheral 欄正規化（多底線 instance 名，2026-07-25）--------------------
+def _normalize_peripherals(plan_rows, alias_map):
+    """以 alias 鍵（該板權威 instance 名）對 signal 做最長前綴匹配，修正
+    plan 的 peripheral 欄。
+
+    第一段的 peripheral 欄用 `signal.split("_", 1)[0]` 推導——對 K3 的多底線
+    instance 名（MCU_I2C0_SCL、WKUP_UART0_CTSn）會切出假週邊「MCU」「WKUP」，
+    導致定位到不存在的節點（&mcu → dtc `Label or path not found`）。
+    alias 鍵是 extractor 從官方 DTS 導出的正確 instance 名（MCU_I2C0…），
+    在消費端據此重新歸戶。單 token instance（stm32 全部、K3 主域）匹配結果
+    與 split 相同——回歸零改變；匹配不到一律保留原值（不猜）。"""
+    insts = sorted(alias_map, key=len, reverse=True)          # 最長前綴優先
+    out = []
+    for r in plan_rows:
+        sig = (r.get("signal") or "").upper()
+        per = r.get("peripheral")
+        for tok in insts:
+            if sig.startswith(tok.upper() + "_"):
+                # 同 pad 雙命名別名（ma35d1 的 eMMC0_*/SD0_* 同屬 &sdhci0）：
+                # 折回 canonical 主鍵，兩套訊號名歸戶到同一週邊，plan_set
+                # 才是完整集合（否則各自殘缺、觸發 INCOMPLETE/錯誤定位）
+                per = (alias_map[tok] or {}).get("canonical") or tok
+                break
+        out.append({**r, "peripheral": per})
+    return out
+
+
 # ---- core -------------------------------------------------------------------
 def locate(plan_rows, extra_columns, *, index, af_table, profiles, gpio_pins,
            require, signal_to_pin, alias, fixed=None, board_cfg=None,
            bindings=None, baseline_rows=None, disable_requests=None):
     """Run the deterministic Locator over already-parsed flexible plan rows."""
     alias_map = alias.get("aliases", {})
+    plan_rows = _normalize_peripherals(plan_rows, alias_map)
     boot_nodes = _boot_required_nodes(require)
     locked = require.get("board_pin_locked", {}).get("peripherals", [])
     unsafe = boot_nodes | _locked_nodes(locked, alias_map)
@@ -301,11 +335,9 @@ def _baseline_owner_map(index):
     return owner
 
 
-def _load(path):
-    try:
-        return json.load(open(path))
-    except Exception:
-        return None
+# _load 改用 m2 的統一版本（KB_ROBUSTNESS_PLAN 改動 2）：選配檔缺檔回空骨架、
+# 必要檔缺檔／壞 JSON 一律明確 raise——取代舊版「except 全吞回 None」
+# （None 會在下游 .get() 處以 AttributeError 炸開，離根因太遠）。
 
 
 def run(plan_csv=None):

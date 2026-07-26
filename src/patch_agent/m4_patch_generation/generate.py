@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 
 from .. import config
 from ..m1_dts_parser import build_index
+from ..pinmux_style import get_style, assemble_group_sections
 
 # patch diff 檔頭的 kernel 樹路徑改由 config.KERNEL_DTS_PATH 供給（多板：
 # 隨 init_board 重算；board.yaml 可用 kernel_dts_path 欄位覆寫）。
@@ -65,25 +66,16 @@ def resolve_electrical(index, existing_p0, family, signal, role):
 
 # ---- rendering -----------------------------------------------------------
 def _pinmux(pin, mode):
-    return f"STM32_PINMUX('{pin[1]}', {int(pin[2:])}, {mode})"
-
-
-def _render_subnode(name, pin, mode, electrical, signal):
-    out = [f"\t\t{name} {{"]
-    cm = f"\t/* {signal} */" if signal else ""
-    out.append(f"\t\t\tpinmux = <{_pinmux(pin, mode)}>;{cm}")
-    for k, v in electrical.items():
-        out.append(f"\t\t\t{k};" if v is None else f"\t\t\t{k} = {v};")
-    out.append("\t\t};")
-    return "\n".join(out)
+    # 渲染分派給該板的 pinmux style（原 STM32_PINMUX 硬編碼平移至
+    # pinmux_style.Stm32Style；缺 style 檔預設 stm32，行為不變）
+    return get_style().render_pinmux(pin, mode)
 
 
 def _render_group(label, name, entries):
-    out = [f"\t{label}: {name} {{"]
-    for sub, pin, mode, elec, sig in entries:
-        out.append(_render_subnode(sub, pin, mode, elec, sig))
-    out.append("\t};")
-    return "\n".join(out)
+    """群組渲染委派給該板的 pinmux style（stm32 subnode 形／K3 IOPAD 陣列形），
+    回 (容器 ref, 群組文字)——容器由 style 決定（stm32 恆為 &pinctrl；
+    K3 依 pads 的 domain 選 &main_pmx0/&wkup_pmx0…）。"""
+    return get_style().render_group(label, name, entries)
 
 
 def _render_override(label, names, pinctrl_map, status="okay"):
@@ -147,13 +139,15 @@ def _generate_one(per, ir_info, resolution, index, bindings=None):
                 f"Set via board_config if a non-default is required.")
 
     # --- default-state entries (electrical via cascade) ---
+    style = get_style()
     default_entries = []
     for i, sig in enumerate(sig_order, 1):
         s = signals[sig]
         role = _role(per, sig)
         elec, src = resolve_electrical(index, resolution.existing_pinctrl_0, family, sig, role)
-        default_entries.append((f"pins{i}", s["pin"], f"AF{s['af']}", elec, sig))
-        report["pinmux"].append({"signal": sig, "pin": s["pin"], "af": f"AF{s['af']}",
+        default_entries.append((f"pins{i}", s["pin"], style.mode_token(s["af"]), elec, sig))
+        report["pinmux"].append({"signal": sig, "pin": s["pin"],
+                                 "af": style.mode_token(s["af"]),
                                  "af_source": "validated_plan_ir", "electrical_source": src})
 
     groups, pinctrl_map = [], {}
@@ -178,7 +172,9 @@ def _generate_one(per, ir_info, resolution, index, bindings=None):
                 s = signals[sig]
                 old_pin = sig2old.get(sig)
                 is_analog, elec = pstate.get(old_pin, (True, {})) if old_pin else (True, {})
-                mode = "ANALOG" if is_analog else f"AF{s['af']}"
+                lp = style.lowpower_token()
+                # 無低功耗腳態詞彙的 style（K3）：低功耗態退回 plan AF（不產壞 mode）
+                mode = lp if (is_analog and lp) else style.mode_token(s["af"])
                 entries.append((f"pins{j}", s["pin"], mode, elec, sig if not is_analog else None))
             glabel = f"{label}_{name}_pins_generated"
             groups.append((glabel, f"{label}-{name}-generated", entries))
@@ -270,10 +266,9 @@ def generate(validated_plan_ir, stage2, index, skip_peripherals=None, to_disable
               " */"]
     body = list(header)
     if all_groups:
-        body.append("&pinctrl {")
-        body += all_groups
-        body.append("};")
-        body.append("")
+        # all_groups = [(容器 ref, 群組文字)]；依容器分組輸出（stm32 單容器時
+        # 與舊版 "&pinctrl { … };" 逐字相同）
+        body += assemble_group_sections(all_groups)
     body += [t + ("" if t.endswith("\n") else "") for t in _interleave(all_overrides)]
     body.append(MARK_END)
     managed = "\n".join(body)

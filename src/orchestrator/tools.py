@@ -429,7 +429,9 @@ class SolverTools:
 
         bad = []
         for r in rows:
-            sig = (r.get("signal") or "").upper()
+            # signal 先試原大小寫（TI 等板含小寫，如 UART0_CTSn），再退大寫（ST 慣例）
+            raw = (r.get("signal") or "")
+            sig = raw if raw in b.kb.sigma else raw.upper()
             pin = (r.get("pin") or "").upper()
             owner = reserved_owner(sig, b.reserved_instances)
             if sig not in b.kb.sigma:

@@ -1,7 +1,7 @@
 # DTS_agent — pin-mux 求解 ＋ DTS patch 生成（多板；預設 STM32MP257F-EV1）
 
 兩段式單一系統（2026-06 由 solver_agent 與 DTS_patch_agent 合併；2026-07
-多板化階段 A 完成，見 [MULTI_BOARD_PLAN.md](MULTI_BOARD_PLAN.md)）：
+多板化完成；2026-07-25 Knowledge Extractor 併入，見 [EXTRACTOR_MERGE_PLAN.md](EXTRACTOR_MERGE_PLAN.md)）：
 第一段自然語言 → pin assignment（確定性 pipeline `/api/solve` 與 LLM tool-use
 編排 `/api/chat` 共用同一個 CSP 求解核心）；第二段 plan.csv → 經驗證的
 kernel DTS patch（`src/patch_agent/` m1–m8 pipeline，web 由 `/api/dts/*` 觸發）。
@@ -21,6 +21,9 @@ PYTHONPATH=src venv/bin/python -m patch_agent locate  # 只定位（不用 LLM�
 PYTHONPATH=src venv/bin/python -m patch_agent dry-run # 印 LLM prompt，不呼叫 API
 PYTHONPATH=src venv/bin/python -m patch_agent run --board <id>   # 指定板（或 PATCH_BOARD 環境變數；
                                                       # 不帶＝stm32mp257f-ev1，行為同單板時期）
+venv/bin/python tools/kb_lint.py <board>              # 知識庫進場檢查（新板丟進 data/ 後先跑這個）
+PYTHONPATH=src venv/bin/python -m knowledge_extract   # 第 0 段 CLI（input/ 材料 → output/staging/；
+                                                      # web 上傳流程見 src/web/board_create.py）
 ```
 
 （2026-07-04 清理：tests/ 與 docs/ 已刪除——本專案目前沒有測試套件；
@@ -46,12 +49,14 @@ PYTHONPATH=src venv/bin/python -m patch_agent run --board <id>   # 指定板（�
    假 error 污染真產物，見 PROJECT_OVERVIEW.md §7）。
 6. **兩份 boot 知識檔不可混淆**——`base/require.json`（solver：腳位級開機常數）
    與 `dts_generation/boot_requirements.json`（patch：DTS node 級開機知識）
-   是**不同的檔案、不同的 schema、不同的消費者**，永不合併（MERGE_PLAN §0.1）。
+   是**不同的檔案、不同的 schema、不同的消費者**，永不合併——這是 2026-06
+   兩專案合併時的定案決策：曾共用檔名導致混淆，改名隔離後不再回退。
 
 ## 目錄地圖（速查）
 
 | 位置 | 內容 |
 |---|---|
+| `src/knowledge_extract/` | 第 0 段：手冊＋DTS → 知識庫（**只寫 output/staging/**，落地由 web REVIEW 確認後原子搬移——紅線 5 延伸）；出廠 lint 內建 |
 | `src/solver/` | 確定性核心：CSP solver（Hall 證據）、resolver 反腐層、周邊三層展開、count 降階、反問 |
 | `src/service.py` | 確定性 pipeline；optional（A + 可選 B）拆解在這層 |
 | `src/orchestrator/` | tool-use loop（`MAX_STEPS=12`、validator 停損 `MAX_VALIDATOR_RUNS=3`）、鎖定工具集、session store |
@@ -70,6 +75,8 @@ PYTHONPATH=src venv/bin/python -m patch_agent run --board <id>   # 指定板（�
 - `STM32CUBEMX_PATH`：覆寫 CubeMX 執行檔位置；未安裝時 validator 回 error、
   DT 生成靜默跳過，不影響其他功能。
 - `PATCH_BOARD`（預設 stm32mp257f-ev1）：第二段 CLI 的目標板（`--board` 優先）。
+- `FEATURE_BOARD_CREATE`（預設 1）：web「上傳新增板子」功能（端點＋前端入口）；
+  設 0 ＝合併前行為。
 - **板級驗證策略**（`data/<board>/board.yaml` 的 `validation` 區塊）：
   `type: cubemx | script | none`（引擎見 `src/validator/engines.py`）。
   缺 board.yaml 時預設＝預設板走 CubeMX、其他板不驗證（回 `skipped`，

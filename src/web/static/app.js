@@ -9,23 +9,37 @@ let chatSessionId = null;
 // --------------------------------------------------------------------------- //
 // 板子選擇 — 啟動時向 /api/boards 取得 data/boards/ 下自動偵測到的板子清單
 // --------------------------------------------------------------------------- //
-async function loadBoards() {
+const BC_CREATE_VALUE = "__create__";     // 下拉選單「上傳新板子」哨兵值
+let boardNames = {};                      // slug -> display name（board.yaml）
+
+async function loadBoards(selectSlug) {
   const sel = $("board-select");
   if (!sel) return;
   try {
     const r = await fetch("/api/boards");
     const d = await r.json();
     const boards = (d.boards && d.boards.length) ? d.boards : [d.default];
-    currentBoard = d.default || boards[0];
+    boardNames = d.names || {};
+    currentBoard = (selectSlug && boards.includes(selectSlug))
+      ? selectSlug : (d.default || boards[0]);
     sel.innerHTML = "";
     boards.forEach((b) => {
       const opt = document.createElement("option");
       opt.value = b;
-      opt.textContent = b;
+      opt.textContent = boardNames[b] || b;     // display name（缺 manifest 退回 id）
       if (b === currentBoard) opt.selected = true;
       sel.appendChild(opt);
     });
-    sel.addEventListener("change", onBoardChange);
+    if (d.can_create) {                         // 「＋ 上傳新板子…」固定在最底
+      const opt = document.createElement("option");
+      opt.value = BC_CREATE_VALUE;
+      opt.textContent = "＋ 上傳新板子…";
+      sel.appendChild(opt);
+    }
+    if (!sel._bcBound) {                        // 重載時避免重複掛 listener
+      sel.addEventListener("change", onBoardChange);
+      sel._bcBound = true;
+    }
   } catch (e) {
     // 取不到清單（舊後端 / 失敗）-> 隱藏選單，沿用後端預設板
     sel.style.display = "none";
@@ -33,11 +47,241 @@ async function loadBoards() {
 }
 
 function onBoardChange(e) {
+  if (e.target.value === BC_CREATE_VALUE) {
+    e.target.value = currentBoard;              // 選單還原，改開彈窗
+    bcOpen();
+    return;
+  }
   currentBoard = e.target.value;
   // 換板等於開新話題：丟掉 Agent 對話 session，避免拿新板的 Σ/DTS
   // 去回答舊板的問題（後端 session 綁定某塊板的對話歷史）。
   chatSessionId = null;
   initDts();                                  // DTS 生成可用性依板而定
+}
+
+// --------------------------------------------------------------------------- //
+// 上傳新板子（EXTRACTOR_MERGE_PLAN M4）：彈窗 → 上傳 → 等待 → REVIEW → 落地
+// --------------------------------------------------------------------------- //
+const BC_STAGE_LABEL = {
+  unpack: "解包上傳檔…",
+  manual: "解析手冊（LLM 抽取，數分鐘～數十分鐘）…",
+  dts: "解析 DTS、生成知識庫…",
+  board_yaml: "寫入板子設定…",
+  lint: "知識庫進場檢查…",
+  landing: "落地中…",
+};
+let bcPolling = false;
+
+function bcShow(section) {                    // form | progress | review
+  $("bc-overlay").hidden = false;
+  ["bc-form", "bc-progress", "bc-review"].forEach((id) => {
+    $(id).hidden = (id !== "bc-" + section);
+  });
+}
+
+async function bcOpen() {
+  // 有進行中的 job 就直接接上，否則開空白表單
+  try {
+    const s = await (await fetch("/api/boards/create/status")).json();
+    if (s.running || s.stage === "failed") {
+      bcShow("progress"); bcRenderProgress(s); bcPoll(); return;
+    }
+  } catch (e) { /* 端點不可用 → 照常開表單，送出時再報錯 */ }
+  $("bc-form-error").textContent = "";
+  bcShow("form");
+}
+
+function bcClose() { $("bc-overlay").hidden = true; }
+
+// DTS 選檔後偵測板檔候選：多個 .dts 時要求使用者指定 baseline（M7 發現的
+// 真實 gap——kernel 樹常含同 SoC 多塊板的板檔，無法自動決定）
+function bcDetectBaseline() {
+  const files = Array.from($("bc-dts").files || []);
+  const cands = files.map((f) => f.webkitRelativePath || f.name)
+    .filter((p) => p.endsWith(".dts"))
+    .map((p) => p.split("/").pop());
+  const field = $("bc-baseline-field");
+  const sel = $("bc-baseline");
+  sel.innerHTML = "";
+  if (cands.length > 1) {
+    // 不給預設值——2026-07-25 事故：預設字母序第一個讓使用者誤選 IOT2050
+    // 的 24 行覆蓋殼當 baseline，整份知識庫空洞化。必須明選。
+    const ph = document.createElement("option");
+    ph.value = ""; ph.textContent = "—— 請選擇（通常含 base-board / evm / evb 字樣）——";
+    ph.disabled = true; ph.selected = true;
+    sel.appendChild(ph);
+    cands.sort().forEach((c) => {
+      const o = document.createElement("option");
+      o.value = c; o.textContent = c;
+      sel.appendChild(o);
+    });
+    field.hidden = false;
+  } else {
+    field.hidden = true;                    // 0/1 個候選：後端自動決定
+  }
+}
+
+async function bcSubmit() {
+  const name = $("bc-name").value.trim();
+  const pdf = $("bc-pdf").files[0];
+  const dts = $("bc-dts").files;
+  const err = $("bc-form-error");
+  if (!name) { err.textContent = "請輸入板子名稱"; return; }
+  if (!pdf) { err.textContent = "請選擇手冊 PDF"; return; }
+  if (!dts.length) { err.textContent = "請選擇 DTS 資料夾（或 zip）"; return; }
+  if (!$("bc-baseline-field").hidden && !$("bc-baseline").value) {
+    err.textContent = "偵測到多個 .dts——請選擇這塊板的 baseline 板檔";
+    return;
+  }
+  const fd = new FormData();
+  fd.append("name", name);
+  fd.append("validate", $("bc-validate").checked ? "1" : "0");
+  if (!$("bc-baseline-field").hidden) {
+    fd.append("baseline", $("bc-baseline").value);
+  }
+  fd.append("pdf", pdf, pdf.name);
+  for (const f of dts) {
+    fd.append("dts", f, f.webkitRelativePath || f.name);  // 保留資料夾相對路徑
+  }
+  $("bc-submit").disabled = true;
+  err.textContent = "";
+  try {
+    const r = await fetch("/api/boards/create", { method: "POST", body: fd });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error || ("HTTP " + r.status); return; }
+    bcMetricsStop();                           // 新 job：計時歸零重新起錶
+    bcShow("progress");
+    bcRenderProgress({ stage: "unpack" });     // 立即起錶，每秒平順跳動
+    bcPoll();
+  } catch (e) {
+    err.textContent = "上傳失敗：" + e.message;
+  } finally {
+    $("bc-submit").disabled = false;
+  }
+}
+
+// 等待畫面的執行指標（灰字）：本地單一起錶點（startAt）每秒平順跳動——
+// 不隨輪詢重設基準（整數秒重設＋本地取整疊加會卡頓跳拍）；只有明顯漂移
+// （頁面重載後接回進行中的 job）才用伺服器 elapsed 校正一次。
+// tokens 每次輪詢更新（LLM 手冊抽取的即時消耗）。
+let bcMetrics = { startAt: null, tokens: 0, timer: null };
+
+function bcMetricsText() {
+  if (bcMetrics.startAt == null) return "";
+  const sec = Math.max(0, Math.floor((Date.now() - bcMetrics.startAt) / 1000));
+  const m = Math.floor(sec / 60), s = sec % 60;
+  const t = (bcMetrics.tokens || 0).toLocaleString();
+  return `已思考 ${m ? m + " 分 " : ""}${s} 秒 ・ 已消耗 ${t} tokens`;
+}
+
+function bcMetricsTick(s) {
+  if (bcMetrics.startAt == null) bcMetrics.startAt = Date.now();  // 即刻起錶
+  if (s && s.elapsed != null) {
+    const serverStart = Date.now() - s.elapsed * 1000;
+    if (Math.abs(serverStart - bcMetrics.startAt) > 2000) {
+      bcMetrics.startAt = serverStart;        // 漂移校正（重載/背景恢復）
+    }
+    bcMetrics.tokens = s.tokens || 0;
+  }
+  if ($("bc-metrics")) $("bc-metrics").textContent = bcMetricsText();
+  if (!bcMetrics.timer) {
+    bcMetrics.timer = setInterval(() => {
+      if ($("bc-metrics")) $("bc-metrics").textContent = bcMetricsText();
+    }, 1000);
+  }
+}
+
+function bcMetricsStop() {
+  if (bcMetrics.timer) { clearInterval(bcMetrics.timer); bcMetrics.timer = null; }
+  bcMetrics.startAt = null;                   // 下一個 job 重新起錶
+}
+
+// 最終指標（伺服器凍結的 elapsed/tokens）——完成與失敗畫面用
+function bcFinalMetricsText(s) {
+  if (!s || s.elapsed == null) return "";
+  const m = Math.floor(s.elapsed / 60), sec = s.elapsed % 60;
+  const t = (s.tokens || 0).toLocaleString();
+  return `共思考 ${m ? m + " 分 " : ""}${sec} 秒 ・ 消耗 ${t} tokens`;
+}
+
+function bcRenderProgress(s) {
+  const failed = s.stage === "failed";
+  $("bc-stage-label").textContent = failed
+    ? "生成失敗" : (BC_STAGE_LABEL[s.stage] || "處理中…");
+  const sp = document.querySelector("#bc-progress .spinner");
+  if (sp) sp.style.display = failed ? "none" : "";
+  $("bc-progress-error").textContent = s.error || "";
+  $("bc-artifacts").hidden = !failed;
+  $("bc-abort").hidden = !failed;
+  if (failed) {
+    bcMetricsStop();
+    $("bc-metrics").textContent = bcFinalMetricsText(s);   // 凍結顯示最終值
+  } else {
+    bcMetricsTick(s);
+  }
+}
+
+async function bcPoll() {
+  if (bcPolling) return;
+  bcPolling = true;
+  try {
+    while (true) {
+      await new Promise((res) => setTimeout(res, 4000));
+      const s = await (await fetch("/api/boards/create/status")).json();
+      if (s.stage === "done") {                 // lint 綠已自動落地
+        bcMetricsStop();
+        await bcRenderDone(s);
+        return;
+      }
+      if (s.stage === "failed") { bcRenderProgress(s); return; }
+      if (s.stage === null) { bcMetricsStop(); return; }
+      bcRenderProgress(s);
+    }
+  } catch (e) { /* 網路抖動：使用者可重開彈窗續看 */ }
+  finally { bcPolling = false; }
+}
+
+// 落地完成畫面：唯讀 boot 判定表＋警示；選單即刻刷新並選中新板
+async function bcRenderDone(s) {
+  const rv = s.review || {};
+  $("bc-done-metrics").textContent = bcFinalMetricsText(s);
+  $("bc-done-note").textContent = s.note || "";
+  const tbody = $("bc-boot-table").querySelector("tbody");
+  tbody.innerHTML = "";
+  for (const [g, spec] of Object.entries(rv.boot_groups || {})) {
+    const tr = document.createElement("tr");
+    const act = spec.action === "emit_fixed_assignment"
+      ? "emit（plan 自動帶上）" : "reserve（保留不排）";
+    tr.innerHTML = `<td>${escapeHtml(g)}</td><td>${escapeHtml(act)}</td>` +
+      `<td>${spec.pins ?? ""}</td><td>${escapeHtml(spec.basis || "")}</td>`;
+    tbody.appendChild(tr);
+  }
+  $("bc-emit-warn").hidden = !rv.needs_emit_confirm;
+  $("bc-review-md").textContent = rv.review_md || "（無 REVIEW.md）";
+  await loadBoards(s.landed);                   // 重載選單並選中新板
+  chatSessionId = null;
+  initDts();
+  if (!$("bc-overlay").hidden) bcShow("review");
+}
+
+async function bcAbort() {
+  try {
+    await fetch("/api/boards/create", { method: "DELETE" });
+  } catch (e) { /* 忽略 */ }
+  bcClose();
+}
+
+function initBoardCreate() {
+  if (!$("bc-overlay")) return;
+  $("bc-dts").addEventListener("change", bcDetectBaseline);
+  $("bc-cancel").addEventListener("click", bcClose);
+  $("bc-hide").addEventListener("click", bcClose);
+  $("bc-submit").addEventListener("click", bcSubmit);
+  $("bc-done-close").addEventListener("click", bcClose);
+  $("bc-abort").addEventListener("click", bcAbort);
+  $("bc-artifacts").addEventListener("click", () => {
+    window.location.href = "/api/boards/create/artifacts";
+  });
 }
 
 // --------------------------------------------------------------------------- //
@@ -971,3 +1215,4 @@ document.querySelectorAll(".examples .chip").forEach((chip) => {
 // + 查詢 DTS 生成可用性（板子清單載完才知道 currentBoard）
 loadBoards().then(initDts);
 initValidatorBadge();
+initBoardCreate();

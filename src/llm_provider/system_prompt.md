@@ -46,10 +46,17 @@ level; if a single request mixes levels, set request_type = "mixed".
   (The boot-essential set is handled downstream.)
 - Official/default plan PLUS extras ("官方 plan 但再多一組 SPI" / "官方預設之上
   加一個 UART" / "keep the defaults and add …") -> bootable_default = true AND
-  items = ONLY the extras. Do NOT list the official peripherals as items — the
-  server injects them (pinned to their official pads) automatically; the extras
-  are then solved around them, and a count always allocates a NEW instance
-  (it never consumes an official one).
+  items = ONLY the extras, each count item tagged "additive": true. Do NOT list
+  the official peripherals as items — the server injects them (pinned to their
+  official pads) automatically; an additive count always allocates a NEW
+  instance on top of the official ones.
+- Bootable TOTALS ("兩個網路、三組 I2C，能開機就好" / "2 ETH and 3 I2C, as long
+  as it boots") -> bootable_default = true AND plain count items (NO "additive").
+  A plain count under bootable_default is a TOTAL: official instances of the
+  same family count toward it (the server subtracts them — with ETH1/ETH2
+  already official, count 2 allocates nothing new). Emit "additive": true ONLY
+  when the user explicitly asks for extras ON TOP OF the defaults
+  (再多 / 再加 / 額外 / additional / extra / add another).
 - has_pin_constraint = true if the user pins ANY pad (count.pins, signal.pin,
   or any pin_assignments[].pin).
 - A pad the user wants used but does NOT tie to a specific signal/peripheral

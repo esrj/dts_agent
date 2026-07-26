@@ -1,0 +1,399 @@
+{
+ "board": "am6548",
+ "description": "Fixed peripheral connections physically wired on the board, extracted from the baseline board DTS. `manageable` = the Patch Agent may enable/disable this connection; boot-required connections are never disabled.",
+ "source": "data/am6548/baseline/dts/k3-am654-base-board.dts",
+ "generated_by": "knowledge_extract dts_generation",
+ "connections": {
+  "davinci_mdio": {
+   "peripheral": "MCU_MDIO0",
+   "target_node": "&davinci_mdio",
+   "family": "davinci_mdio",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "mcu_mdio_pins_default"
+   ],
+   "pins": [
+    "MCU_MDIO0_MDC",
+    "MCU_MDIO0_MDIO"
+   ],
+   "ics": [],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  },
+  "ecap0": {
+   "peripheral": "ECAP0_IN_APWM",
+   "target_node": "&ecap0",
+   "family": "ecap",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "ecap0_pins_default"
+   ],
+   "pins": [
+    "ECAP0_IN_APWM_OUT"
+   ],
+   "ics": [],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  },
+  "main_i2c0": {
+   "peripheral": "I2C0",
+   "target_node": "&main_i2c0",
+   "family": "i2c",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_i2c0_pins_default"
+   ],
+   "pins": [
+    "I2C0_SCL",
+    "I2C0_SDA"
+   ],
+   "ics": [
+    {
+     "path": "gpio@21",
+     "label": "pca9555",
+     "compatible": "nxp,pca9555",
+     "reg": "<0x21>",
+     "status": null,
+     "props": {
+      "gpio-controller": null,
+      "#gpio-cells": "<2>"
+     }
+    }
+   ],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  },
+  "main_i2c1": {
+   "peripheral": "I2C1",
+   "target_node": "&main_i2c1",
+   "family": "i2c",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_i2c1_pins_default"
+   ],
+   "pins": [
+    "I2C1_SCL",
+    "I2C1_SDA"
+   ],
+   "ics": [],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  },
+  "main_i2c2": {
+   "peripheral": "I2C2",
+   "target_node": "&main_i2c2",
+   "family": "i2c",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_i2c2_pins_default"
+   ],
+   "pins": [
+    "GPMC0_CSN2",
+    "GPMC0_CSN3"
+   ],
+   "ics": [],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  },
+  "main_spi0": {
+   "peripheral": "SPI0",
+   "target_node": "&main_spi0",
+   "family": "spi",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_spi0_pins_default"
+   ],
+   "pins": [
+    "SPI0_CLK",
+    "SPI0_CS0",
+    "SPI0_D0",
+    "SPI0_D1"
+   ],
+   "ics": [
+    {
+     "path": "flash@0",
+     "label": null,
+     "compatible": "jedec,spi-nor",
+     "reg": "<0x0>",
+     "status": null,
+     "props": {
+      "spi-tx-bus-width": "<1>",
+      "spi-rx-bus-width": "<1>",
+      "spi-max-frequency": "<48000000>"
+     }
+    }
+   ],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  },
+  "main_uart0": {
+   "peripheral": "UART0",
+   "target_node": "&main_uart0",
+   "family": "uart",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_uart0_pins_default"
+   ],
+   "pins": [
+    "UART0_CTSN",
+    "UART0_RTSN",
+    "UART0_RXD",
+    "UART0_TXD"
+   ],
+   "ics": [],
+   "boot_required": true,
+   "board_locked": false,
+   "manageable": false
+  },
+  "mcu_cpsw": {
+   "peripheral": "MCU_RGMII1",
+   "target_node": "&mcu_cpsw",
+   "family": "cpsw",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "mcu_cpsw_pins_default"
+   ],
+   "pins": [
+    "MCU_RGMII1_RD0",
+    "MCU_RGMII1_RD1",
+    "MCU_RGMII1_RD2",
+    "MCU_RGMII1_RD3",
+    "MCU_RGMII1_RXC",
+    "MCU_RGMII1_RX_CTL",
+    "MCU_RGMII1_TD0",
+    "MCU_RGMII1_TD1",
+    "MCU_RGMII1_TD2",
+    "MCU_RGMII1_TD3",
+    "MCU_RGMII1_TXC",
+    "MCU_RGMII1_TX_CTL"
+   ],
+   "ics": [],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  },
+  "mcu_i2c0": {
+   "peripheral": "MCU_I2C0",
+   "target_node": "&mcu_i2c0",
+   "family": "i2c",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "mcu_i2c0_pins_default"
+   ],
+   "pins": [
+    "MCU_I2C0_SCL",
+    "MCU_I2C0_SDA"
+   ],
+   "ics": [],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  },
+  "mcu_uart0": {
+   "peripheral": "MCU_UART0",
+   "target_node": "&mcu_uart0",
+   "family": "uart",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "mcu_uart0_pins_default"
+   ],
+   "pins": [
+    "MCU_OSPI1_CSN1",
+    "MCU_OSPI1_D1",
+    "MCU_OSPI1_D2",
+    "MCU_OSPI1_D3"
+   ],
+   "ics": [],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  },
+  "ospi0": {
+   "peripheral": "MCU_OSPI0",
+   "target_node": "&ospi0",
+   "family": "ospi",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "mcu_fss0_ospi0_pins_default"
+   ],
+   "pins": [
+    "MCU_OSPI0_CLK",
+    "MCU_OSPI0_CSN0",
+    "MCU_OSPI0_D0",
+    "MCU_OSPI0_D1",
+    "MCU_OSPI0_D2",
+    "MCU_OSPI0_D3",
+    "MCU_OSPI0_D4",
+    "MCU_OSPI0_D5",
+    "MCU_OSPI0_D6",
+    "MCU_OSPI0_D7",
+    "MCU_OSPI0_DQS"
+   ],
+   "ics": [
+    {
+     "path": "flash@0",
+     "label": null,
+     "compatible": "jedec,spi-nor",
+     "reg": "<0x0>",
+     "status": null,
+     "props": {
+      "spi-tx-bus-width": "<8>",
+      "spi-rx-bus-width": "<8>",
+      "spi-max-frequency": "<25000000>",
+      "cdns,tshsl-ns": "<60>",
+      "cdns,tsd2d-ns": "<60>",
+      "cdns,tchsh-ns": "<60>",
+      "cdns,tslch-ns": "<60>",
+      "cdns,read-delay": "<0>"
+     }
+    },
+    {
+     "path": "flash@0/partitions",
+     "label": null,
+     "compatible": "fixed-partitions",
+     "reg": null,
+     "status": null,
+     "props": {
+      "#address-cells": "<1>",
+      "#size-cells": "<1>"
+     }
+    }
+   ],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  },
+  "sdhci0": {
+   "peripheral": "MMC0",
+   "target_node": "&sdhci0",
+   "family": "sdhci",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_mmc0_pins_default"
+   ],
+   "pins": [
+    "MMC0_CLK",
+    "MMC0_CMD",
+    "MMC0_DAT0",
+    "MMC0_DAT1",
+    "MMC0_DAT2",
+    "MMC0_DAT3",
+    "MMC0_DAT4",
+    "MMC0_DAT5",
+    "MMC0_DAT6",
+    "MMC0_DAT7",
+    "MMC0_DS",
+    "MMC0_SDCD"
+   ],
+   "ics": [],
+   "boot_required": true,
+   "board_locked": false,
+   "manageable": false
+  },
+  "sdhci1": {
+   "peripheral": "MMC1",
+   "target_node": "&sdhci1",
+   "family": "sdhci",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_mmc1_pins_default"
+   ],
+   "pins": [
+    "MMC1_CLK",
+    "MMC1_CMD",
+    "MMC1_DAT0",
+    "MMC1_DAT1",
+    "MMC1_DAT2",
+    "MMC1_DAT3",
+    "MMC1_SDCD",
+    "MMC1_SDWP"
+   ],
+   "ics": [],
+   "boot_required": true,
+   "board_locked": false,
+   "manageable": false
+  },
+  "usb1": {
+   "peripheral": "USB1",
+   "target_node": "&usb1",
+   "family": "usb",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "usb1_pins_default"
+   ],
+   "pins": [
+    "USB1_DRVVBUS"
+   ],
+   "ics": [],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  },
+  "wkup_i2c0": {
+   "peripheral": "WKUP_I2C0",
+   "target_node": "&wkup_i2c0",
+   "family": "i2c",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "wkup_i2c0_pins_default"
+   ],
+   "pins": [
+    "WKUP_I2C0_SCL",
+    "WKUP_I2C0_SDA"
+   ],
+   "ics": [
+    {
+     "path": "eeprom@50",
+     "label": null,
+     "compatible": "atmel,24c1024",
+     "reg": "<0x50>",
+     "status": null,
+     "props": {}
+    },
+    {
+     "path": "regulator@60",
+     "label": "vdd_mpu",
+     "compatible": "ti,tps62363",
+     "reg": "<0x60>",
+     "status": null,
+     "props": {
+      "regulator-name": "\"VDD_MPU\"",
+      "regulator-min-microvolt": "<500000>",
+      "regulator-max-microvolt": "<1770000>",
+      "regulator-always-on": null,
+      "regulator-boot-on": null,
+      "ti,vsel0-state-high": null,
+      "ti,vsel1-state-high": null,
+      "ti,enable-vout-discharge": null
+     }
+    },
+    {
+     "path": "gpio@39",
+     "label": "pca9554",
+     "compatible": "nxp,pca9554",
+     "reg": "<0x39>",
+     "status": null,
+     "props": {
+      "gpio-controller": null,
+      "#gpio-cells": "<2>",
+      "pinctrl-names": "\"default\"",
+      "pinctrl-0": "<&wkup_pca554_default>",
+      "interrupt-parent": "<&wkup_gpio0>",
+      "interrupts": "<25 IRQ_TYPE_EDGE_FALLING>",
+      "interrupt-controller": null,
+      "#interrupt-cells": "<2>"
+     }
+    }
+   ],
+   "boot_required": false,
+   "board_locked": false,
+   "manageable": true
+  }
+ }
+}

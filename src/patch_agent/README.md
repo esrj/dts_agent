@@ -95,7 +95,7 @@ web 的 single-flight DTS 工作者呼叫；`config.board_ready(board)` 是純�
 | `AF_TABLE` / `ALL_PERIPHERAL` / `PERIPHERAL_PROFILES` | `data/<b>/base/` | 與第一段共用的 solver 正本 |
 | `SIGNAL_TO_PIN` / `OFFICIAL_DTS_PERIPHERAL` | `data/<b>/dts/` | 官方 DTS 解析（共用） |
 | `BASELINE_CSV`、`BOARD_DTS` 等 | `data/<b>/baseline/` | 官方 kernel DTS 快照（本段專用） |
-| `REQUIRE`（= boot_requirements.json）、`GPIO_PINS`、render 資料 | `data/<b>/dts_generation/` | 本段專用知識。**注意**：`boot_requirements.json` 是 DTS node 級開機知識，與 solver 的 `base/require.json` **同名不同物**（僅曾共用檔名，知識內容互不相干），永不合併 |
+| `REQUIRE`（= boot_requirements.json）、`GPIO_PINS`、render 資料 | `data/<b>/dts_generation/` | 本段專用知識。**注意**：`boot_requirements.json` 是 DTS node 級開機知識，與 solver 的 `base/require.json` **同名不同物**（僅曾共用檔名，知識內容互不相干），永不合併。**缺檔語意**：boot_requirements.json 必要（缺＝board_ready false）；其餘五檔缺席時 m2/m5 的 `_load` 以空骨架降級（`_KB_DEFAULTS`，m6 走 LLM 補償） |
 | `PLAN_CSV` | `output/plan/plan.csv` | 兩段交棒點（輸入） |
 | `OUTPUT_GEN` | `output/generated/` | 本段全部產物（覆寫制） |
 

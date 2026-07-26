@@ -1,0 +1,30 @@
+{
+ "style": "k3-iopad",
+ "description": "TI K3 AM65x pinctrl-single IOPAD 巨集。domain = pmx 節點 label(MAIN 有 main_pmx0/main_pmx1 兩個節點,offset 各自起算);渲染的群組須放進 nodes 對應的 &節點下。",
+ "source": "k3-am654-base-board.dts(kernel 官方 DTS 實抓)",
+ "macros": {
+  "main_pmx0": "AM65X_IOPAD",
+  "main_pmx1": "AM65X_IOPAD",
+  "main_timerio_input": "AM65X_IOPAD",
+  "main_timerio_output": "AM65X_IOPAD",
+  "mcu_timerio_input": "AM65X_IOPAD",
+  "mcu_timerio_output": "AM65X_IOPAD",
+  "wkup_pmx0": "AM65X_WKUP_IOPAD"
+ },
+ "nodes": {
+  "main_pmx0": "&main_pmx0",
+  "main_pmx1": "&main_pmx1",
+  "main_timerio_input": "&main_timerio_input",
+  "main_timerio_output": "&main_timerio_output",
+  "mcu_timerio_input": "&mcu_timerio_input",
+  "mcu_timerio_output": "&mcu_timerio_output",
+  "wkup_pmx0": "&wkup_pmx0"
+ },
+ "role_flags": {
+  "rx": "PIN_INPUT",
+  "tx": "PIN_OUTPUT",
+  "clk": "PIN_OUTPUT",
+  "bidir": "PIN_INPUT",
+  "default": "PIN_INPUT"
+ }
+}

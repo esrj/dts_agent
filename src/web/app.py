@@ -28,12 +28,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask import Flask, request, jsonify, send_from_directory, Response
 
 from service import Pipeline
-from util.dataio import (DEFAULT_BOARD, OUTPUT, list_boards, plan_csv_text,
-                         plan_xlsx_bytes)
+from util.dataio import (DEFAULT_BOARD, OUTPUT, list_boards,
+                         load_board_manifest, plan_csv_text, plan_xlsx_bytes)
 from orchestrator import Orchestrator, SessionStore, SolverTools
 from validator import expected_pin_map, plan_fingerprint
+import board_create
 
 app = Flask(__name__, static_folder="static", static_url_path="")
+app.config["MAX_CONTENT_LENGTH"] = 220 * 1024 * 1024   # 上傳（PDF＋DTS 樹）上限
+app.register_blueprint(board_create.bp)                # 上傳新增板子（M3）
 pipeline = Pipeline()        # 啟動時載入一次（provider / system_prompt；各板資料延後載入並快取）
 
 # 聊天式 orchestrator（agentic tool-use loop）。延後初始化：第一個 /api/chat 請求才
@@ -107,11 +110,20 @@ def index():
 
 @app.get("/api/boards")
 def boards():
-    """前端下拉選單用：自動偵測 data/boards/ 下有哪些板子。"""
+    """前端下拉選單用：自動偵測 data/ 下有哪些板子。
+    names＝board.yaml 的 display name（缺 manifest 退回板子 id）；
+    can_create＝「上傳新增板子」功能旗標（M3/M4）。"""
     available = list_boards()
     default = DEFAULT_BOARD if DEFAULT_BOARD in available else (
         available[0] if available else DEFAULT_BOARD)
-    return jsonify(boards=available, default=default)
+    names = {}
+    for b in available:
+        try:
+            names[b] = (load_board_manifest(b).get("name") or b)
+        except Exception:
+            names[b] = b
+    return jsonify(boards=available, default=default, names=names,
+                   can_create=board_create.FEATURE_ON)
 
 
 @app.post("/api/solve")

@@ -36,7 +36,8 @@ from util.dataio import (
 )
 from solver.runner import solve_signals
 from solver.resolver import ResolveError, load_knowledge, reserved_owner
-from solver.counts import plan
+from solver.counts import plan, _family_key
+from solver.peripherals import _split_family
 from solver.clarify import (
     Clarify, Option, Question, apply_answer, phrase_question, validate_clarify,
 )
@@ -68,8 +69,9 @@ class _Board:
         self.af = self.kb.af
         self.gpio_pins = load_gpio_pins(paths["require"], af_keys=set(self.kb.af.keys()))
         self.boot_required = load_require_signals(paths["require"], self.kb.sigma)
-        # 開機固定腳（emit 群組 pin_map）-> must_bind（{pin: signal}）
-        self.pin_locked = load_pin_locked(paths["require"])
+        # 開機固定腳（emit 群組 pin_map）-> must_bind（{pin: signal}）；
+        # 帶 Σ 過濾（壞列剔除＋警告，不流進 resolver 炸 unknown-signal）
+        self.pin_locked = load_pin_locked(paths["require"], sigma=self.kb.sigma)
         # secure/bootloader 保留（reserve_only 群組）：pin 移出候選域 + instance 封鎖
         self.reserved_pins, self.reserved_instances = load_reserved(paths["require"])
         self.must_gpio = self.gpio_pins | self.reserved_pins
@@ -209,8 +211,13 @@ class Pipeline:
         來源是該板 signal_to_pin.json（官方 DTS 解析），逐 signal 帶 pin、
         pin_mode="required" -> resolver 轉成 must_bind：官方腳被釘死、並從其他
         訊號的候選域移除，新需求天生避開官方腳。counts 的 `used` 集合會把注入的
-        instance 排除在 count domain 外，所以「再多一組 X」一定配新 instance，
-        不會吃掉官方那組。
+        instance 排除在 count domain 外。
+
+        count 語意（2026-07-25 起）：無 additive 標記的 count 是**總量**——
+        官方基底的同 family instance 抵扣需求（官方有 ETH1/ETH2 時「兩個 ETH」
+        不再另配，見下方抵扣區塊）；帶 `additive: true`（parse 對「官方之上
+        再多一組 X」的標記）或 mode/pins 約束的 count 維持加法——一定配新
+        instance，不吃官方那組。
 
         跳過三類：(1) boot 範圍（boot_set）——那是 _inject_boot 的職責（含
         relax 機制，不可越權釘死）；(2) reserve_only（secure/bootloader 持有）；
@@ -240,6 +247,52 @@ class Pipeline:
                 "signal": sig, "pin": pin, "af": None,
                 "pin_mode": "required", "source": "official_default",
             })
+
+        # ---- 官方基底抵扣 count 需求（總量語意，2026-07-25）------------------
+        # 「兩個網路、三組 I2C，能開機就好」的數字是**總量**：官方預設已啟用的
+        # 同 family instance 計入需求，抵扣後才配新 instance（官方有 ETH1/ETH2
+        # 時「兩個 ETH」不再另配）。三種情況維持加法語意（一律配新 instance）：
+        #   1. item 帶 additive:true——parse 對「官方之上再多/再加 X」的標記；
+        #   2. item 帶 mode / pins 約束——那是對「新配那組」的特定要求，
+        #      官方列未必滿足；
+        #   3. boot 群組（USART2…）不在此注入（_inject_boot 職責），也不抵扣。
+        # 冪等：count_requested 記原始需求，clarify 重入時據此重算；抵扣說明存
+        # intent["official_credit"]（持久、只記一次），_solve_once 轉入 notes。
+        families = (b.kb.profiles or {}).get("families") or {}
+        by_key: dict = {}
+        for it in injected:
+            inst = (it.get("signal") or "").split("_", 1)[0]
+            fam = _split_family(inst, families)
+            if fam:
+                by_key.setdefault(fam[2], set()).add(inst)
+        credit_notes = intent.setdefault("official_credit", [])
+        adjusted = []
+        for it in kept:
+            lvl = (it.get("level") or "").lower()
+            countish = (lvl == "count"
+                        or (lvl == "peripheral" and not it.get("instance")))
+            if (not countish or it.get("additive") or it.get("mode")
+                    or it.get("pins") or it.get("pin_assignments")):
+                adjusted.append(it)
+                continue
+            key = _family_key(str(it.get("family") or ""), b.kb.profiles)
+            offered = sorted(by_key.get(key) or ())
+            if not offered:
+                adjusted.append(it)
+                continue
+            orig = int(it.get("count_requested") or it.get("count") or 1)
+            newc = orig - len(offered)
+            if "count_requested" not in it:      # 首次抵扣才記說明，重入不重複
+                credit_notes.append(
+                    f"{(it.get('family') or '?').upper()}×{orig} 計入官方預設 "
+                    + "、".join(offered)
+                    + (f"，另配 {newc} 組新 instance" if newc > 0 else "，不需另配"))
+            if newc > 0:
+                adjusted.append({**it, "level": "count", "count": newc,
+                                 "count_requested": orig})
+            # newc <= 0：需求已由官方基底完全滿足，項目移除（官方列仍注入）
+        kept = adjusted
+
         intent["items"] = injected + kept
         return intent
 
@@ -413,6 +466,9 @@ class Pipeline:
         if off_sigs:
             insts = sorted({s.split("_", 1)[0] for s in off_sigs})
             spec.notes.append("已保留官方預設週邊（官方腳鎖定）：" + ", ".join(insts))
+        # 官方基底抵扣 count 的說明（_inject_official 記錄；總量語意）
+        for note in intent.get("official_credit") or []:
+            spec.notes.append(note)
         required, result = solve_signals(
             b.af, spec.required, spec.must_gpio, spec.must_bind, af_map=b.kb.af_map)
         return {

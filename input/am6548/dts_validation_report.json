@@ -1,0 +1,337 @@
+{
+ "board": "am6548",
+ "timestamp": "2026-07-22T13:28:35Z",
+ "source": {
+  "repo": "https://github.com/torvalds/linux.git",
+  "branch": "v6.6",
+  "commit": "ffc253263a1375a65fa6c9f62a893e9767fbebfa"
+ },
+ "files": [
+  {
+   "path": "k3-am65-iot2050-common-pg1.dtsi",
+   "type": "dtsi",
+   "size_bytes": 585,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": "via_including_dts",
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-am65-iot2050-common-pg2.dtsi",
+   "type": "dtsi",
+   "size_bytes": 1230,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": "via_including_dts",
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-am65-iot2050-common.dtsi",
+   "type": "dtsi",
+   "size_bytes": 17588,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": "via_including_dts",
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-am65-main.dtsi",
+   "type": "dtsi",
+   "size_bytes": 42980,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": "via_including_dts",
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-am65-mcu.dtsi",
+   "type": "dtsi",
+   "size_bytes": 12197,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": "via_including_dts",
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-am65-wakeup.dtsi",
+   "type": "dtsi",
+   "size_bytes": 2533,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": "via_including_dts",
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-am65.dtsi",
+   "type": "dtsi",
+   "size_bytes": 4107,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": "via_including_dts",
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-am6528-iot2050-basic-common.dtsi",
+   "type": "dtsi",
+   "size_bytes": 1379,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": "via_including_dts",
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-am6528-iot2050-basic-pg2.dts",
+   "type": "dts",
+   "size_bytes": 623,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": true,
+   "errors": [],
+   "warnings": [
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-mcu.dtsi:281.20-319.4: Warning (unit_address_vs_reg): /bus@100000/bus@28380000/bus@47000000: node has a unit name, but no reg or ranges property",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:862.25-881.4: Warning (unique_unit_address): /bus@100000/pcie@5500000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5500000)",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:897.25-916.4: Warning (unique_unit_address): /bus@100000/pcie@5600000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5600000)",
+    "  also defined at /Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-iot2050-common.dtsi:677.11-686.3"
+   ]
+  },
+  {
+   "path": "k3-am6528-iot2050-basic.dts",
+   "type": "dts",
+   "size_bytes": 615,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": true,
+   "errors": [],
+   "warnings": [
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-mcu.dtsi:281.20-319.4: Warning (unit_address_vs_reg): /bus@100000/bus@28380000/bus@47000000: node has a unit name, but no reg or ranges property",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:862.25-881.4: Warning (unique_unit_address): /bus@100000/pcie@5500000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5500000)",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:897.25-916.4: Warning (unique_unit_address): /bus@100000/pcie@5600000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5600000)",
+    "  also defined at /Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-iot2050-common.dtsi:677.11-686.3"
+   ]
+  },
+  {
+   "path": "k3-am654-base-board.dts",
+   "type": "dts",
+   "size_bytes": 15616,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": true,
+   "errors": [],
+   "warnings": [
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-mcu.dtsi:281.20-319.4: Warning (unit_address_vs_reg): /bus@100000/bus@28380000/bus@47000000: node has a unit name, but no reg or ranges property",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:862.25-881.4: Warning (unique_unit_address): /bus@100000/pcie@5500000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5500000)",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:897.25-916.4: Warning (unique_unit_address): /bus@100000/pcie@5600000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5600000)"
+   ]
+  },
+  {
+   "path": "k3-am654-industrial-thermal.dtsi",
+   "type": "dtsi",
+   "size_bytes": 1025,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": "via_including_dts",
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-am654.dtsi",
+   "type": "dtsi",
+   "size_bytes": 2362,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": "via_including_dts",
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-am6548-iot2050-advanced-common.dtsi",
+   "type": "dtsi",
+   "size_bytes": 1579,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": "via_including_dts",
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-am6548-iot2050-advanced-m2.dts",
+   "type": "dts",
+   "size_bytes": 3194,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": true,
+   "errors": [],
+   "warnings": [
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-mcu.dtsi:281.20-319.4: Warning (unit_address_vs_reg): /bus@100000/bus@28380000/bus@47000000: node has a unit name, but no reg or ranges property",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:862.25-881.4: Warning (unique_unit_address): /bus@100000/pcie@5500000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5500000)",
+    "  also defined at /Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am6548-iot2050-advanced-m2.dts:93.11-102.3",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:897.25-916.4: Warning (unique_unit_address): /bus@100000/pcie@5600000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5600000)",
+    "  also defined at /Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-iot2050-common.dtsi:677.11-686.3",
+    "  also defined at /Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am6548-iot2050-advanced-m2.dts:104.11-106.3"
+   ]
+  },
+  {
+   "path": "k3-am6548-iot2050-advanced-pg2.dts",
+   "type": "dts",
+   "size_bytes": 740,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": true,
+   "errors": [],
+   "warnings": [
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-mcu.dtsi:281.20-319.4: Warning (unit_address_vs_reg): /bus@100000/bus@28380000/bus@47000000: node has a unit name, but no reg or ranges property",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:862.25-881.4: Warning (unique_unit_address): /bus@100000/pcie@5500000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5500000)",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:897.25-916.4: Warning (unique_unit_address): /bus@100000/pcie@5600000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5600000)",
+    "  also defined at /Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-iot2050-common.dtsi:677.11-686.3"
+   ]
+  },
+  {
+   "path": "k3-am6548-iot2050-advanced.dts",
+   "type": "dts",
+   "size_bytes": 640,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": true,
+   "errors": [],
+   "warnings": [
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-mcu.dtsi:281.20-319.4: Warning (unit_address_vs_reg): /bus@100000/bus@28380000/bus@47000000: node has a unit name, but no reg or ranges property",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:862.25-881.4: Warning (unique_unit_address): /bus@100000/pcie@5500000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5500000)",
+    "/Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-main.dtsi:897.25-916.4: Warning (unique_unit_address): /bus@100000/pcie@5600000: duplicate unit-address (also used in node /bus@100000/pcie-ep@5600000)",
+    "  also defined at /Users/sam/Desktop/knowledge_extract/dts_sources/am6548/dts/k3-am65-iot2050-common.dtsi:677.11-686.3"
+   ]
+  },
+  {
+   "path": "k3-pinctrl.h",
+   "type": "h",
+   "size_bytes": 2694,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": null,
+   "errors": [],
+   "warnings": []
+  },
+  {
+   "path": "k3-serdes.h",
+   "type": "h",
+   "size_bytes": 6869,
+   "last_modified": "2026-07-22T13:09:05Z",
+   "dtc_valid": null,
+   "errors": [],
+   "warnings": []
+  }
+ ],
+ "include_tree": {
+  "k3-am6528-iot2050-basic-pg2.dts": [
+   "k3-am6528-iot2050-basic-common.dtsi",
+   "k3-am65-iot2050-common.dtsi",
+   "k3-am654.dtsi",
+   "k3-am65.dtsi",
+   "k3-pinctrl.h",
+   "k3-am65-main.dtsi",
+   "dt-bindings/phy/phy-am654-serdes.h",
+   "k3-am65-mcu.dtsi",
+   "k3-am65-wakeup.dtsi",
+   "dt-bindings/gpio/gpio.h",
+   "dt-bindings/interrupt-controller/irq.h",
+   "dt-bindings/interrupt-controller/arm-gic.h",
+   "dt-bindings/soc/ti,sci_pm_domain.h",
+   "k3-am654-industrial-thermal.dtsi",
+   "dt-bindings/thermal/thermal.h",
+   "dt-bindings/phy/phy.h",
+   "k3-am65-iot2050-common-pg2.dtsi"
+  ],
+  "k3-am6528-iot2050-basic.dts": [
+   "k3-am6528-iot2050-basic-common.dtsi",
+   "k3-am65-iot2050-common.dtsi",
+   "k3-am654.dtsi",
+   "k3-am65.dtsi",
+   "k3-pinctrl.h",
+   "k3-am65-main.dtsi",
+   "dt-bindings/phy/phy-am654-serdes.h",
+   "k3-am65-mcu.dtsi",
+   "k3-am65-wakeup.dtsi",
+   "dt-bindings/gpio/gpio.h",
+   "dt-bindings/interrupt-controller/irq.h",
+   "dt-bindings/interrupt-controller/arm-gic.h",
+   "dt-bindings/soc/ti,sci_pm_domain.h",
+   "k3-am654-industrial-thermal.dtsi",
+   "dt-bindings/thermal/thermal.h",
+   "dt-bindings/phy/phy.h",
+   "k3-am65-iot2050-common-pg1.dtsi"
+  ],
+  "k3-am654-base-board.dts": [
+   "k3-am654.dtsi",
+   "k3-am65.dtsi",
+   "k3-pinctrl.h",
+   "k3-am65-main.dtsi",
+   "dt-bindings/phy/phy-am654-serdes.h",
+   "k3-am65-mcu.dtsi",
+   "k3-am65-wakeup.dtsi",
+   "dt-bindings/gpio/gpio.h",
+   "dt-bindings/interrupt-controller/irq.h",
+   "dt-bindings/interrupt-controller/arm-gic.h",
+   "dt-bindings/soc/ti,sci_pm_domain.h",
+   "k3-am654-industrial-thermal.dtsi",
+   "dt-bindings/thermal/thermal.h",
+   "dt-bindings/input/input.h",
+   "dt-bindings/net/ti-dp83867.h"
+  ],
+  "k3-am6548-iot2050-advanced-m2.dts": [
+   "k3-am6548-iot2050-advanced-common.dtsi",
+   "k3-am65-iot2050-common.dtsi",
+   "k3-am654.dtsi",
+   "k3-am65.dtsi",
+   "k3-pinctrl.h",
+   "k3-am65-main.dtsi",
+   "dt-bindings/phy/phy-am654-serdes.h",
+   "k3-am65-mcu.dtsi",
+   "k3-am65-wakeup.dtsi",
+   "dt-bindings/gpio/gpio.h",
+   "dt-bindings/interrupt-controller/irq.h",
+   "dt-bindings/interrupt-controller/arm-gic.h",
+   "dt-bindings/soc/ti,sci_pm_domain.h",
+   "k3-am654-industrial-thermal.dtsi",
+   "dt-bindings/thermal/thermal.h",
+   "dt-bindings/phy/phy.h",
+   "k3-am65-iot2050-common-pg2.dtsi"
+  ],
+  "k3-am6548-iot2050-advanced-pg2.dts": [
+   "k3-am6548-iot2050-advanced-common.dtsi",
+   "k3-am65-iot2050-common.dtsi",
+   "k3-am654.dtsi",
+   "k3-am65.dtsi",
+   "k3-pinctrl.h",
+   "k3-am65-main.dtsi",
+   "dt-bindings/phy/phy-am654-serdes.h",
+   "k3-am65-mcu.dtsi",
+   "k3-am65-wakeup.dtsi",
+   "dt-bindings/gpio/gpio.h",
+   "dt-bindings/interrupt-controller/irq.h",
+   "dt-bindings/interrupt-controller/arm-gic.h",
+   "dt-bindings/soc/ti,sci_pm_domain.h",
+   "k3-am654-industrial-thermal.dtsi",
+   "dt-bindings/thermal/thermal.h",
+   "dt-bindings/phy/phy.h",
+   "k3-am65-iot2050-common-pg2.dtsi"
+  ],
+  "k3-am6548-iot2050-advanced.dts": [
+   "k3-am6548-iot2050-advanced-common.dtsi",
+   "k3-am65-iot2050-common.dtsi",
+   "k3-am654.dtsi",
+   "k3-am65.dtsi",
+   "k3-pinctrl.h",
+   "k3-am65-main.dtsi",
+   "dt-bindings/phy/phy-am654-serdes.h",
+   "k3-am65-mcu.dtsi",
+   "k3-am65-wakeup.dtsi",
+   "dt-bindings/gpio/gpio.h",
+   "dt-bindings/interrupt-controller/irq.h",
+   "dt-bindings/interrupt-controller/arm-gic.h",
+   "dt-bindings/soc/ti,sci_pm_domain.h",
+   "k3-am654-industrial-thermal.dtsi",
+   "dt-bindings/thermal/thermal.h",
+   "dt-bindings/phy/phy.h",
+   "k3-am65-iot2050-common-pg1.dtsi"
+  ]
+ },
+ "summary": {
+  "total_files": 19,
+  "dts_files": 6,
+  "dtsi_files": 11,
+  "header_files": 2,
+  "dtc": "ran",
+  "valid_count": 6,
+  "warning_count": 6,
+  "error_count": 0
+ }
+}

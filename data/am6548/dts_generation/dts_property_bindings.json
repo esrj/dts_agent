@@ -1,0 +1,277 @@
+{
+ "board": "am6548",
+ "description": "Per-family non-pinctrl property template, aggregated from ENABLED board overrides (status-aware).",
+ "source": "data/am6548/baseline/dts/k3-am654-base-board.dts",
+ "families": {
+  "cpsw": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "mcu_cpsw"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "cpsw_port": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "cpsw_port1"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {
+    "phy-handle": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<&phy0>"
+     ]
+    },
+    "phy-mode": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "\"rgmii-rxid\""
+     ]
+    }
+   }
+  },
+  "davinci_mdio": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "davinci_mdio"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "dss": {
+   "total_overrides": 1,
+   "enabled_labels": [],
+   "enabled_instances": 0,
+   "extra_properties": {}
+  },
+  "dwc3_": {
+   "total_overrides": 1,
+   "enabled_labels": [],
+   "enabled_instances": 0,
+   "extra_properties": {}
+  },
+  "ecap": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "ecap0"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "i2c": {
+   "total_overrides": 5,
+   "enabled_labels": [
+    "main_i2c0",
+    "main_i2c1",
+    "main_i2c2",
+    "mcu_i2c0",
+    "wkup_i2c0"
+   ],
+   "enabled_instances": 5,
+   "extra_properties": {
+    "clock-frequency": {
+     "occurrences": 5,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<400000>"
+     ]
+    }
+   }
+  },
+  "mailbox0_cluster": {
+   "total_overrides": 2,
+   "enabled_labels": [
+    "mailbox0_cluster0",
+    "mailbox0_cluster1"
+   ],
+   "enabled_instances": 2,
+   "extra_properties": {
+    "interrupts": {
+     "occurrences": 2,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<436>",
+      "<432>"
+     ]
+    }
+   }
+  },
+  "ospi": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "ospi0"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "r5fss0_core": {
+   "total_overrides": 2,
+   "enabled_labels": [
+    "mcu_r5fss0_core0",
+    "mcu_r5fss0_core1"
+   ],
+   "enabled_instances": 2,
+   "extra_properties": {
+    "mboxes": {
+     "occurrences": 2,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<&mailbox0_cluster0>, <&mbox_mcu_r5fss0_core0>",
+      "<&mailbox0_cluster1>, <&mbox_mcu_r5fss0_core1>"
+     ]
+    },
+    "memory-region": {
+     "occurrences": 2,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<&mcu_r5fss0_core0_dma_memory_region>,\n\t\t\t<&mcu_r5fss0_core0_memory_region>",
+      "<&mcu_r5fss0_core1_dma_memory_region>,\n\t\t\t<&mcu_r5fss0_core1_memory_region>"
+     ]
+    }
+   }
+  },
+  "sdhci": {
+   "total_overrides": 2,
+   "enabled_labels": [
+    "sdhci0",
+    "sdhci1"
+   ],
+   "enabled_instances": 2,
+   "extra_properties": {
+    "bus-width": {
+     "occurrences": 1,
+     "in_all_enabled_instances": false,
+     "boolean_flag": false,
+     "example_values": [
+      "<8>"
+     ]
+    },
+    "disable-wp": {
+     "occurrences": 2,
+     "in_all_enabled_instances": true,
+     "boolean_flag": true,
+     "example_values": []
+    },
+    "non-removable": {
+     "occurrences": 1,
+     "in_all_enabled_instances": false,
+     "boolean_flag": true,
+     "example_values": []
+    },
+    "ti,driver-strength-ohm": {
+     "occurrences": 2,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<50>"
+     ]
+    },
+    "vmmc-supply": {
+     "occurrences": 1,
+     "in_all_enabled_instances": false,
+     "boolean_flag": false,
+     "example_values": [
+      "<&vdd_mmc1_sd>"
+     ]
+    }
+   }
+  },
+  "serdes": {
+   "total_overrides": 2,
+   "enabled_labels": [],
+   "enabled_instances": 0,
+   "extra_properties": {}
+  },
+  "spi": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "main_spi0"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {
+    "#address-cells": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<1>"
+     ]
+    },
+    "#size-cells": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<0>"
+     ]
+    },
+    "ti,pindir-d0-out-d1-in": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": true,
+     "example_values": []
+    }
+   }
+  },
+  "tscadc": {
+   "total_overrides": 2,
+   "enabled_labels": [
+    "tscadc0",
+    "tscadc1"
+   ],
+   "enabled_instances": 2,
+   "extra_properties": {}
+  },
+  "uart": {
+   "total_overrides": 3,
+   "enabled_labels": [
+    "main_uart0",
+    "mcu_uart0"
+   ],
+   "enabled_instances": 2,
+   "extra_properties": {
+    "power-domains": {
+     "occurrences": 1,
+     "in_all_enabled_instances": false,
+     "boolean_flag": false,
+     "example_values": [
+      "<&k3_pds 146 TI_SCI_PD_SHARED>"
+     ]
+    }
+   }
+  },
+  "usb": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "usb1"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {
+    "dr_mode": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "\"otg\""
+     ]
+    }
+   }
+  },
+  "usb0_phy": {
+   "total_overrides": 1,
+   "enabled_labels": [],
+   "enabled_instances": 0,
+   "extra_properties": {}
+  }
+ }
+}

@@ -5,6 +5,12 @@
   "2": "CPTS0_RFT_CLK",
   "7": "GPIO1_86"
  },
+ "EMU0": {
+  "0": "EMU0"
+ },
+ "EMU1": {
+  "0": "EMU1"
+ },
  "EXT_REFCLK1": {
   "0": "EXT_REFCLK1",
   "1": "SYNC1_OUT",
@@ -227,6 +233,12 @@
   "1": "VOUT1_VSYNC",
   "7": "GPIO0_24"
  },
+ "I2C0_SCL": {
+  "0": "I2C0_SCL"
+ },
+ "I2C0_SDA": {
+  "0": "I2C0_SDA"
+ },
  "I2C1_SCL": {
   "0": "I2C1_SCL",
   "1": "CPTS0_HW1TSPUSH"
@@ -234,6 +246,12 @@
  "I2C1_SDA": {
   "0": "I2C1_SDA",
   "1": "CPTS0_HW2TSPUSH"
+ },
+ "MCU_I2C0_SCL": {
+  "0": "MCU_I2C0_SCL"
+ },
+ "MCU_I2C0_SDA": {
+  "0": "MCU_I2C0_SDA"
  },
  "MCU_MCAN0_RX": {
   "0": "MCU_MCAN0_RX",
@@ -367,6 +385,15 @@
   "2": "MCU_HYPERBUS0_RESETOn",
   "7": "WKUP_GPIO0_26"
  },
+ "MCU_PORZ_OUT": {
+  "0": "MCU_PORz_OUT"
+ },
+ "MCU_RESETSTATZ": {
+  "0": "MCU_RESETSTATz"
+ },
+ "MCU_RESETZ": {
+  "0": "MCU_RESETz"
+ },
  "MCU_RGMII1_RD0": {
   "0": "MCU_RGMII1_RD0",
   "1": "MCU_RMII1_RXD0",
@@ -422,6 +449,9 @@
   "0": "MCU_RGMII1_TX_CTL",
   "1": "MCU_RMII1_CRS_DV",
   "7": "WKUP_GPIO0_34"
+ },
+ "MCU_SAFETY_ERRORN": {
+  "0": "MCU_SAFETY_ERRORn"
  },
  "MCU_SPI0_CLK": {
   "0": "MCU_SPI0_CLK",
@@ -535,6 +565,18 @@
  "NMIN": {
   "0": "NMIn",
   "6": "PRG2_PWM1_TZ_IN"
+ },
+ "PMIC_POWER_EN0": {
+  "0": "PMIC_POWER_EN0"
+ },
+ "PMIC_POWER_EN1": {
+  "0": "PMIC_POWER_EN1"
+ },
+ "PORZ": {
+  "0": "PORz"
+ },
+ "PORZ_OUT": {
+  "0": "PORz_OUT"
  },
  "PRG0_MDIO0_MDC": {
   "0": "PRG0_MDIO0_MDC",
@@ -1458,6 +1500,15 @@
   "6": "PRG2_PWM3_TZ_OUT",
   "7": "GPIO0_52"
  },
+ "RESETSTATZ": {
+  "0": "RESETSTATz"
+ },
+ "RESETZ": {
+  "0": "RESETz"
+ },
+ "SOC_SAFETY_ERRORN": {
+  "0": "SOC_SAFETY_ERRORn"
+ },
  "SPI0_CLK": {
   "0": "SPI0_CLK",
   "7": "GPIO1_17"
@@ -1512,6 +1563,15 @@
   "4": "PRG2_UART0_TXD",
   "7": "GPIO1_24"
  },
+ "TCK": {
+  "0": "TCK"
+ },
+ "TDI": {
+  "0": "TDI"
+ },
+ "TDO": {
+  "0": "TDO"
+ },
  "TIMER_IO0": {
   "0": "TIMER_IO0",
   "2": "SYSCLKOUT0",
@@ -1521,6 +1581,12 @@
   "0": "TIMER_IO1",
   "2": "OBSCLK0",
   "7": "GPIO1_89"
+ },
+ "TMS": {
+  "0": "TMS"
+ },
+ "TRSTN": {
+  "0": "TRSTn"
  },
  "UART0_CTSN": {
   "0": "UART0_CTSn",
@@ -1619,6 +1685,12 @@
   "0": "WKUP_GPIO0_9",
   "2": "MCU_CPTS0_TS_COMP",
   "7": "WKUP_GPIO0_9"
+ },
+ "WKUP_I2C0_SCL": {
+  "0": "WKUP_I2C0_SCL"
+ },
+ "WKUP_I2C0_SDA": {
+  "0": "WKUP_I2C0_SDA"
  },
  "WKUP_UART0_RXD": {
   "0": "WKUP_UART0_RXD",

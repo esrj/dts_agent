@@ -49,9 +49,14 @@
 特例：
 - 使用者沒有具體需求 / 要「可開機的就好」/ 要「官方預設版」→ `bootable_default:true`、`items:[]`。
 - **官方預設＋額外需求**（「官方 plan 但再多一組 SPI」「官方預設之上加一個 UART」）→
-  `bootable_default:true` **且** `items` 只放**額外**的項目。官方週邊**不要**自己列進
-  items——伺服器會自動注入並鎖定官方腳；count 需求一律配**新** instance（不會吃掉
-  官方那組）。若使用者要**改動**某個官方週邊（換腳、指定模式），把該週邊放進 items
+  `bootable_default:true` **且** `items` 只放**額外**的項目、每個 count item 標
+  `"additive": true`。官方週邊**不要**自己列進 items——伺服器會自動注入並鎖定官方腳；
+  additive count 一律配**新** instance（不會吃掉官方那組）。
+- **可開機＋總量需求**（「兩個網路、三組 I2C，能開機就好」）→ `bootable_default:true`
+  且 count items **不帶** additive。不帶 additive 的 count 是**總量**：伺服器會把官方
+  基底的同 family instance 抵扣進需求（官方已有 ETH1/ETH2 時「兩個 ETH」不再另配）。
+  只有使用者明說「再多／再加／額外」時才標 `additive: true`。
+  若使用者要**改動**某個官方週邊（換腳、指定模式），把該週邊放進 items
   （伺服器會以使用者的要求為準、跳過該 instance 的官方注入）。回傳的 assignment 會
   包含官方列（`official_default:true`）＋新增列，plan 即完整視圖。「官方」指的是
   **官方預設**這個固定基底，不是上一輪的結果。

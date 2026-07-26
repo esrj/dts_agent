@@ -1,0 +1,1750 @@
+{
+ "board": "am6548",
+ "description": "Maps CSV peripheral name -> kernel DTS node label (&node). 由 knowledge_extract dts 步驟從 baseline DTS 自動生成;resolved_by=soc-dtsi-def 的條目是 baseline 未啟用的 instance(P2:新需求的目標解析用)。",
+ "source_dts": "data/am6548/baseline/dts/",
+ "aliases": {
+  "A53_TIMER0": {
+   "node_label": "a53_timer0",
+   "target_node": "&a53_timer0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "CAL": {
+   "node_label": "cal",
+   "target_node": "&cal",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "CBASS_MAIN": {
+   "node_label": "cbass_main",
+   "target_node": "&cbass_main",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "CBASS_MCU": {
+   "node_label": "cbass_mcu",
+   "target_node": "&cbass_mcu",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "CBASS_WAKEUP": {
+   "node_label": "cbass_wakeup",
+   "target_node": "&cbass_wakeup",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "CPSW_PORT1": {
+   "node_label": "cpsw_port1",
+   "target_node": "&cpsw_port1",
+   "resolved_by": "label",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "CPU0": {
+   "node_label": "cpu0",
+   "target_node": "&cpu0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "CPU1": {
+   "node_label": "cpu1",
+   "target_node": "&cpu1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "CPU2": {
+   "node_label": "cpu2",
+   "target_node": "&cpu2",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "CPU3": {
+   "node_label": "cpu3",
+   "target_node": "&cpu3",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "CRYPTO": {
+   "node_label": "crypto",
+   "target_node": "&crypto",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "DMSC": {
+   "node_label": "dmsc",
+   "target_node": "&dmsc",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "DSS": {
+   "node_label": "dss",
+   "target_node": "&dss",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "DSS_OLDI_IO_CTRL": {
+   "node_label": "dss_oldi_io_ctrl",
+   "target_node": "&dss_oldi_io_ctrl",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "DWC3_0": {
+   "node_label": "dwc3_0",
+   "target_node": "&dwc3_0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "DWC3_1": {
+   "node_label": "dwc3_1",
+   "target_node": "&dwc3_1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ECAP0": {
+   "node_label": "ecap0",
+   "target_node": "&ecap0",
+   "resolved_by": "signal-prefix-alias",
+   "canonical": "ECAP0_IN_APWM",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "ecap0_pins_default"
+   ],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ECAP0_IN_APWM": {
+   "node_label": "ecap0",
+   "target_node": "&ecap0",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "ecap0_pins_default"
+   ],
+   "csv_pins": 1,
+   "pins_matched_in_baseline": 1
+  },
+  "EHRPWM0": {
+   "node_label": "ehrpwm0",
+   "target_node": "&ehrpwm0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "EHRPWM1": {
+   "node_label": "ehrpwm1",
+   "target_node": "&ehrpwm1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "EHRPWM2": {
+   "node_label": "ehrpwm2",
+   "target_node": "&ehrpwm2",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "EHRPWM3": {
+   "node_label": "ehrpwm3",
+   "target_node": "&ehrpwm3",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "EHRPWM4": {
+   "node_label": "ehrpwm4",
+   "target_node": "&ehrpwm4",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "EHRPWM5": {
+   "node_label": "ehrpwm5",
+   "target_node": "&ehrpwm5",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "EHRPWM_TBCLK": {
+   "node_label": "ehrpwm_tbclk",
+   "target_node": "&ehrpwm_tbclk",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "EVM_12V0": {
+   "node_label": "evm_12v0",
+   "target_node": "&evm_12v0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "FSS": {
+   "node_label": "fss",
+   "target_node": "&fss",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "GIC500": {
+   "node_label": "gic500",
+   "target_node": "&gic500",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "GIC_ITS": {
+   "node_label": "gic_its",
+   "target_node": "&gic_its",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "GPIO0": {
+   "node_label": "main_gpio0",
+   "target_node": "&main_gpio0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "GPIO1": {
+   "node_label": "main_gpio1",
+   "target_node": "&main_gpio1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "HWSPINLOCK": {
+   "node_label": "hwspinlock",
+   "target_node": "&hwspinlock",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "I2C0": {
+   "node_label": "main_i2c0",
+   "target_node": "&main_i2c0",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_i2c0_pins_default"
+   ],
+   "csv_pins": 2,
+   "pins_matched_in_baseline": 2
+  },
+  "I2C1": {
+   "node_label": "main_i2c1",
+   "target_node": "&main_i2c1",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_i2c1_pins_default"
+   ],
+   "csv_pins": 2,
+   "pins_matched_in_baseline": 2
+  },
+  "I2C2": {
+   "node_label": "main_i2c2",
+   "target_node": "&main_i2c2",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_i2c2_pins_default"
+   ],
+   "csv_pins": 2,
+   "pins_matched_in_baseline": 2
+  },
+  "I2C3": {
+   "node_label": "main_i2c3",
+   "target_node": "&main_i2c3",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG0": {
+   "node_label": "icssg0",
+   "target_node": "&icssg0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG0_CFG": {
+   "node_label": "icssg0_cfg",
+   "target_node": "&icssg0_cfg",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG0_INTC": {
+   "node_label": "icssg0_intc",
+   "target_node": "&icssg0_intc",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG0_MDIO": {
+   "node_label": "icssg0_mdio",
+   "target_node": "&icssg0_mdio",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG0_MII_G_RT": {
+   "node_label": "icssg0_mii_g_rt",
+   "target_node": "&icssg0_mii_g_rt",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG0_MII_RT": {
+   "node_label": "icssg0_mii_rt",
+   "target_node": "&icssg0_mii_rt",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG1": {
+   "node_label": "icssg1",
+   "target_node": "&icssg1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG1_CFG": {
+   "node_label": "icssg1_cfg",
+   "target_node": "&icssg1_cfg",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG1_INTC": {
+   "node_label": "icssg1_intc",
+   "target_node": "&icssg1_intc",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG1_MDIO": {
+   "node_label": "icssg1_mdio",
+   "target_node": "&icssg1_mdio",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG1_MII_G_RT": {
+   "node_label": "icssg1_mii_g_rt",
+   "target_node": "&icssg1_mii_g_rt",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG1_MII_RT": {
+   "node_label": "icssg1_mii_rt",
+   "target_node": "&icssg1_mii_rt",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG2": {
+   "node_label": "icssg2",
+   "target_node": "&icssg2",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG2_CFG": {
+   "node_label": "icssg2_cfg",
+   "target_node": "&icssg2_cfg",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG2_INTC": {
+   "node_label": "icssg2_intc",
+   "target_node": "&icssg2_intc",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG2_MDIO": {
+   "node_label": "icssg2_mdio",
+   "target_node": "&icssg2_mdio",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG2_MII_G_RT": {
+   "node_label": "icssg2_mii_g_rt",
+   "target_node": "&icssg2_mii_g_rt",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "ICSSG2_MII_RT": {
+   "node_label": "icssg2_mii_rt",
+   "target_node": "&icssg2_mii_rt",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "INTA_MAIN_UDMASS": {
+   "node_label": "inta_main_udmass",
+   "target_node": "&inta_main_udmass",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "INTR_MAIN_GPIO": {
+   "node_label": "intr_main_gpio",
+   "target_node": "&intr_main_gpio",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "INTR_MAIN_NAVSS": {
+   "node_label": "intr_main_navss",
+   "target_node": "&intr_main_navss",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "INTR_WKUP_GPIO": {
+   "node_label": "intr_wkup_gpio",
+   "target_node": "&intr_wkup_gpio",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "K3_CLKS": {
+   "node_label": "k3_clks",
+   "target_node": "&k3_clks",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "K3_PDS": {
+   "node_label": "k3_pds",
+   "target_node": "&k3_pds",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "K3_RESET": {
+   "node_label": "k3_reset",
+   "target_node": "&k3_reset",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "L2_0": {
+   "node_label": "L2_0",
+   "target_node": "&L2_0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "L2_1": {
+   "node_label": "L2_1",
+   "target_node": "&L2_1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER0": {
+   "node_label": "mailbox0_cluster0",
+   "target_node": "&mailbox0_cluster0",
+   "resolved_by": "label",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER1": {
+   "node_label": "mailbox0_cluster1",
+   "target_node": "&mailbox0_cluster1",
+   "resolved_by": "label",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER10": {
+   "node_label": "mailbox0_cluster10",
+   "target_node": "&mailbox0_cluster10",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER11": {
+   "node_label": "mailbox0_cluster11",
+   "target_node": "&mailbox0_cluster11",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER2": {
+   "node_label": "mailbox0_cluster2",
+   "target_node": "&mailbox0_cluster2",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER3": {
+   "node_label": "mailbox0_cluster3",
+   "target_node": "&mailbox0_cluster3",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER4": {
+   "node_label": "mailbox0_cluster4",
+   "target_node": "&mailbox0_cluster4",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER5": {
+   "node_label": "mailbox0_cluster5",
+   "target_node": "&mailbox0_cluster5",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER6": {
+   "node_label": "mailbox0_cluster6",
+   "target_node": "&mailbox0_cluster6",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER7": {
+   "node_label": "mailbox0_cluster7",
+   "target_node": "&mailbox0_cluster7",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER8": {
+   "node_label": "mailbox0_cluster8",
+   "target_node": "&mailbox0_cluster8",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MAILBOX0_CLUSTER9": {
+   "node_label": "mailbox0_cluster9",
+   "target_node": "&mailbox0_cluster9",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCASP0": {
+   "node_label": "mcasp0",
+   "target_node": "&mcasp0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCASP1": {
+   "node_label": "mcasp1",
+   "target_node": "&mcasp1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCASP2": {
+   "node_label": "mcasp2",
+   "target_node": "&mcasp2",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_CONF": {
+   "node_label": "mcu_conf",
+   "target_node": "&mcu_conf",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_I2C0": {
+   "node_label": "mcu_i2c0",
+   "target_node": "&mcu_i2c0",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "mcu_i2c0_pins_default"
+   ],
+   "csv_pins": 2,
+   "pins_matched_in_baseline": 2
+  },
+  "MCU_MDIO0": {
+   "node_label": "davinci_mdio",
+   "target_node": "&davinci_mdio",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "mcu_mdio_pins_default"
+   ],
+   "csv_pins": 2,
+   "pins_matched_in_baseline": 2
+  },
+  "MCU_NAVSS": {
+   "node_label": "mcu_navss",
+   "target_node": "&mcu_navss",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_OSPI0": {
+   "node_label": "ospi0",
+   "target_node": "&ospi0",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "mcu_fss0_ospi0_pins_default"
+   ],
+   "csv_pins": 11,
+   "pins_matched_in_baseline": 11
+  },
+  "MCU_R5FSS0": {
+   "node_label": "mcu_r5fss0",
+   "target_node": "&mcu_r5fss0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_R5FSS0_CORE0": {
+   "node_label": "mcu_r5fss0_core0",
+   "target_node": "&mcu_r5fss0_core0",
+   "resolved_by": "label",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_R5FSS0_CORE0_DMA_MEMORY_REGION": {
+   "node_label": "mcu_r5fss0_core0_dma_memory_region",
+   "target_node": "&mcu_r5fss0_core0_dma_memory_region",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_R5FSS0_CORE0_MEMORY_REGION": {
+   "node_label": "mcu_r5fss0_core0_memory_region",
+   "target_node": "&mcu_r5fss0_core0_memory_region",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_R5FSS0_CORE1": {
+   "node_label": "mcu_r5fss0_core1",
+   "target_node": "&mcu_r5fss0_core1",
+   "resolved_by": "label",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_R5FSS0_CORE1_DMA_MEMORY_REGION": {
+   "node_label": "mcu_r5fss0_core1_dma_memory_region",
+   "target_node": "&mcu_r5fss0_core1_dma_memory_region",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_R5FSS0_CORE1_MEMORY_REGION": {
+   "node_label": "mcu_r5fss0_core1_memory_region",
+   "target_node": "&mcu_r5fss0_core1_memory_region",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_RAM": {
+   "node_label": "mcu_ram",
+   "target_node": "&mcu_ram",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_RGMII1": {
+   "node_label": "mcu_cpsw",
+   "target_node": "&mcu_cpsw",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "mcu_cpsw_pins_default"
+   ],
+   "csv_pins": 12,
+   "pins_matched_in_baseline": 12
+  },
+  "MCU_RINGACC": {
+   "node_label": "mcu_ringacc",
+   "target_node": "&mcu_ringacc",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_RTI1": {
+   "node_label": "mcu_rti1",
+   "target_node": "&mcu_rti1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_SPI0": {
+   "node_label": "mcu_spi0",
+   "target_node": "&mcu_spi0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_SPI1": {
+   "node_label": "mcu_spi1",
+   "target_node": "&mcu_spi1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_SPI2": {
+   "node_label": "mcu_spi2",
+   "target_node": "&mcu_spi2",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_TIMER0": {
+   "node_label": "mcu_timer0",
+   "target_node": "&mcu_timer0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_TIMER1": {
+   "node_label": "mcu_timer1",
+   "target_node": "&mcu_timer1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_TIMER2": {
+   "node_label": "mcu_timer2",
+   "target_node": "&mcu_timer2",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_TIMER3": {
+   "node_label": "mcu_timer3",
+   "target_node": "&mcu_timer3",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_TIMERIO_INPUT": {
+   "node_label": "mcu_timerio_input",
+   "target_node": "&mcu_timerio_input",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_TIMERIO_OUTPUT": {
+   "node_label": "mcu_timerio_output",
+   "target_node": "&mcu_timerio_output",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MCU_UART0": {
+   "node_label": "mcu_uart0",
+   "target_node": "&mcu_uart0",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "mcu_uart0_pins_default"
+   ],
+   "csv_pins": 4,
+   "pins_matched_in_baseline": 4
+  },
+  "MCU_UDMAP": {
+   "node_label": "mcu_udmap",
+   "target_node": "&mcu_udmap",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MMC0": {
+   "node_label": "sdhci0",
+   "target_node": "&sdhci0",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_mmc0_pins_default"
+   ],
+   "csv_pins": 12,
+   "pins_matched_in_baseline": 12
+  },
+  "MMC1": {
+   "node_label": "sdhci1",
+   "target_node": "&sdhci1",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_mmc1_pins_default"
+   ],
+   "csv_pins": 8,
+   "pins_matched_in_baseline": 8
+  },
+  "MSMC_L3": {
+   "node_label": "msmc_l3",
+   "target_node": "&msmc_l3",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "MSMC_RAM": {
+   "node_label": "msmc_ram",
+   "target_node": "&msmc_ram",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "M_CAN0": {
+   "node_label": "m_can0",
+   "target_node": "&m_can0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "M_CAN1": {
+   "node_label": "m_can1",
+   "target_node": "&m_can1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "NAVSS": {
+   "node_label": "main_navss",
+   "target_node": "&main_navss",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "OSPI1": {
+   "node_label": "ospi1",
+   "target_node": "&ospi1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PCA9554": {
+   "node_label": "pca9554",
+   "target_node": "&pca9554",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PCA9555": {
+   "node_label": "pca9555",
+   "target_node": "&pca9555",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PCIE0_EP": {
+   "node_label": "pcie0_ep",
+   "target_node": "&pcie0_ep",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PCIE0_RC": {
+   "node_label": "pcie0_rc",
+   "target_node": "&pcie0_rc",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PCIE1_EP": {
+   "node_label": "pcie1_ep",
+   "target_node": "&pcie1_ep",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PCIE1_RC": {
+   "node_label": "pcie1_rc",
+   "target_node": "&pcie1_rc",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PHY_GMII_SEL": {
+   "node_label": "phy_gmii_sel",
+   "target_node": "&phy_gmii_sel",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PMU": {
+   "node_label": "pmu",
+   "target_node": "&pmu",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PMX0": {
+   "node_label": "main_pmx0",
+   "target_node": "&main_pmx0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PMX1": {
+   "node_label": "main_pmx1",
+   "target_node": "&main_pmx1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PRU0_0": {
+   "node_label": "pru0_0",
+   "target_node": "&pru0_0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PRU0_1": {
+   "node_label": "pru0_1",
+   "target_node": "&pru0_1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PRU1_0": {
+   "node_label": "pru1_0",
+   "target_node": "&pru1_0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PRU1_1": {
+   "node_label": "pru1_1",
+   "target_node": "&pru1_1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PRU2_0": {
+   "node_label": "pru2_0",
+   "target_node": "&pru2_0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PRU2_1": {
+   "node_label": "pru2_1",
+   "target_node": "&pru2_1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "PSCI": {
+   "node_label": "psci",
+   "target_node": "&psci",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "RINGACC": {
+   "node_label": "ringacc",
+   "target_node": "&ringacc",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "RNG": {
+   "node_label": "rng",
+   "target_node": "&rng",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "RTU0_0": {
+   "node_label": "rtu0_0",
+   "target_node": "&rtu0_0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "RTU0_1": {
+   "node_label": "rtu0_1",
+   "target_node": "&rtu0_1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "RTU1_0": {
+   "node_label": "rtu1_0",
+   "target_node": "&rtu1_0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "RTU1_1": {
+   "node_label": "rtu1_1",
+   "target_node": "&rtu1_1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "RTU2_0": {
+   "node_label": "rtu2_0",
+   "target_node": "&rtu2_0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "RTU2_1": {
+   "node_label": "rtu2_1",
+   "target_node": "&rtu2_1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SCM_CONF": {
+   "node_label": "scm_conf",
+   "target_node": "&scm_conf",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SECURE_PROXY_MAIN": {
+   "node_label": "secure_proxy_main",
+   "target_node": "&secure_proxy_main",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SECURE_PROXY_MCU": {
+   "node_label": "secure_proxy_mcu",
+   "target_node": "&secure_proxy_mcu",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SERDES0": {
+   "node_label": "serdes0",
+   "target_node": "&serdes0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SERDES0_CLK": {
+   "node_label": "serdes0_clk",
+   "target_node": "&serdes0_clk",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SERDES1": {
+   "node_label": "serdes1",
+   "target_node": "&serdes1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SERDES1_CLK": {
+   "node_label": "serdes1_clk",
+   "target_node": "&serdes1_clk",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SERDES_MUX": {
+   "node_label": "serdes_mux",
+   "target_node": "&serdes_mux",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SPI0": {
+   "node_label": "main_spi0",
+   "target_node": "&main_spi0",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_spi0_pins_default"
+   ],
+   "csv_pins": 4,
+   "pins_matched_in_baseline": 4
+  },
+  "SPI1": {
+   "node_label": "main_spi1",
+   "target_node": "&main_spi1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SPI2": {
+   "node_label": "main_spi2",
+   "target_node": "&main_spi2",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SPI3": {
+   "node_label": "main_spi3",
+   "target_node": "&main_spi3",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "SPI4": {
+   "node_label": "main_spi4",
+   "target_node": "&main_spi4",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER0": {
+   "node_label": "main_timer0",
+   "target_node": "&main_timer0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER1": {
+   "node_label": "main_timer1",
+   "target_node": "&main_timer1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER10": {
+   "node_label": "main_timer10",
+   "target_node": "&main_timer10",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER11": {
+   "node_label": "main_timer11",
+   "target_node": "&main_timer11",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER2": {
+   "node_label": "main_timer2",
+   "target_node": "&main_timer2",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER3": {
+   "node_label": "main_timer3",
+   "target_node": "&main_timer3",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER4": {
+   "node_label": "main_timer4",
+   "target_node": "&main_timer4",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER5": {
+   "node_label": "main_timer5",
+   "target_node": "&main_timer5",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER6": {
+   "node_label": "main_timer6",
+   "target_node": "&main_timer6",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER7": {
+   "node_label": "main_timer7",
+   "target_node": "&main_timer7",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER8": {
+   "node_label": "main_timer8",
+   "target_node": "&main_timer8",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMER9": {
+   "node_label": "main_timer9",
+   "target_node": "&main_timer9",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMERIO_INPUT": {
+   "node_label": "main_timerio_input",
+   "target_node": "&main_timerio_input",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TIMERIO_OUTPUT": {
+   "node_label": "main_timerio_output",
+   "target_node": "&main_timerio_output",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TSCADC0": {
+   "node_label": "tscadc0",
+   "target_node": "&tscadc0",
+   "resolved_by": "label",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TSCADC1": {
+   "node_label": "tscadc1",
+   "target_node": "&tscadc1",
+   "resolved_by": "label",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TX_PRU0_0": {
+   "node_label": "tx_pru0_0",
+   "target_node": "&tx_pru0_0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TX_PRU0_1": {
+   "node_label": "tx_pru0_1",
+   "target_node": "&tx_pru0_1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TX_PRU1_0": {
+   "node_label": "tx_pru1_0",
+   "target_node": "&tx_pru1_0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TX_PRU1_1": {
+   "node_label": "tx_pru1_1",
+   "target_node": "&tx_pru1_1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TX_PRU2_0": {
+   "node_label": "tx_pru2_0",
+   "target_node": "&tx_pru2_0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "TX_PRU2_1": {
+   "node_label": "tx_pru2_1",
+   "target_node": "&tx_pru2_1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "UART0": {
+   "node_label": "main_uart0",
+   "target_node": "&main_uart0",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "main_uart0_pins_default"
+   ],
+   "csv_pins": 4,
+   "pins_matched_in_baseline": 4
+  },
+  "UART1": {
+   "node_label": "main_uart1",
+   "target_node": "&main_uart1",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "UART2": {
+   "node_label": "main_uart2",
+   "target_node": "&main_uart2",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "UDMAP": {
+   "node_label": "main_udmap",
+   "target_node": "&main_udmap",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "USB0": {
+   "node_label": "usb0",
+   "target_node": "&usb0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "USB0_PHY": {
+   "node_label": "usb0_phy",
+   "target_node": "&usb0_phy",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "USB1": {
+   "node_label": "usb1",
+   "target_node": "&usb1",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "usb1_pins_default"
+   ],
+   "csv_pins": 1,
+   "pins_matched_in_baseline": 1
+  },
+  "USB1_PHY": {
+   "node_label": "usb1_phy",
+   "target_node": "&usb1_phy",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "VCC3V3_IO": {
+   "node_label": "vcc3v3_io",
+   "target_node": "&vcc3v3_io",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "VDD_MMC1_SD": {
+   "node_label": "vdd_mmc1_sd",
+   "target_node": "&vdd_mmc1_sd",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "VDD_MPU": {
+   "node_label": "vdd_mpu",
+   "target_node": "&vdd_mpu",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "VTT_SUPPLY": {
+   "node_label": "vtt_supply",
+   "target_node": "&vtt_supply",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "WKUP_GPIO0": {
+   "node_label": "wkup_gpio0",
+   "target_node": "&wkup_gpio0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "WKUP_I2C0": {
+   "node_label": "wkup_i2c0",
+   "target_node": "&wkup_i2c0",
+   "resolved_by": "signal-prefix",
+   "enabled_in_baseline": true,
+   "pinctrl_groups": [
+    "wkup_i2c0_pins_default"
+   ],
+   "csv_pins": 2,
+   "pins_matched_in_baseline": 2
+  },
+  "WKUP_PMX0": {
+   "node_label": "wkup_pmx0",
+   "target_node": "&wkup_pmx0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "WKUP_UART0": {
+   "node_label": "wkup_uart0",
+   "target_node": "&wkup_uart0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  },
+  "WKUP_VTM0": {
+   "node_label": "wkup_vtm0",
+   "target_node": "&wkup_vtm0",
+   "resolved_by": "soc-dtsi-def",
+   "enabled_in_baseline": false,
+   "pinctrl_groups": [],
+   "csv_pins": 0,
+   "pins_matched_in_baseline": 0
+  }
+ }
+}

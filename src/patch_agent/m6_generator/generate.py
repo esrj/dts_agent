@@ -22,8 +22,8 @@ from dataclasses import dataclass, field
 
 from .. import config
 from ..m1_dts_parser import build_index
-from ..m4_patch_generation.generate import (
-    MARK_BEGIN, MARK_END, _pinmux)
+from ..m4_patch_generation.generate import MARK_BEGIN, MARK_END
+from ..pinmux_style import get_style, assemble_group_sections
 from .schema import EMIT_TOOL, TOOL_NAME, PROMPT_VERSION
 from .prompt import SYSTEM_PROMPT, build_user_prompt, build_retry_prompt
 
@@ -69,8 +69,9 @@ def check_edits(target, edits, all_labels):
     cp = target["context_pack"]
     states = cp["declared_pinctrl_states"]
     plan_rows = target["plan_rows"]
-    plan_set = {(r["pin"], f"AF{r['af']}") for r in plan_rows}
-    plan_pins = {r["pin"]: f"AF{r['af']}" for r in plan_rows}
+    style = get_style()                 # mode 詞彙依板的 pinmux style（stm32=AF<n>）
+    plan_set = {(r["pin"], style.mode_token(r["af"])) for r in plan_rows}
+    plan_pins = {r["pin"]: style.mode_token(r["af"]) for r in plan_rows}
 
     groups = [e for e in edits["edits"] if e.get("type") == "pinctrl_group"]
     overrides = [e for e in edits["edits"] if e.get("type") == "node_override"]
@@ -115,12 +116,13 @@ def check_edits(target, edits, all_labels):
         if st == states[0]:                       # default state: exact plan set
             if got != plan_set:
                 errs.append(f"default group pinmux {sorted(got)} != plan {sorted(plan_set)}")
-        else:                                     # other states: same pins, ANALOG or the plan AF
+        else:                                     # other states: same pins, low-power or the plan AF
             if pins != set(plan_pins):
                 errs.append(f"state {st!r} pins {sorted(pins)} != plan pins {sorted(plan_pins)}")
+            lp = style.lowpower_token()           # stm32=ANALOG；無此概念的 style 回 None
             for pin, mode in got:
-                if mode != "ANALOG" and mode != plan_pins.get(pin):
-                    errs.append(f"state {st!r}: {pin} mode {mode!r} is neither ANALOG "
+                if mode != lp and mode != plan_pins.get(pin):
+                    errs.append(f"state {st!r}: {pin} mode {mode!r} is neither {lp} "
                                 f"nor the plan AF {plan_pins.get(pin)!r}")
 
     # --- pinctrl-N must reference this edit set's groups, in state order ---
@@ -192,17 +194,13 @@ def _render_props(props, depth):
 
 
 def render_group(e):
+    """LLM structured edit -> (容器 ref, 群組文字)。渲染形狀委派給該板的
+    pinmux style（stm32 subnode 形＝原輸出逐字相同；K3 IOPAD 陣列形）。"""
     label = e["label"]
     name = e.get("name") or label.replace("_", "-")
-    out = [f"\t{label}: {name} {{"]
-    for sn in e.get("subnodes", []):
-        out.append(f"\t\t{sn['name']} {{")
-        cm = f"\t/* {sn['signal']} */" if sn.get("signal") else ""
-        out.append(f"\t\t\tpinmux = <{_pinmux(sn['pin'], sn['mode'])}>;{cm}")
-        out += _render_props(sn.get("props"), 3)
-        out.append("\t\t};")
-    out.append("\t};")
-    return "\n".join(out)
+    entries = [(sn["name"], sn["pin"], sn["mode"], sn.get("props") or {},
+                sn.get("signal")) for sn in e.get("subnodes", [])]
+    return get_style().render_group(label, name, entries)
 
 
 def _render_child(c, depth):
@@ -455,9 +453,8 @@ def generate(diff_plan, provider=None, index=None, *, model=None,
             f" * Changes: {summary}",
             " */"]
     if all_groups:
-        body.append("&pinctrl {")
-        body += all_groups
-        body += ["};", ""]
+        # all_groups = [(容器 ref, 群組文字)]；stm32 單容器時與舊版逐字相同
+        body += assemble_group_sections(all_groups)
     for i, ov in enumerate(all_overrides):
         if i:
             body.append("")

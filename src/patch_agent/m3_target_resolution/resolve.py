@@ -55,10 +55,39 @@ class Stage2Result:
         }
 
 
-def _node_label(target_node, peripheral):
-    if target_node:
-        return target_node.lstrip("&")
-    return peripheral.lower()
+def _fallback_label(per, info, index):
+    """alias 查不到（baseline 未啟用的新 instance）時的資料驅動 fallback：
+
+    1) defs 有 `per.lower()` 這個 label → 直接用（＝舊裸猜行為，stm32 命名
+       spi1/i2c3 都在這裡命中——回歸不變）；
+    2) 否則找 defs 中以 `_<per.lower()>` 結尾的候選（K3 的 domain 前綴命名：
+       SPI1 → main_spi1）；多候選（main_spi1 vs mcu_spi1）時以 plan pads 的
+       pinmux domain 名首段消歧（pad domain main_pmx0 ↔ label main_spi1——
+       比對的是供料資料的字串，非寫死 vendor 清單）；
+    3) 仍不唯一 → 退回 `per.lower()`，**不猜**——下游（m7 dtc）會以明確的
+       label-not-found 攔下，不會產出壞 patch。
+    正解仍是 alias 檔覆蓋全 instance（extractor 回饋）；本 fallback 是防禦網。
+    """
+    want = per.lower()
+    if want in index.defs:
+        return want
+    cands = [l for l in index.defs if l.endswith("_" + want)]
+    if len(cands) > 1:
+        try:
+            from ..pinmux_style import get_style
+            params = getattr(get_style(), "param_of", None) or {}
+            doms = {params[(s.get("pin") or "").upper()][0]
+                    for s in (info.get("signals") or {}).values()
+                    if (s.get("pin") or "").upper() in params}
+            prefixes = {d.split("_", 1)[0] for d in doms}
+            if len(prefixes) == 1:
+                p = next(iter(prefixes))
+                narrowed = [l for l in cands if l.split("_", 1)[0] == p]
+                if narrowed:
+                    cands = narrowed
+        except Exception:
+            pass                      # 消歧失敗＝維持多候選 → 不猜
+    return cands[0] if len(cands) == 1 else want
 
 
 def _baseline_pin_owner(index):
@@ -79,13 +108,16 @@ def resolve(validated_plan_ir, index, boot_required_nodes=None):
     boot = set(boot_required_nodes or [])
     owner = _baseline_pin_owner(index)
     peripherals = validated_plan_ir.get("peripherals", {})
+    # per -> node label（alias 給的 target_node 優先；缺席走 defs fallback）
+    labels = {per: (info["target_node"].lstrip("&") if info.get("target_node")
+                    else _fallback_label(per, info, index))
+              for per, info in peripherals.items()}
     # node label -> plan peripheral (to know if a conflicting owner is also in the plan)
-    label_to_plan = {_node_label(info.get("target_node"), per): per
-                     for per, info in peripherals.items()}
+    label_to_plan = {v: k for k, v in labels.items()}
 
     result = Stage2Result()
     for per, info in peripherals.items():
-        label = _node_label(info.get("target_node"), per)
+        label = labels[per]
         ov = index.override(label)
         existing_p0 = list(ov.pinctrl_0) if ov else []
         existing_set = set()

@@ -1,0 +1,587 @@
+{
+ "board": "am6548",
+ "source": "datasheet Pad Configuration Registers 表 + baseline DTS 錨點校準",
+ "description": "pad → pinmux 渲染參數;鍵與 af_table 的 pin 鍵逐字一致。K3 鍵空間為 (domain, offset);MA35 為 (offset, shift) 位段。",
+ "pads": {
+  "ECAP0_IN_APWM_OUT": {
+   "domain": "main_pmx1",
+   "offset": "0x0010"
+  },
+  "EMU0": {
+   "domain": "wkup_pmx0",
+   "offset": "0x010c"
+  },
+  "EMU1": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0110"
+  },
+  "EXT_REFCLK1": {
+   "domain": "main_pmx1",
+   "offset": "0x0014"
+  },
+  "GPMC0_AD0": {
+   "domain": "main_pmx0",
+   "offset": "0x0000"
+  },
+  "GPMC0_AD1": {
+   "domain": "main_pmx0",
+   "offset": "0x0004"
+  },
+  "GPMC0_AD10": {
+   "domain": "main_pmx0",
+   "offset": "0x0028"
+  },
+  "GPMC0_AD11": {
+   "domain": "main_pmx0",
+   "offset": "0x002c"
+  },
+  "GPMC0_AD12": {
+   "domain": "main_pmx0",
+   "offset": "0x0030"
+  },
+  "GPMC0_AD13": {
+   "domain": "main_pmx0",
+   "offset": "0x0034"
+  },
+  "GPMC0_AD14": {
+   "domain": "main_pmx0",
+   "offset": "0x0038"
+  },
+  "GPMC0_AD15": {
+   "domain": "main_pmx0",
+   "offset": "0x003c"
+  },
+  "GPMC0_AD2": {
+   "domain": "main_pmx0",
+   "offset": "0x0008"
+  },
+  "GPMC0_AD3": {
+   "domain": "main_pmx0",
+   "offset": "0x000c"
+  },
+  "GPMC0_AD4": {
+   "domain": "main_pmx0",
+   "offset": "0x0010"
+  },
+  "GPMC0_AD5": {
+   "domain": "main_pmx0",
+   "offset": "0x0014"
+  },
+  "GPMC0_AD6": {
+   "domain": "main_pmx0",
+   "offset": "0x0018"
+  },
+  "GPMC0_AD7": {
+   "domain": "main_pmx0",
+   "offset": "0x001c"
+  },
+  "GPMC0_AD8": {
+   "domain": "main_pmx0",
+   "offset": "0x0020"
+  },
+  "GPMC0_AD9": {
+   "domain": "main_pmx0",
+   "offset": "0x0024"
+  },
+  "GPMC0_BE1N": {
+   "domain": "main_pmx0",
+   "offset": "0x0054"
+  },
+  "GPMC0_CLK": {
+   "domain": "main_pmx0",
+   "offset": "0x0040"
+  },
+  "GPMC0_CSN0": {
+   "domain": "main_pmx0",
+   "offset": "0x0068"
+  },
+  "GPMC0_CSN1": {
+   "domain": "main_pmx0",
+   "offset": "0x006c"
+  },
+  "GPMC0_CSN2": {
+   "domain": "main_pmx0",
+   "offset": "0x0070"
+  },
+  "GPMC0_CSN3": {
+   "domain": "main_pmx0",
+   "offset": "0x0074"
+  },
+  "GPMC0_DIR": {
+   "domain": "main_pmx0",
+   "offset": "0x0064"
+  },
+  "GPMC0_OEN_REN": {
+   "domain": "main_pmx0",
+   "offset": "0x0048"
+  },
+  "GPMC0_WAIT0": {
+   "domain": "main_pmx0",
+   "offset": "0x0058"
+  },
+  "GPMC0_WAIT1": {
+   "domain": "main_pmx0",
+   "offset": "0x005c"
+  },
+  "GPMC0_WEN": {
+   "domain": "main_pmx0",
+   "offset": "0x004c"
+  },
+  "GPMC0_WPN": {
+   "domain": "main_pmx0",
+   "offset": "0x0060"
+  },
+  "I2C0_SCL": {
+   "domain": "main_pmx1",
+   "offset": "0x0000"
+  },
+  "I2C0_SDA": {
+   "domain": "main_pmx1",
+   "offset": "0x0004"
+  },
+  "I2C1_SCL": {
+   "domain": "main_pmx1",
+   "offset": "0x0008"
+  },
+  "I2C1_SDA": {
+   "domain": "main_pmx1",
+   "offset": "0x000c"
+  },
+  "MCU_I2C0_SCL": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00e8"
+  },
+  "MCU_I2C0_SDA": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00ec"
+  },
+  "MCU_MCAN0_RX": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00ac"
+  },
+  "MCU_MCAN0_TX": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00a8"
+  },
+  "MCU_MDIO0_MDC": {
+   "domain": "wkup_pmx0",
+   "offset": "0x008c"
+  },
+  "MCU_MDIO0_MDIO": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0088"
+  },
+  "MCU_OSPI0_CLK": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0000"
+  },
+  "MCU_OSPI0_CSN0": {
+   "domain": "wkup_pmx0",
+   "offset": "0x002c"
+  },
+  "MCU_OSPI0_CSN1": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0030"
+  },
+  "MCU_OSPI0_D0": {
+   "domain": "wkup_pmx0",
+   "offset": "0x000c"
+  },
+  "MCU_OSPI0_D1": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0010"
+  },
+  "MCU_OSPI0_D2": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0014"
+  },
+  "MCU_OSPI0_D3": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0018"
+  },
+  "MCU_OSPI0_D4": {
+   "domain": "wkup_pmx0",
+   "offset": "0x001c"
+  },
+  "MCU_OSPI0_D5": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0020"
+  },
+  "MCU_OSPI0_D6": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0024"
+  },
+  "MCU_OSPI0_D7": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0028"
+  },
+  "MCU_OSPI0_DQS": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0008"
+  },
+  "MCU_OSPI1_CLK": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0034"
+  },
+  "MCU_OSPI1_CSN0": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0050"
+  },
+  "MCU_OSPI1_CSN1": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0054"
+  },
+  "MCU_OSPI1_D0": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0040"
+  },
+  "MCU_OSPI1_D1": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0044"
+  },
+  "MCU_OSPI1_D2": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0048"
+  },
+  "MCU_OSPI1_D3": {
+   "domain": "wkup_pmx0",
+   "offset": "0x004c"
+  },
+  "MCU_OSPI1_DQS": {
+   "domain": "wkup_pmx0",
+   "offset": "0x003c"
+  },
+  "MCU_PORZ_OUT": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0100"
+  },
+  "MCU_RESETZ": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00f8"
+  },
+  "MCU_RGMII1_RD0": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0084"
+  },
+  "MCU_RGMII1_RD1": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0080"
+  },
+  "MCU_RGMII1_RD2": {
+   "domain": "wkup_pmx0",
+   "offset": "0x007c"
+  },
+  "MCU_RGMII1_RD3": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0078"
+  },
+  "MCU_RGMII1_RXC": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0074"
+  },
+  "MCU_RGMII1_RX_CTL": {
+   "domain": "wkup_pmx0",
+   "offset": "0x005c"
+  },
+  "MCU_RGMII1_TD0": {
+   "domain": "wkup_pmx0",
+   "offset": "0x006c"
+  },
+  "MCU_RGMII1_TD1": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0068"
+  },
+  "MCU_RGMII1_TD2": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0064"
+  },
+  "MCU_RGMII1_TD3": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0060"
+  },
+  "MCU_RGMII1_TXC": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0070"
+  },
+  "MCU_RGMII1_TX_CTL": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0058"
+  },
+  "MCU_SPI0_CLK": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0090"
+  },
+  "MCU_SPI0_CS0": {
+   "domain": "wkup_pmx0",
+   "offset": "0x009c"
+  },
+  "MCU_SPI0_D0": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0094"
+  },
+  "MCU_SPI0_D1": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0098"
+  },
+  "MMC0_CLK": {
+   "domain": "main_pmx0",
+   "offset": "0x01a8"
+  },
+  "MMC0_CMD": {
+   "domain": "main_pmx0",
+   "offset": "0x01ac"
+  },
+  "MMC0_DAT0": {
+   "domain": "main_pmx0",
+   "offset": "0x01a4"
+  },
+  "MMC0_DAT1": {
+   "domain": "main_pmx0",
+   "offset": "0x01a0"
+  },
+  "MMC0_DAT2": {
+   "domain": "main_pmx0",
+   "offset": "0x019c"
+  },
+  "MMC0_DAT3": {
+   "domain": "main_pmx0",
+   "offset": "0x0198"
+  },
+  "MMC0_DAT4": {
+   "domain": "main_pmx0",
+   "offset": "0x0194"
+  },
+  "MMC0_DAT5": {
+   "domain": "main_pmx0",
+   "offset": "0x0190"
+  },
+  "MMC0_DAT6": {
+   "domain": "main_pmx0",
+   "offset": "0x018c"
+  },
+  "MMC0_DAT7": {
+   "domain": "main_pmx0",
+   "offset": "0x0188"
+  },
+  "MMC0_DS": {
+   "domain": "main_pmx0",
+   "offset": "0x01b0"
+  },
+  "MMC0_SDCD": {
+   "domain": "main_pmx0",
+   "offset": "0x01b4"
+  },
+  "MMC0_SDWP": {
+   "domain": "main_pmx0",
+   "offset": "0x01b8"
+  },
+  "MMC1_CLK": {
+   "domain": "main_pmx0",
+   "offset": "0x02d4"
+  },
+  "MMC1_CMD": {
+   "domain": "main_pmx0",
+   "offset": "0x02d8"
+  },
+  "MMC1_DAT0": {
+   "domain": "main_pmx0",
+   "offset": "0x02d0"
+  },
+  "MMC1_DAT1": {
+   "domain": "main_pmx0",
+   "offset": "0x02cc"
+  },
+  "MMC1_DAT2": {
+   "domain": "main_pmx0",
+   "offset": "0x02c8"
+  },
+  "MMC1_DAT3": {
+   "domain": "main_pmx0",
+   "offset": "0x02c4"
+  },
+  "MMC1_SDCD": {
+   "domain": "main_pmx0",
+   "offset": "0x02dc"
+  },
+  "MMC1_SDWP": {
+   "domain": "main_pmx0",
+   "offset": "0x02e0"
+  },
+  "NMIN": {
+   "domain": "main_pmx0",
+   "offset": "0x029c"
+  },
+  "PORZ": {
+   "domain": "main_pmx1",
+   "offset": "0x0020"
+  },
+  "PORZ_OUT": {
+   "domain": "main_pmx0",
+   "offset": "0x02a8"
+  },
+  "RESETSTATZ": {
+   "domain": "main_pmx0",
+   "offset": "0x02a4"
+  },
+  "RESETZ": {
+   "domain": "main_pmx0",
+   "offset": "0x02a0"
+  },
+  "SPI0_CLK": {
+   "domain": "main_pmx0",
+   "offset": "0x01c4"
+  },
+  "SPI0_CS0": {
+   "domain": "main_pmx0",
+   "offset": "0x01bc"
+  },
+  "SPI0_CS1": {
+   "domain": "main_pmx0",
+   "offset": "0x01c0"
+  },
+  "SPI0_D0": {
+   "domain": "main_pmx0",
+   "offset": "0x01c8"
+  },
+  "SPI0_D1": {
+   "domain": "main_pmx0",
+   "offset": "0x01cc"
+  },
+  "SPI1_CLK": {
+   "domain": "main_pmx0",
+   "offset": "0x01d8"
+  },
+  "SPI1_CS0": {
+   "domain": "main_pmx0",
+   "offset": "0x01d0"
+  },
+  "SPI1_CS1": {
+   "domain": "main_pmx0",
+   "offset": "0x01d4"
+  },
+  "SPI1_D0": {
+   "domain": "main_pmx0",
+   "offset": "0x01dc"
+  },
+  "SPI1_D1": {
+   "domain": "main_pmx0",
+   "offset": "0x01e0"
+  },
+  "TCK": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0104"
+  },
+  "TDI": {
+   "domain": "main_pmx0",
+   "offset": "0x02b0"
+  },
+  "TDO": {
+   "domain": "main_pmx0",
+   "offset": "0x02b4"
+  },
+  "TIMER_IO0": {
+   "domain": "main_pmx1",
+   "offset": "0x0018"
+  },
+  "TIMER_IO1": {
+   "domain": "main_pmx1",
+   "offset": "0x001c"
+  },
+  "TMS": {
+   "domain": "main_pmx0",
+   "offset": "0x02b8"
+  },
+  "TRSTN": {
+   "domain": "wkup_pmx0",
+   "offset": "0x0108"
+  },
+  "UART0_CTSN": {
+   "domain": "main_pmx0",
+   "offset": "0x01ec"
+  },
+  "UART0_RTSN": {
+   "domain": "main_pmx0",
+   "offset": "0x01f0"
+  },
+  "UART0_RXD": {
+   "domain": "main_pmx0",
+   "offset": "0x01e4"
+  },
+  "UART0_TXD": {
+   "domain": "main_pmx0",
+   "offset": "0x01e8"
+  },
+  "USB0_DRVVBUS": {
+   "domain": "main_pmx0",
+   "offset": "0x02bc"
+  },
+  "USB1_DRVVBUS": {
+   "domain": "main_pmx0",
+   "offset": "0x02c0"
+  },
+  "WKUP_GPIO0_0": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00b0"
+  },
+  "WKUP_GPIO0_1": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00b4"
+  },
+  "WKUP_GPIO0_10": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00d8"
+  },
+  "WKUP_GPIO0_11": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00dc"
+  },
+  "WKUP_GPIO0_2": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00b8"
+  },
+  "WKUP_GPIO0_3": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00bc"
+  },
+  "WKUP_GPIO0_4": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00c0"
+  },
+  "WKUP_GPIO0_5": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00c4"
+  },
+  "WKUP_GPIO0_6": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00c8"
+  },
+  "WKUP_GPIO0_7": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00cc"
+  },
+  "WKUP_GPIO0_8": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00d0"
+  },
+  "WKUP_GPIO0_9": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00d4"
+  },
+  "WKUP_I2C0_SCL": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00e0"
+  },
+  "WKUP_I2C0_SDA": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00e4"
+  },
+  "WKUP_UART0_RXD": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00a0"
+  },
+  "WKUP_UART0_TXD": {
+   "domain": "wkup_pmx0",
+   "offset": "0x00a4"
+  }
+ }
+}

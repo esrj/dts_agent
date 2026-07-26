@@ -127,13 +127,29 @@ def _bind(spec: SolveSpec, pin: str, signal: str) -> None:
 # --------------------------------------------------------------------------- #
 # Per-level resolution
 # --------------------------------------------------------------------------- #
+def _canon_signal(name: str, sigma) -> str | None:
+    """輸入的 signal 名 -> Σ 的正典形式（大小寫不敏感）。
+
+    Σ 以 af_table 原文為準——ST 全大寫（.upper() 舊行為不變）；TI 等板含
+    小寫（UART0_CTSn），任何來源（boot 注入、LLM intent、plan 回填）的
+    大小寫差異在此收斂，查無此名回 None（2026-07-25 am6548 事故）。"""
+    s = (name or "").strip()
+    if s in sigma:
+        return s
+    u = s.upper()
+    if u in sigma:
+        return u
+    return next((x for x in sigma if x.upper() == u), None)
+
+
 def _resolve_signal(item: dict, kb: Knowledge, spec: SolveSpec,
                     reserved=frozenset()) -> None:
-    signal = (item.get("signal") or "").upper()
-    if not signal:
+    raw = (item.get("signal") or "").strip()
+    if not raw:
         raise ResolveError("signal item missing 'signal'")
-    if signal not in kb.sigma:
-        raise ResolveError(f"unknown signal '{signal}' (not in Σ / wrong name)")
+    signal = _canon_signal(raw, kb.sigma)
+    if signal is None:
+        raise ResolveError(f"unknown signal '{raw}' (not in Σ / wrong name)")
     owner = reserved_owner(signal, reserved)
     if owner:
         raise ResolveError(
@@ -225,7 +241,7 @@ def _resolve_pin_assignment(pa: dict, instance: str, inst_signals: set,
     signal = pa.get("signal")
     af = pa.get("af")
     if signal:                            # explicit signal: trust + validate
-        signal = signal.upper()
+        signal = _canon_signal(signal, kb.sigma) or signal.upper()
         if signal not in inst_signals:
             raise ResolveError(
                 f"{pin}: signal '{signal}' is not part of {instance}'s signals")

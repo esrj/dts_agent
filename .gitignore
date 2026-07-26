@@ -15,3 +15,8 @@ plan.inc
 CLAUDE.md
 .env
 
+# knowledge_extract 工作區（合併後移入根目錄）
+cache/          # PDF 頁快取，可整夾刪除重建
+input/          # CLI 待處理材料（手冊/DTS），不入庫
+archive/        # 收集品（手冊 PDF/DTS 源碼），大型二進位不入庫
+

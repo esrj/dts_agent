@@ -36,6 +36,7 @@ from ..m1_dts_parser import build_index
 from ..m1_dts_parser.parser import parse_dts, iter_all
 from ..m2_validation_harness.harness import _boot_required_nodes
 from ..m4_patch_generation.generate import MARK_BEGIN, MARK_END
+from ..pinmux_style import get_style
 
 # ---- error types (M8 Repairer classifier consumes these, plan.md §8.2) ----
 SCHEMA_VIOLATION = "SCHEMA_VIOLATION"
@@ -54,7 +55,7 @@ MACRO_EXPANDED = "MACRO_EXPANDED"
 SYNTAX_ERROR = "SYNTAX_ERROR"
 DTC_ERROR = "DTC_ERROR"
 
-_PINMUX_RE = re.compile(r"STM32_PINMUX\('([A-Z])',\s*(\d+),\s*(\w+)\)")
+# pinmux 巨集解析已平移至 pinmux_style（多廠商：依板的 style 分派，缺檔預設 stm32）
 
 
 @dataclass
@@ -108,18 +109,17 @@ class _Artifact:
         self.nodes = []                            # parsed top-level region nodes
         if self.region:
             self.nodes = parse_dts(self.region)
+            style = get_style()
+            containers = style.containers()
             for n in self.nodes:
-                if n.ref == "pinctrl":
+                if n.ref in containers:
                     for g in n.children:
                         entries, props = [], []
-                        subs = [c for c in g.children if "pinmux" in c.props] or \
-                               ([g] if "pinmux" in g.props else [])
-                        for sub in subs:
-                            props.append({k: v for k, v in sub.props.items() if k != "pinmux"})
-                            for m in _PINMUX_RE.finditer(sub.props.get("pinmux", "")):
-                                mode = m.group(3)
-                                af = int(mode[2:]) if re.fullmatch(r"AF\d+", mode) else None
-                                entries.append((f"P{m.group(1)}{m.group(2)}", mode, af))
+                        for sub, text in style.pin_sources(g):
+                            props.append({k: v for k, v in sub.props.items()
+                                          if k not in style.GROUP_PROPS})
+                            for pin, af, mode in style.iter_pinmux(text, domain=n.ref):
+                                entries.append((pin, mode, af))
                         self.groups[g.label] = entries
                         self.group_props[g.label] = props
                 elif n.ref:
@@ -204,7 +204,8 @@ def _layer2_plan(dp, art, af_table, errs):
             continue
 
         # action == generate: default pinmux must equal the plan, verbatim
-        plan_set = {(r["pin"], f"AF{r['af']}") for r in t["plan_rows"]}
+        style = get_style()
+        plan_set = {(r["pin"], style.mode_token(r["af"])) for r in t["plan_rows"]}
         got = art.active_set(art.pinctrl_refs(ov, "pinctrl-0"))
         if got != plan_set:
             only_gen = sorted(got - plan_set)
@@ -219,7 +220,8 @@ def _layer2_plan(dp, art, af_table, errs):
             sig = entry.get(str(r["af"]), "")
             if r["signal"] not in sig.split("/"):
                 errs.append(VError(AF_MISMATCH,
-                                   f"{per}: af_table says {r['pin']}/AF{r['af']} = {sig!r}, "
+                                   f"{per}: af_table says {r['pin']}/"
+                                   f"{style.mode_token(r['af'])} = {sig!r}, "
                                    f"plan says {r['signal']}", 2, per))
         # plan L3/L4 extras must be applied
         extras = {}
@@ -322,8 +324,9 @@ def _layer5_structural(art, base_labels, defs, errs, warns):
       (same node name, e.g. `phy1_eth1: ethernet-phy@4` re-declared inside
       &eth1) — dtc only rejects a duplicate label on a *different* node."""
     seen = {}
+    _containers = get_style().containers()
     for top in art.nodes:
-        in_pinctrl = (top.ref == "pinctrl")
+        in_pinctrl = (top.ref in _containers)
         if not top.ref:
             continue
         for nd in iter_all(top.children):
@@ -354,10 +357,11 @@ def _layer5_structural(art, base_labels, defs, errs, warns):
                                        f"({nd.name!r} vs baseline "
                                        f"{d.name if d else 'unknown'!r})", 5, line=line))
 
-    for m in re.finditer(r"pinmux\s*=\s*<\s*(0x[0-9a-fA-F]+|\d+\s+\d+)", art.region):
+    _style = get_style()
+    for m in _style.RAW_NUMBER_RE.finditer(art.region):
         line = art.region_start + art.region[:m.start()].count("\n") + 1
         errs.append(VError(MACRO_EXPANDED,
-                           "pinmux written as raw numbers; must stay STM32_PINMUX(...)",
+                           f"pinmux written as raw numbers; must stay {_style.macro_label}",
                            5, line=line))
 
     known = set(art.groups) | base_labels

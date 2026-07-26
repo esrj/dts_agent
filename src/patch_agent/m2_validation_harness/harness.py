@@ -68,15 +68,24 @@ class Stage1Result:
 # ---- helpers -------------------------------------------------------------
 def load_plan(path):
     rows = []
-    for r in csv.DictReader(open(path, encoding="utf-8-sig")):
-        if not r.get("peripheral"):
-            continue
-        if (r.get("signal") or "").strip().upper() == "DISABLE":
-            continue    # disable 指令列（pin/af 為空）——由 m5 Locator 消費
-        rows.append({"peripheral": r["peripheral"].strip(),
-                     "signal": r["signal"].strip(),
-                     "pin": r["pin"].strip(),
-                     "af": int(r["af"])})
+    with open(path, encoding="utf-8-sig") as fh:
+        for lineno, r in enumerate(csv.DictReader(fh), start=2):
+            if not r.get("peripheral"):
+                continue
+            if (r.get("signal") or "").strip().upper() == "DISABLE":
+                continue    # disable 指令列（pin/af 為空）——由 m5 Locator 消費
+            af = (r.get("af") or "").strip()
+            if not af.lstrip("-").isdigit():
+                # 空欄/非整數 AF 給出可定位的錯誤（歷史事故：ma35d1 baseline.csv
+                # 空 af 炸出無上下文的 int('') ValueError）。修法：補真實 AF 值
+                # 或移除該列；kb_lint 會在進場時攔下同一問題。
+                raise ValueError(
+                    f"{path} 第 {lineno} 行：af 欄必須是整數，實際為 {af!r}"
+                    f"（{r.get('peripheral')},{r.get('signal')},{r.get('pin')}）")
+            rows.append({"peripheral": r["peripheral"].strip(),
+                         "signal": r["signal"].strip(),
+                         "pin": r["pin"].strip(),
+                         "af": int(af)})
     return rows
 
 
@@ -246,8 +255,36 @@ def validate_plan(plan_rows, *, af_table, profiles, gpio_pins, require,
                         board_regression_checks=regression, diff=diff)
 
 
+# 選配知識檔（dts_generation/ 的 render 資料）：缺檔＝schema 正確的空骨架，
+# m6 生成走 LLM 補償路徑（KB_ROBUSTNESS_PLAN 改動 2；骨架定義與
+# Knowledge Extractor 端 prompts/3 增項 C 逐字對齊）。
+# 必要檔（af_table、profiles、signal_to_pin、boot_requirements…）不在此表：
+# 缺檔／壞 JSON 一律 raise 帶路徑的明確錯誤，不靜默。
+_KB_DEFAULTS = {
+    "peripheral_node_alias.json": {"aliases": {}},
+    "gpio_pins.json": {"protected_pins": [], "reserved_by_disabled_only": []},
+    "board_config.json": {"peripherals": {}},
+    "dts_property_bindings.json": {"families": {}},
+    "fixed_connections.json": {"connections": {}},   # dict（label -> 連線），非 list
+}
+
+
 def _load(path):
-    return json.load(open(path))
+    """知識庫 JSON 載入（m2/m5 共用；缺檔語意統一）。"""
+    import copy as _copy
+    import os as _os
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except FileNotFoundError:
+        default = _KB_DEFAULTS.get(_os.path.basename(str(path)))
+        if default is not None:
+            return _copy.deepcopy(default)
+        raise FileNotFoundError(
+            f"知識庫必要檔缺失：{path}——此檔無法降級（boot 保護／solver 正本），"
+            f"請由 Knowledge Extractor 產出或手工補齊（見 data/README.md）") from None
+    except ValueError as exc:
+        raise ValueError(f"知識庫檔 JSON 損壞：{path}：{exc}") from None
 
 
 def _baseline_owner_map():

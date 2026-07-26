@@ -190,7 +190,7 @@
     }
 
     /* ---- normal conversational message (e.g. 不支援/無解 的回覆，不用紅字) ---- */
-    .note { margin: 0; font-size: .95rem; color: var(--text); white-space: pre-wrap; }
+    .note { margin: 0; font-size: .95rem; color: var(--text);  }
 
     /* ---- count auto-selection line ---- */
     .chosen { margin: .5rem 0 0; font-size: .88rem; color: var(--text-soft); }
@@ -400,6 +400,99 @@
     }
     .val-card li.mv b { color: var(--text); }
 
+    /* ---- 上傳新板子彈窗（M4） ---- */
+    .bc-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: flex; align-items: center; justify-content: center; z-index: 50;
+    }
+    /* display:flex 會蓋掉 [hidden] 的 UA 預設 display:none——必須明寫，
+       否則彈窗一載入就常駐、關不掉 */
+    .bc-overlay[hidden] { display: none; }
+    /* 設定頁風格：行距放寬、欄位間 hairline 分隔、無框軟底按鈕 */
+    .bc-modal {
+      background: var(--bg, #fff); color: var(--text);
+      border: none; border-radius: 16px;
+      width: min(800px, 92vw); max-height: 86vh; overflow-y: auto;
+      padding: 1.8rem 2rem 1.4rem; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    .bc-modal h2 {
+      margin: 0 0 .6rem; font-size: 1.15rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+    /* 每個欄位一列：上下留白＋列間 hairline（類 hr 的 section 分隔） */
+    #bc-form > .bc-field, #bc-form > .bc-check {
+      margin: 0; padding: 1.05rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .bc-field label { display: block; font-size: .9rem; font-weight: 600;
+                      margin-bottom: .55rem; }
+    .bc-field input[type="text"] {
+      width: 100%; padding: .8rem .9rem; border: 0;
+      border-radius: 10px; font-size: .9rem; background: var(--bg-soft);
+      color: var(--text); box-sizing: border-box;
+    }
+    .bc-field input[type="text"]:focus-visible { outline: 1px solid var(--border); }
+    .bc-field .note { font-size: .78rem; color: var(--text-soft);
+                      margin-top: .45rem; line-height: 1.55; }
+    /* 檔案選擇鈕：無邊框軟底 pill（與「取消／上傳」同款） */
+    .bc-field input[type="file"] { font-size: .85rem; color: var(--text-soft); }
+    .bc-field input[type="file"]::file-selector-button {
+      padding: .55rem 1.1rem; border-radius: 10px; border: none;
+      background: var(--bg-soft); color: var(--text); cursor: pointer;
+      font: inherit; font-size: .88rem; margin-right: .8rem;
+      transition: background-color .15s;
+    }
+    .bc-field input[type="file"]::file-selector-button:hover {
+      background: var(--bubble-user);
+    }
+    .bc-field select {
+      font: inherit; font-size: .88rem; color: var(--text);
+      background: var(--bg-soft); border: none; border-radius: 10px;
+      padding: .55rem .9rem; max-width: 100%; cursor: pointer;
+    }
+    .bc-check { display: flex; gap: .7rem; align-items: flex-start;
+                font-size: .9rem; line-height: 1.55; }
+    .bc-check input { margin-top: .3rem; }
+    .bc-actions { display: flex; gap: .7rem; justify-content: flex-end;
+                  margin-top: 1.3rem; }
+    .bc-actions button {
+      padding: .55rem 1.25rem; border-radius: 10px; border: none;
+      background: var(--bg-soft); color: var(--text); cursor: pointer;
+      font: inherit; font-size: .9rem;
+      transition: background-color .15s;
+    }
+    .bc-actions button:hover { background: var(--bubble-user); }
+    .bc-actions button.primary {
+      background: var(--accent); color: var(--accent-text);
+    }
+    .bc-actions button.primary:hover { opacity: .88; }
+    .bc-actions button:disabled { opacity: .5; cursor: default; }
+    .bc-stage { display: flex; gap: .6rem; align-items: center;
+                margin: 1.2rem 0 .6rem; font-size: .95rem; }
+    #bc-metrics { color: var(--text-soft); font-size: .82rem; margin: .2rem 0 1rem; }
+    .bc-error { color: var(--err); font-size: .85rem; white-space: pre-wrap;
+                margin: .6rem 0; }
+    /* 完成畫面：表格軟化——只留列間 hairline，無格線 */
+    .bc-review table { width: 100%; border-collapse: collapse;
+                       font-size: .84rem; margin: .8rem 0 1.1rem; }
+    .bc-review th, .bc-review td {
+      border: none; border-bottom: 1px solid var(--border);
+      padding: .65rem .5rem .65rem 0; text-align: left; vertical-align: top;
+    }
+    .bc-review th { font-size: .76rem; font-weight: 600;
+                    color: var(--text-soft); }
+    .bc-review > p { margin: 1rem 0 .3rem; }
+    .bc-review .note { color: var(--text-soft); font-size: .8rem; }
+    .bc-review details { margin: .9rem 0; padding-top: .9rem;
+                         border-top: 1px solid var(--border); }
+    .bc-review details summary { cursor: pointer; font-size: .85rem;
+                                 color: var(--text-soft); }
+    .bc-review details pre {
+      max-height: 220px; overflow: auto; background: var(--bg-soft);
+      padding: .8rem .9rem; border-radius: 10px; font-size: .75rem;
+      margin: .7rem 0 0;
+    }
+
     /* ---- 修改建議卡片（G6）：驗證過的替代方案，一鍵採納 ---- */
     .sugg-cards { display: flex; flex-direction: column; gap: .5rem; margin-top: .85rem; }
     .sugg-head { margin: 0 0 .1rem; font-size: .8rem; font-weight: 600;
@@ -482,6 +575,78 @@
     <span id="validator-badge" class="v-badge err" hidden
           title="STM32CubeMX 環境異常（找不到或損壞的執行檔）——驗證功能暫不可用">CubeMX 離線</span>
   </header>
+
+  <!-- 上傳新板子彈窗（M4；app.js 控制顯示） -->
+  <div id="bc-overlay" class="bc-overlay" hidden>
+    <div class="bc-modal" role="dialog" aria-label="上傳新板子">
+      <h2>＋ 上傳新板子</h2>
+      <div id="bc-form">
+        <div class="bc-field">
+          <label for="bc-name">板子名稱</label>
+          <input type="text" id="bc-name" placeholder="例：AM6548-EVM"
+                 maxlength="64">
+          <div class="note">顯示在左上角選單；系統會自動轉成資料夾 id（小寫英數）。</div>
+        </div>
+        <div class="bc-field">
+          <label for="bc-pdf">手冊 PDF</label>
+          <input type="file" id="bc-pdf" accept=".pdf">
+        </div>
+        <div class="bc-field">
+          <label for="bc-dts">kernel DTS 資料夾</label>
+          <input type="file" id="bc-dts" webkitdirectory multiple>
+          <div class="note">整包資料夾（含 dtsi 與 include/）；也可改選單一 zip。</div>
+        </div>
+        <div class="bc-field" id="bc-baseline-field" hidden>
+          <label for="bc-baseline">baseline 板檔（偵測到多個 .dts，請選這塊板的板檔）</label>
+          <select id="bc-baseline"></select>
+        </div>
+        <div class="bc-check">
+          <input type="checkbox" id="bc-validate">
+          <label for="bc-validate">進行 plan 驗證<br>
+            <span class="note">ST 板勾選（走 STM32CubeMX 官方驗證）；其他板請不勾。
+            未來將支援上傳自訂驗證腳本。</span></label>
+        </div>
+        <div class="bc-error" id="bc-form-error"></div>
+        <div class="bc-actions">
+          <button id="bc-cancel">取消</button>
+          <button id="bc-submit" class="primary">上傳</button>
+        </div>
+      </div>
+      <div id="bc-progress" hidden>
+        <div class="bc-stage"><span class="spinner"></span>
+          <span id="bc-stage-label">上傳中…</span></div>
+        <div class="note" id="bc-metrics"></div>
+        <div class="note">生成需數分鐘～數十分鐘（手冊解析走 LLM）；
+          可關閉此視窗，稍後由選單重新開啟續看。</div>
+        <div class="bc-error" id="bc-progress-error"></div>
+        <div class="bc-actions">
+          <button id="bc-artifacts" hidden>下載產物</button>
+          <button id="bc-abort" hidden>放棄</button>
+          <button id="bc-hide">背景執行</button>
+        </div>
+      </div>
+      <div id="bc-review" class="bc-review" hidden>
+        <p><b id="bc-done-head">✓ 板子已建立並落地</b></p>
+        <div class="note" id="bc-done-metrics"></div>
+        <div class="note" id="bc-done-note"></div>
+        <div id="bc-emit-warn" class="bc-error" hidden>
+          ⚠ 此板沒有任何 emit 群組——plan 不會自動帶開機組。若不符預期，
+          多半是 baseline 板檔選錯（應選 base-board/evm/evb 類主板檔）；
+          可重新上傳（覆寫），或編輯 data/&lt;板&gt;/base/require.json 後跑
+          tools/kb_lint.py。</div>
+        <p class="note">boot 群組判定（僅供檢視；改判請編輯
+          data/&lt;板&gt;/base/require.json 後跑 kb_lint 驗證）：</p>
+        <table id="bc-boot-table">
+          <thead><tr><th>boot 群組</th><th>判定</th><th>腳數</th><th>依據</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <details><summary>REVIEW.md 完整內容</summary><pre id="bc-review-md"></pre></details>
+        <div class="bc-actions">
+          <button id="bc-done-close" class="primary">完成</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <main class="chat" id="chat">
     <div class="chat-inner" id="messages">

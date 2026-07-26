@@ -72,6 +72,7 @@ def _recalc() -> None:
     global BASELINE_CSV, OFFICIAL_DTS_PERIPHERAL, SIGNAL_TO_PIN, BOARD_DTS
     global DTS_INCLUDE, PERIPHERAL_NODE_ALIAS, BOARD_CONFIG
     global DTS_PROPERTY_BINDINGS, FIXED_CONNECTIONS
+    global PINMUX_STYLE_JSON, PAD_PARAMS
     global GENERATED_DTS, KERNEL_DTS_PATH, CPP_CMD
 
     # Layout follows the solver-standard board taxonomy (see data/README.md):
@@ -105,6 +106,10 @@ def _recalc() -> None:
     BOARD_CONFIG = DTS_GEN / "board_config.json"
     DTS_PROPERTY_BINDINGS = DTS_GEN / "dts_property_bindings.json"
     FIXED_CONNECTIONS = DTS_GEN / "fixed_connections.json"
+    # pinmux style（多廠商渲染，PINMUX_STYLE_PLAN）：兩檔都選配——
+    # ST 板不放，pinmux_style.get_style() 缺檔預設 stm32（行為不變）
+    PINMUX_STYLE_JSON = DTS_GEN / "pinmux_style.json"
+    PAD_PARAMS = DTS_GEN / "pad_params.json"
 
     # 板相關輸出（其餘 output 路徑不隨板變）
     GENERATED_DTS = OUTPUT_GEN / f"{BOARD}.generated.dts"
@@ -122,16 +127,25 @@ def init_board(board_id: str) -> None:
     _recalc()
 
 
+# dts_generation/ 的必要檔（KB_ROBUSTNESS_PLAN 改動 1）：只放「缺了會做出
+# 危險輸出」的檔——boot_requirements.json 缺席＝boot node 不受保護。
+# 其餘五檔（alias/gpio_pins/board_config/bindings/fixed_connections）缺席時
+# 由 m2/m5 的 _load 以空骨架降級（LLM 補償路徑），不擋 available。
+_DTS_GEN_REQUIRED = ("boot_requirements.json",)
+
+
 def board_ready(board_id: str | None = None) -> bool:
     """該板是否具備第二段（DTS patch）知識庫——純路徑檢查、不動模組全域，
     web 的 /api/dts/status 可對任意板詢問。條件：baseline.csv、baseline/dts/
-    至少一個 .dts、dts_generation/ 目錄齊全。"""
+    至少一個 .dts、dts_generation/ 目錄與其必要檔齊全。"""
     b = board_id or BOARD
     d = REPO_ROOT / "data" / b
     dts_dir = d / "baseline" / "dts"
+    gen_dir = d / "dts_generation"
     return ((d / "baseline" / "baseline.csv").is_file()
             and dts_dir.is_dir() and any(dts_dir.glob("*.dts"))
-            and (d / "dts_generation").is_dir())
+            and gen_dir.is_dir()
+            and all((gen_dir / f).is_file() for f in _DTS_GEN_REQUIRED))
 
 
 _recalc()

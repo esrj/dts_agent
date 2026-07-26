@@ -5,11 +5,13 @@
 > 本文是**第一段（求解）**的總覽文件（原 docs/ 里程碑文檔已於 2026-07-04 清理，
 > 營運必要知識已濃縮至本文）。
 >
-> 2026-06 起本專案與 DTS_patch_agent 合併為單一 DTS_agent（見根目錄
-> [README.md](README.md) 與 [MERGE_PLAN.md](MERGE_PLAN.md)）：第二段
+> 2026-06 起本專案與 DTS_patch_agent 合併為單一 DTS_agent：第二段
 > 「plan.csv → kernel DTS patch」由 `src/patch_agent/` 承接
 > （其 pipeline 細節見 [src/patch_agent/README.md](src/patch_agent/README.md)），
-> 兩段的交棒介面見 §5。
+> 兩段的交棒介面見 §5。2026-07-25 起 Knowledge Extractor 亦併入
+> （`src/knowledge_extract/`，web 上傳新增板子——見
+> [EXTRACTOR_MERGE_PLAN.md](EXTRACTOR_MERGE_PLAN.md) 與
+> [src/knowledge_extract/README.md](src/knowledge_extract/README.md)）。
 
 ---
 
@@ -24,7 +26,7 @@ optee-os）。
 
 | 功能 | 說明 |
 |---|---|
-| 自然語言 → IntentIR | parse LLM 把需求解析成結構化 intent（count / peripheral / signal 三種 level、optional 條件式需求、bootable_default） |
+| 自然語言 → IntentIR | parse LLM 把需求解析成結構化 intent（count / peripheral / signal 三種 level、optional 條件式需求、bootable_default）。bootable_default＋count 的**總量語意**（2026-07-25）：官方基底的同 family instance 抵扣 count（「兩個 ETH，能開機就好」官方已有 ETH1/ETH2 → 不另配）；count item 帶 `additive: true`（「官方之上再多一組」）或 mode/pins 約束則維持加法、一律配新 instance（service._inject_official 抵扣區塊） |
 | CSP 求解 | AC propagation + backtracking；UNSAT 時產 Hall 鴿籠證據（哪些訊號擠在哪些腳） |
 | 開機／安全世界約束 | 開機必備群組（SDMMC1/SDMMC2/USART2）以 pin_map 常數鎖定；secure/bootloader 保留週邊（I2C7=PMIC、OCTOSPIM_P1=U-Boot flash）instance 級封鎖；GPIO 鎖腳 |
 | 歧義反問 | shared_pin / count_af / loose_pin 等六種歧義偵測，選項只來自合法候選，前端渲染成可點按鈕 |
@@ -87,8 +89,10 @@ DTS_agent/
 ├── README.md                合併系統總覽＋快速上手（兩段式流程）
 ├── PROJECT_OVERVIEW.md      本文（第一段：求解總覽）
 ├── CLAUDE.md                Claude Code 工作說明（指令、紅線、慣例）
-├── MERGE_PLAN.md            兩專案合併計劃與決策記錄（2026-06 執行完畢）
-├── llm_modules.ini          LLM provider 選型（[parse]/[orchestrator]/[dts_patch]）
+├── EXTRACTOR_MERGE_PLAN.md  Knowledge Extractor 合併計劃與執行記錄（2026-07-25）
+├── llm_modules.ini          LLM provider 選型（[knowledge_extract]/[parse]/[orchestrator]/[dts_patch]）
+├── boards.ini               extractor 的 pdf↔board／baseline 對應快取（可手改）
+├── input/ archive/ cache/   extractor CLI 材料區／收集品／PDF 頁快取（gitignore）
 ├── .env                     API keys 等環境變數
 ├── requirements.txt         Python 相依（venv 重建用）
 ├── data/                    板級知識庫（詳見 data/README.md）
@@ -108,6 +112,8 @@ DTS_agent/
 │                            dts_property_bindings、fixed_connections、
 │                            peripheral_node_alias、gpio_pins、boot_requirements
 ├── src/
+│   ├── knowledge_extract/   第 0 段：手冊+DTS → 知識庫（只寫 output/staging/；
+│   │                        web 上傳流程見 src/web/board_create.py）
 │   ├── main.py              CLI 入口（solver 實驗）
 │   ├── service.py           確定性 pipeline（parse→澄清→optional 拆解→求解）
 │   ├── solver/              CSP 核心：solve.py（求解+Hall）、resolver.py（反腐層）、
@@ -130,6 +136,7 @@ DTS_agent/
 │   │                        devicetree/{kernel,u-boot,tf-a,optee-os}/
 │   └── generated/           第二段產物：generated.patch、*.generated.dts、
 │                            diff_plan/locator/generation/validation report、llm_cache/
+├── output/staging/          extractor 生成的落地前暫存（lint 全綠＋REVIEW 確認才進 data/）
 └── venv/                    Python 虛擬環境（3.10；requirements.txt 重建）
 ```
 
@@ -141,7 +148,8 @@ DTS_agent/
 
 | 端點 | 用途 |
 |---|---|
-| `GET /api/boards` | 板子自動偵測（data/ 下必要檔齊全的資料夾） |
+| `GET /api/boards` | 板子自動偵測＋`names`（board.yaml display name）＋`can_create` |
+| `POST /api/boards/create` | 上傳新板（multipart：name／pdf／dts 多檔或 zip／validate 勾選／baseline 板檔）→ single-flight 背景生成（extractor）；`GET …/status` 輪詢、`POST …/confirm` REVIEW 改判＋原子落地、`DELETE` 放棄、`GET …/artifacts` 打包 staging。旗標 `FEATURE_BOARD_CREATE`（預設 1） |
 | `POST /api/solve` | 確定性路徑：text 或 intent+question+option（反問接續） |
 | `POST /api/chat` | 編排路徑：message／adopt（採納建議卡）；回 reply/plan/suggestions/clarify/validator |
 | `POST /api/export` | per-message 匯出 csv/xlsx |

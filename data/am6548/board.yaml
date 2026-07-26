@@ -1,0 +1,9 @@
+board_id: am6548
+vendor: TI
+name: am6548
+knowledge_base: .
+kernel_dts_path: arch/arm64/boot/dts/ti/k3-am654-base-board.dts
+validation:
+  enabled: false
+  type: none
+  script: null

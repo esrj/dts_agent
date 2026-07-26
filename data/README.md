@@ -49,7 +49,7 @@ data/<board>/
                                     交叉查證）。注意：與 base/require.json 是
                                     **不同的檔案**——那份是 solver 的腳位級開機
                                     常數，這份是 DTS node 級知識，永不合併
-                                    （MERGE_PLAN §0.1 決策 1）
+                                    （合併時定案的不變式，永不回退）
 ```
 
 `base/` + `dts/` 五檔是**必要檔**（缺任一檔該板不會出現在板子清單）；
@@ -58,8 +58,16 @@ ic 欄留空、lookup_binding 回 no_ic / 現查）；`baseline/`、`dts_generat
 是**第二段（DTS patch）的選配檔**——缺夾時 plan 流程照常，只有「產生 DTS」
 功能不可用（web 依 `/api/dts/status` 的 available 決定是否顯示「產生 DTS」反問；
 判定用 `patch_agent.config.board_ready()` 純路徑檢查）。第二段已多板化
-（2026-07，MULTI_BOARD_PLAN.md Phase 2）：備齊這兩夾即可用 `--board` 或
+（2026-07 多板化）：備齊這兩夾即可用 `--board` 或
 web 對該板產 patch，**不需改 config**。
+
+`dts_generation/` 六檔的缺檔語意（2026-07-25 起）：
+**`boot_requirements.json` 必要**（缺＝board_ready false、「產生 DTS」不亮——
+boot 保護不能沒有）；其餘五檔（gpio_pins、peripheral_node_alias、board_config、
+dts_property_bindings、fixed_connections）選配——缺檔時 pipeline 以 schema
+正確的空骨架降級（m6 生成走 LLM 補償）。新板丟進 data/ 後先跑
+`venv/bin/python tools/kb_lint.py <board>` 做進場檢查（交叉一致性／schema／
+baseline label 完整性，全綠再上）。
 
 ## 為什麼這樣分類
 

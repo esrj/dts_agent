@@ -17,13 +17,10 @@ import json
 from dataclasses import dataclass, field
 
 from .parser import parse_dts, walk, iter_all, compat_primary
+from ..pinmux_style import get_style
 
-# AF macro token -> af NUMBER used by af_table (AF6 -> 6). GPIO/ANALOG have none.
-_AF_MODE = {'GPIO': None, 'ANALOG': None}
-for _i in range(16):
-    _AF_MODE[f'AF{_i}'] = _i
-
-_PINMUX_RE = re.compile(r"STM32_PINMUX\('([A-Z])',\s*(\d+),\s*(\w+)\)")
+# pinmux 巨集的解析（原 _PINMUX_RE / _AF_MODE 硬編碼）已平移至
+# pinmux_style.Stm32Style——多廠商化後由該板的 style 分派（缺檔預設 stm32）。
 
 _FAMILY_RULES = [
     (r'^usart\d+$', 'usart'), (r'^uart\d+$', 'uart'), (r'^lpuart\d+$', 'lpuart'),
@@ -131,31 +128,32 @@ class DtsIndex:
 
 
 def _pinctrl_groups_from(nodes, fname, af_table):
-    """A pinctrl group = a labeled node at least one of whose direct children
-    carries a `pinmux` property (excludes the pinctrl controller itself)."""
+    """A pinctrl group = a labeled node that carries pinmux content per the
+    board's style（stm32：子節點的 pinmux 屬性；K3：節點自身的
+    pinctrl-single,pins 陣列）。逐 top-level 節點下行，帶 top.ref 當
+    domain 提示（K3 的 offset->pad 反查需要；stm32 忽略）。"""
     out = {}
-    for nd in iter_all(nodes):
-        if not nd.label:
-            continue
-        pin_children = [c for c in nd.children if 'pinmux' in c.props]
-        if 'pinmux' in nd.props:        # rare: pinmux directly on the group
-            pin_children = pin_children + [nd]
-        if not pin_children:
-            continue
-        grp = PinctrlGroup(label=nd.label, name=nd.name, file=fname, line=nd.line)
-        for sub in pin_children:
-            electrical = {k: v for k, v in sub.props.items() if k != 'pinmux'}
-            for m in _PINMUX_RE.finditer(sub.props.get('pinmux') or ''):
-                port, line, mode = m.group(1), int(m.group(2)), m.group(3)
-                pin = f"P{port}{line}"
-                af = _AF_MODE.get(mode)
-                grp.entries.append(PinEntry(
-                    pin=pin, af=af, mode=mode,
-                    signal=(af_table.get(pin, {}).get(str(af)) if af is not None else None),
-                    subnode=sub.name, electrical=dict(electrical),
-                ))
-        if grp.entries:
-            out[nd.label] = grp
+    style = get_style()
+    for top in nodes:
+        hint = top.ref
+        for nd in iter_all([top]):
+            if not nd.label:
+                continue
+            sources = style.pin_sources(nd)
+            if not sources:
+                continue
+            grp = PinctrlGroup(label=nd.label, name=nd.name, file=fname, line=nd.line)
+            for sub, text in sources:
+                electrical = {k: v for k, v in sub.props.items()
+                              if k not in style.GROUP_PROPS}
+                for pin, af, mode in style.iter_pinmux(text, domain=hint):
+                    grp.entries.append(PinEntry(
+                        pin=pin, af=af, mode=mode,
+                        signal=(af_table.get(pin, {}).get(str(af)) if af is not None else None),
+                        subnode=sub.name, electrical=dict(electrical),
+                    ))
+            if grp.entries:
+                out[nd.label] = grp
     return out
 
 

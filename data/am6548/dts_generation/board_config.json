@@ -1,0 +1,301 @@
+{
+ "board": "am6548",
+ "description": "Board-specific peripheral configuration from the baseline board DTS overrides (depth-1 non-pinctrl props + child devices + /delete-property directives). DTS-derived; nothing guessed.",
+ "source": "data/am6548/baseline/dts/k3-am654-base-board.dts",
+ "_needs_board_doc": [
+  "connector_routing (which CN/header a peripheral routes to) — not in DTS."
+ ],
+ "peripherals": {
+  "cpsw_port1": {
+   "family": "cpsw_port",
+   "status": "okay(default)",
+   "board_knobs": {
+    "phy-mode": "\"rgmii-rxid\"",
+    "phy-handle": "<&phy0>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "davinci_mdio": {
+   "family": "davinci_mdio",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "ecap0": {
+   "family": "ecap",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "mailbox0_cluster0": {
+   "family": "mailbox0_cluster",
+   "status": "okay",
+   "board_knobs": {
+    "interrupts": "<436>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "mailbox0_cluster1": {
+   "family": "mailbox0_cluster",
+   "status": "okay",
+   "board_knobs": {
+    "interrupts": "<432>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "main_i2c0": {
+   "family": "i2c",
+   "status": "okay",
+   "board_knobs": {
+    "clock-frequency": "<400000>"
+   },
+   "deleted_properties": [],
+   "child_devices": [
+    {
+     "path": "gpio@21",
+     "label": "pca9555",
+     "compatible": "nxp,pca9555",
+     "reg": "<0x21>",
+     "status": null,
+     "props": {
+      "gpio-controller": null,
+      "#gpio-cells": "<2>"
+     }
+    }
+   ]
+  },
+  "main_i2c1": {
+   "family": "i2c",
+   "status": "okay",
+   "board_knobs": {
+    "clock-frequency": "<400000>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "main_i2c2": {
+   "family": "i2c",
+   "status": "okay",
+   "board_knobs": {
+    "clock-frequency": "<400000>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "main_spi0": {
+   "family": "spi",
+   "status": "okay",
+   "board_knobs": {
+    "#address-cells": "<1>",
+    "#size-cells": "<0>",
+    "ti,pindir-d0-out-d1-in": null
+   },
+   "deleted_properties": [],
+   "child_devices": [
+    {
+     "path": "flash@0",
+     "label": null,
+     "compatible": "jedec,spi-nor",
+     "reg": "<0x0>",
+     "status": null,
+     "props": {
+      "spi-tx-bus-width": "<1>",
+      "spi-rx-bus-width": "<1>",
+      "spi-max-frequency": "<48000000>"
+     }
+    }
+   ]
+  },
+  "main_uart0": {
+   "family": "uart",
+   "status": "okay",
+   "board_knobs": {
+    "power-domains": "<&k3_pds 146 TI_SCI_PD_SHARED>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "mcu_cpsw": {
+   "family": "cpsw",
+   "status": "okay(default)",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "mcu_i2c0": {
+   "family": "i2c",
+   "status": "okay",
+   "board_knobs": {
+    "clock-frequency": "<400000>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "mcu_r5fss0_core0": {
+   "family": "r5fss0_core",
+   "status": "okay(default)",
+   "board_knobs": {
+    "memory-region": "<&mcu_r5fss0_core0_dma_memory_region>,\n\t\t\t<&mcu_r5fss0_core0_memory_region>",
+    "mboxes": "<&mailbox0_cluster0>, <&mbox_mcu_r5fss0_core0>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "mcu_r5fss0_core1": {
+   "family": "r5fss0_core",
+   "status": "okay(default)",
+   "board_knobs": {
+    "memory-region": "<&mcu_r5fss0_core1_dma_memory_region>,\n\t\t\t<&mcu_r5fss0_core1_memory_region>",
+    "mboxes": "<&mailbox0_cluster1>, <&mbox_mcu_r5fss0_core1>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "mcu_uart0": {
+   "family": "uart",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "ospi0": {
+   "family": "ospi",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": [
+    {
+     "path": "flash@0",
+     "label": null,
+     "compatible": "jedec,spi-nor",
+     "reg": "<0x0>",
+     "status": null,
+     "props": {
+      "spi-tx-bus-width": "<8>",
+      "spi-rx-bus-width": "<8>",
+      "spi-max-frequency": "<25000000>",
+      "cdns,tshsl-ns": "<60>",
+      "cdns,tsd2d-ns": "<60>",
+      "cdns,tchsh-ns": "<60>",
+      "cdns,tslch-ns": "<60>",
+      "cdns,read-delay": "<0>"
+     }
+    },
+    {
+     "path": "flash@0/partitions",
+     "label": null,
+     "compatible": "fixed-partitions",
+     "reg": null,
+     "status": null,
+     "props": {
+      "#address-cells": "<1>",
+      "#size-cells": "<1>"
+     }
+    }
+   ]
+  },
+  "sdhci0": {
+   "family": "sdhci",
+   "status": "okay(default)",
+   "board_knobs": {
+    "bus-width": "<8>",
+    "non-removable": null,
+    "ti,driver-strength-ohm": "<50>",
+    "disable-wp": null
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "sdhci1": {
+   "family": "sdhci",
+   "status": "okay(default)",
+   "board_knobs": {
+    "vmmc-supply": "<&vdd_mmc1_sd>",
+    "ti,driver-strength-ohm": "<50>",
+    "disable-wp": null
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "tscadc0": {
+   "family": "tscadc",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "tscadc1": {
+   "family": "tscadc",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "usb1": {
+   "family": "usb",
+   "status": "okay(default)",
+   "board_knobs": {
+    "dr_mode": "\"otg\""
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "wkup_i2c0": {
+   "family": "i2c",
+   "status": "okay",
+   "board_knobs": {
+    "clock-frequency": "<400000>"
+   },
+   "deleted_properties": [],
+   "child_devices": [
+    {
+     "path": "eeprom@50",
+     "label": null,
+     "compatible": "atmel,24c1024",
+     "reg": "<0x50>",
+     "status": null,
+     "props": {}
+    },
+    {
+     "path": "regulator@60",
+     "label": "vdd_mpu",
+     "compatible": "ti,tps62363",
+     "reg": "<0x60>",
+     "status": null,
+     "props": {
+      "regulator-name": "\"VDD_MPU\"",
+      "regulator-min-microvolt": "<500000>",
+      "regulator-max-microvolt": "<1770000>",
+      "regulator-always-on": null,
+      "regulator-boot-on": null,
+      "ti,vsel0-state-high": null,
+      "ti,vsel1-state-high": null,
+      "ti,enable-vout-discharge": null
+     }
+    },
+    {
+     "path": "gpio@39",
+     "label": "pca9554",
+     "compatible": "nxp,pca9554",
+     "reg": "<0x39>",
+     "status": null,
+     "props": {
+      "gpio-controller": null,
+      "#gpio-cells": "<2>",
+      "pinctrl-names": "\"default\"",
+      "pinctrl-0": "<&wkup_pca554_default>",
+      "interrupt-parent": "<&wkup_gpio0>",
+      "interrupts": "<25 IRQ_TYPE_EDGE_FALLING>",
+      "interrupt-controller": null,
+      "#interrupt-cells": "<2>"
+     }
+    }
+   ]
+  }
+ }
+}

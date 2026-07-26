@@ -1,9 +1,9 @@
 {
- "soc": "AM6548",
+ "soc": "am6548",
  "source": "Derived from af_table.json by knowledge_extract. Keys are the peripheral prefix of each signal (token before the first '_'); 'system' holds non-peripheral SoC functions (debug/trace/clock-out/EVENTOUT etc.).",
- "peripheral_count": 46,
- "system_count": 3,
- "signal_count": 1117,
+ "peripheral_count": 64,
+ "system_count": 13,
+ "signal_count": 1141,
  "peripherals": {
   "CPTS0": [
    "CPTS0_RFT_CLK",
@@ -320,6 +320,10 @@
    "GPMC0_BE0n_CLE",
    "GPMC0_FCLK_MUX"
   ],
+  "I2C0": [
+   "I2C0_SCL",
+   "I2C0_SDA"
+  ],
   "I2C1": [
    "I2C1_SCL",
    "I2C1_SDA"
@@ -386,82 +390,15 @@
    "MCASP2_AHCLKR",
    "MCASP2_AHCLKX"
   ],
-  "MCU": [
-   "MCU_CLKOUT0",
-   "MCU_OBSCLK0",
-   "MCU_SPI0_D0",
-   "MCU_SPI0_D1",
-   "MCU_SPI1_D0",
-   "MCU_SPI1_D1",
-   "MCU_MCAN0_RX",
-   "MCU_MCAN0_TX",
-   "MCU_MCAN1_RX",
-   "MCU_MCAN1_TX",
-   "MCU_OSPI0_D0",
-   "MCU_OSPI0_D1",
-   "MCU_OSPI0_D2",
-   "MCU_OSPI0_D3",
-   "MCU_OSPI0_D4",
-   "MCU_OSPI0_D5",
-   "MCU_OSPI0_D6",
-   "MCU_OSPI0_D7",
-   "MCU_OSPI1_D0",
-   "MCU_OSPI1_D1",
-   "MCU_OSPI1_D2",
-   "MCU_OSPI1_D3",
-   "MCU_SPI0_CLK",
-   "MCU_SPI0_CS0",
-   "MCU_SPI0_CS1",
-   "MCU_SPI0_CS2",
-   "MCU_SPI0_CS3",
-   "MCU_SPI1_CLK",
-   "MCU_SPI1_CS0",
-   "MCU_SPI1_CS1",
-   "MCU_SPI1_CS2",
-   "MCU_SPI1_CS3",
-   "MCU_MDIO0_MDC",
-   "MCU_OSPI0_CLK",
-   "MCU_OSPI0_DQS",
-   "MCU_OSPI1_CLK",
-   "MCU_OSPI1_DQS",
-   "MCU_TIMER_IO0",
-   "MCU_TIMER_IO1",
-   "MCU_UART0_RXD",
-   "MCU_UART0_TXD",
-   "MCU_MDIO0_MDIO",
-   "MCU_OSPI0_CSn0",
-   "MCU_OSPI0_CSn1",
-   "MCU_OSPI0_CSn2",
-   "MCU_OSPI0_CSn3",
-   "MCU_OSPI1_CSn0",
-   "MCU_OSPI1_CSn1",
-   "MCU_RGMII1_RD0",
-   "MCU_RGMII1_RD1",
-   "MCU_RGMII1_RD2",
-   "MCU_RGMII1_RD3",
-   "MCU_RGMII1_RXC",
-   "MCU_RGMII1_TD0",
-   "MCU_RGMII1_TD1",
-   "MCU_RGMII1_TD2",
-   "MCU_RGMII1_TD3",
-   "MCU_RGMII1_TXC",
-   "MCU_RMII1_RXD0",
-   "MCU_RMII1_RXD1",
-   "MCU_RMII1_TXD0",
-   "MCU_RMII1_TXD1",
-   "MCU_SYSCLKOUT0",
-   "MCU_UART0_CTSn",
-   "MCU_UART0_RTSn",
-   "MCU_EXT_REFCLK0",
-   "MCU_RMII1_RX_ER",
-   "MCU_RMII1_TX_EN",
-   "MCU_HYPERBUS0_CK",
-   "MCU_OSPI0_LBCLKO",
-   "MCU_OSPI1_LBCLKO",
-   "MCU_RMII1_CRS_DV",
+  "MCU_CPTS0": [
    "MCU_CPTS0_RFT_CLK",
    "MCU_CPTS0_TS_COMP",
    "MCU_CPTS0_TS_SYNC",
+   "MCU_CPTS0_HW1TSPUSH",
+   "MCU_CPTS0_HW2TSPUSH"
+  ],
+  "MCU_HYPERBUS0": [
+   "MCU_HYPERBUS0_CK",
    "MCU_HYPERBUS0_CKn",
    "MCU_HYPERBUS0_DQ0",
    "MCU_HYPERBUS0_DQ1",
@@ -472,19 +409,104 @@
    "MCU_HYPERBUS0_DQ6",
    "MCU_HYPERBUS0_DQ7",
    "MCU_HYPERBUS0_WPn",
-   "MCU_RGMII1_RX_CTL",
-   "MCU_RGMII1_TX_CTL",
-   "MCU_RMII1_REF_CLK",
    "MCU_HYPERBUS0_CSn0",
    "MCU_HYPERBUS0_CSn1",
    "MCU_HYPERBUS0_INTn",
    "MCU_HYPERBUS0_RWDS",
-   "MCU_CPTS0_HW1TSPUSH",
-   "MCU_CPTS0_HW2TSPUSH",
-   "MCU_ADC_EXT_TRIGGER0",
-   "MCU_ADC_EXT_TRIGGER1",
    "MCU_HYPERBUS0_RESETn",
    "MCU_HYPERBUS0_RESETOn"
+  ],
+  "MCU_I2C0": [
+   "MCU_I2C0_SCL",
+   "MCU_I2C0_SDA"
+  ],
+  "MCU_MCAN0": [
+   "MCU_MCAN0_RX",
+   "MCU_MCAN0_TX"
+  ],
+  "MCU_MCAN1": [
+   "MCU_MCAN1_RX",
+   "MCU_MCAN1_TX"
+  ],
+  "MCU_MDIO0": [
+   "MCU_MDIO0_MDC",
+   "MCU_MDIO0_MDIO"
+  ],
+  "MCU_OSPI0": [
+   "MCU_OSPI0_D0",
+   "MCU_OSPI0_D1",
+   "MCU_OSPI0_D2",
+   "MCU_OSPI0_D3",
+   "MCU_OSPI0_D4",
+   "MCU_OSPI0_D5",
+   "MCU_OSPI0_D6",
+   "MCU_OSPI0_D7",
+   "MCU_OSPI0_CLK",
+   "MCU_OSPI0_DQS",
+   "MCU_OSPI0_CSn0",
+   "MCU_OSPI0_CSn1",
+   "MCU_OSPI0_CSn2",
+   "MCU_OSPI0_CSn3",
+   "MCU_OSPI0_LBCLKO"
+  ],
+  "MCU_OSPI1": [
+   "MCU_OSPI1_D0",
+   "MCU_OSPI1_D1",
+   "MCU_OSPI1_D2",
+   "MCU_OSPI1_D3",
+   "MCU_OSPI1_CLK",
+   "MCU_OSPI1_DQS",
+   "MCU_OSPI1_CSn0",
+   "MCU_OSPI1_CSn1",
+   "MCU_OSPI1_LBCLKO"
+  ],
+  "MCU_RGMII1": [
+   "MCU_RGMII1_RD0",
+   "MCU_RGMII1_RD1",
+   "MCU_RGMII1_RD2",
+   "MCU_RGMII1_RD3",
+   "MCU_RGMII1_RXC",
+   "MCU_RGMII1_TD0",
+   "MCU_RGMII1_TD1",
+   "MCU_RGMII1_TD2",
+   "MCU_RGMII1_TD3",
+   "MCU_RGMII1_TXC",
+   "MCU_RGMII1_RX_CTL",
+   "MCU_RGMII1_TX_CTL"
+  ],
+  "MCU_RMII1": [
+   "MCU_RMII1_RXD0",
+   "MCU_RMII1_RXD1",
+   "MCU_RMII1_TXD0",
+   "MCU_RMII1_TXD1",
+   "MCU_RMII1_RX_ER",
+   "MCU_RMII1_TX_EN",
+   "MCU_RMII1_CRS_DV",
+   "MCU_RMII1_REF_CLK"
+  ],
+  "MCU_SPI0": [
+   "MCU_SPI0_D0",
+   "MCU_SPI0_D1",
+   "MCU_SPI0_CLK",
+   "MCU_SPI0_CS0",
+   "MCU_SPI0_CS1",
+   "MCU_SPI0_CS2",
+   "MCU_SPI0_CS3"
+  ],
+  "MCU_SPI1": [
+   "MCU_SPI1_D0",
+   "MCU_SPI1_D1",
+   "MCU_SPI1_CLK",
+   "MCU_SPI1_CS0",
+   "MCU_SPI1_CS1",
+   "MCU_SPI1_CS2",
+   "MCU_SPI1_CS3"
+  ],
+  "MCU_UART0": [
+   "MCU_UART0_RXD",
+   "MCU_UART0_TXD",
+   "MCU_UART0_CTSn",
+   "MCU_UART0_RTSn"
   ],
   "MMC0": [
    "MMC0_DS",
@@ -510,6 +532,13 @@
    "MMC1_DAT3",
    "MMC1_SDCD",
    "MMC1_SDWP"
+  ],
+  "PMIC": [
+   "PMIC_POWER_EN0",
+   "PMIC_POWER_EN1"
+  ],
+  "PORz": [
+   "PORz_OUT"
   ],
   "PRG0": [
    "PRG0_PWM0_A0",
@@ -983,6 +1012,9 @@
    "PRG2_IEP0_EDIO_DATA_IN_OUT30",
    "PRG2_IEP0_EDIO_DATA_IN_OUT31"
   ],
+  "SOC": [
+   "SOC_SAFETY_ERRORn"
+  ],
   "SPI0": [
    "SPI0_D0",
    "SPI0_D1",
@@ -1149,7 +1181,7 @@
    "VOUT1_DATA23",
    "VOUT1_EXTPCLKIN"
   ],
-  "WKUP": [
+  "WKUP_GPIO0": [
    "WKUP_GPIO0_0",
    "WKUP_GPIO0_1",
    "WKUP_GPIO0_2",
@@ -1205,7 +1237,13 @@
    "WKUP_GPIO0_52",
    "WKUP_GPIO0_53",
    "WKUP_GPIO0_54",
-   "WKUP_GPIO0_55",
+   "WKUP_GPIO0_55"
+  ],
+  "WKUP_I2C0": [
+   "WKUP_I2C0_SCL",
+   "WKUP_I2C0_SDA"
+  ],
+  "WKUP_UART0": [
    "WKUP_UART0_RXD",
    "WKUP_UART0_TXD",
    "WKUP_UART0_CTSn",
@@ -1213,14 +1251,56 @@
   ]
  },
  "system": {
+  "EMU": [
+   "EMU0",
+   "EMU1"
+  ],
+  "MCU": [
+   "MCU_RESETz",
+   "MCU_CLKOUT0",
+   "MCU_OBSCLK0",
+   "MCU_PORz_OUT",
+   "MCU_TIMER_IO0",
+   "MCU_TIMER_IO1",
+   "MCU_RESETSTATz",
+   "MCU_SYSCLKOUT0",
+   "MCU_EXT_REFCLK0",
+   "MCU_SAFETY_ERRORn",
+   "MCU_ADC_EXT_TRIGGER0",
+   "MCU_ADC_EXT_TRIGGER1"
+  ],
   "NMIn": [
    "NMIn"
   ],
   "OBSCLK": [
    "OBSCLK0"
   ],
+  "PORz": [
+   "PORz"
+  ],
+  "RESETSTATz": [
+   "RESETSTATz"
+  ],
+  "RESETz": [
+   "RESETz"
+  ],
   "SYSCLKOUT": [
    "SYSCLKOUT0"
+  ],
+  "TCK": [
+   "TCK"
+  ],
+  "TDI": [
+   "TDI"
+  ],
+  "TDO": [
+   "TDO"
+  ],
+  "TMS": [
+   "TMS"
+  ],
+  "TRSTn": [
+   "TRSTn"
   ]
  }
 }

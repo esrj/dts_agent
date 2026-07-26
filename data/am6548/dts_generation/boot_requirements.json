@@ -1,0 +1,80 @@
+{
+ "soc": "AM6548",
+ "source": "baseline DTS(k3-am654-base-board.dts)boot 節點判定 + 手冊 boot 章節(require.json 草稿)交叉查證",
+ "description": "開機必備(node 級,patch 消費;與 require.json 的腳位級判定同源)",
+ "board_pin_locked": {
+  "description": "實體已繞線、必須鎖回官方腳位的開機介面;solver 會把這些腳從其他訊號的候選域移除。",
+  "peripherals": [
+   "MMC0",
+   "MMC1",
+   "UART0"
+  ],
+  "why": "kernel 板 DTS 有效啟用(增項 A 判定為 emit_fixed_assignment)"
+ },
+ "peripherals": {
+  "bootmode_main": {
+   "block": "BOOTMODE_MAIN",
+   "why": "DTS 無對應節點或未啟用——視為 bootloader/strap 持有,kernel 不碰",
+   "signals": [],
+   "dts_node": null,
+   "solver_action": "reserve_only"
+  },
+  "bootmode_mcu": {
+   "block": "BOOTMODE_MCU",
+   "why": "DTS 無對應節點或未啟用——視為 bootloader/strap 持有,kernel 不碰",
+   "signals": [],
+   "dts_node": null,
+   "solver_action": "reserve_only"
+  },
+  "main_uart0": {
+   "block": "UART0",
+   "why": "/chosen stdout-path 指向 &main_uart0（開機 console）",
+   "signals": [
+    "UART0_RXD",
+    "UART0_TXD",
+    "UART0_CTSn",
+    "UART0_RTSn"
+   ],
+   "dts_node": "&main_uart0",
+   "solver_action": "emit_fixed_assignment"
+  },
+  "sdhci0": {
+   "block": "MMC0",
+   "why": "compatible \"ti,am654-sdhci-5.1\" ＝開機媒體（eMMC/SD）且有效啟用",
+   "signals": [
+    "MMC0_CLK",
+    "MMC0_CMD",
+    "MMC0_DAT0",
+    "MMC0_DAT1",
+    "MMC0_DAT2",
+    "MMC0_DAT3",
+    "MMC0_DAT4",
+    "MMC0_DAT5",
+    "MMC0_DAT6",
+    "MMC0_DAT7",
+    "MMC0_SDCD",
+    "MMC0_DS"
+   ],
+   "dts_node": "&sdhci0",
+   "solver_action": "emit_fixed_assignment"
+  },
+  "sdhci1": {
+   "block": "MMC1",
+   "why": "compatible \"ti,am654-sdhci-5.1\" ＝開機媒體（eMMC/SD）且有效啟用",
+   "signals": [
+    "MMC1_CLK",
+    "MMC1_CMD",
+    "MMC1_DAT0",
+    "MMC1_DAT1",
+    "MMC1_DAT2",
+    "MMC1_DAT3",
+    "MMC1_SDCD",
+    "MMC1_SDWP"
+   ],
+   "dts_node": "&sdhci1",
+   "solver_action": "emit_fixed_assignment"
+  }
+ },
+ "recommended_not_strictly_mandatory": {},
+ "_review_status": "pending_human_review(與 require.json 的 emit/reserve 判定同批,須一併人工確認)"
+}
