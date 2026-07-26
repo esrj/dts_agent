@@ -25,10 +25,16 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import time
+
 from llm_provider import get_provider
 from orchestrator.tools import SolverTools
 from orchestrator.session import ChatSession
 from util import dataio                      # 功能旗標（IC_BINDING_ENABLED）
+
+# 本輪 LLM 活動的即時計數（/api/chat/progress 輪詢用；前端等待畫面顯示
+# 「已思考 X 秒 ・ 已消耗 N tokens」）。單執行緒對話流：欄位覆寫即可。
+LIVE = {"running": False, "started_at": None, "tokens": 0}
 
 # Per-turn loop bound: each tool round is one iteration. Generous enough for a
 # few UNSAT→adjust→retry cycles, low enough to cap cost / stop a runaway.
@@ -194,11 +200,14 @@ class ChatReply:
     the deterministic /api/solve flow — the model must not re-type the list)."""
 
     def __init__(self, text: str, plan: list | None = None,
-                 suggestions: list | None = None, clarify: dict | None = None):
+                 suggestions: list | None = None, clarify: dict | None = None,
+                 usage_tokens: int = 0, seconds: float = 0.0):
         self.text = text
         self.plan = plan
         self.suggestions = suggestions or []
         self.clarify = clarify
+        self.usage_tokens = usage_tokens      # 本輪 LLM 消耗（全部呼叫合計）
+        self.seconds = seconds                # 本輪耗時（秒）
 
 
 class Orchestrator:
@@ -221,10 +230,18 @@ class Orchestrator:
         session.suggestions = []          # 建議卡片屬於「這一輪」——每輪重置
         session.validator_runs = 0        # 修復迴圈停損計數——每輪重置
         system = _strip_disabled_sections(system)
+        t0 = time.time()
+        turn_tokens = 0
+        LIVE.update(running=True, started_at=t0, tokens=0)
         for _ in range(MAX_STEPS):
             resp = self.provider.complete_raw(
                 system=system, messages=session.messages,
                 tools=_active_tools(), temperature=0)
+            u = resp.usage or {}
+            turn_tokens += int(u.get("total_tokens")
+                               or (u.get("prompt_tokens", 0)
+                                   + u.get("completion_tokens", 0)) or 0)
+            LIVE["tokens"] = turn_tokens
 
             # Append the assistant turn verbatim (so tool_use blocks are replayed).
             # Never append an empty content (the API rejects an empty assistant turn).
@@ -241,10 +258,13 @@ class Orchestrator:
             if resp.stop_reason != "tool_use" or not resp.tool_calls:
                 # Final answer (or a degenerate tool_use with no blocks — treat as final
                 # rather than send back an empty user turn, which the API rejects).
+                LIVE["running"] = False
                 return ChatReply(text=resp.content or "（沒有產生回覆）",
                                  plan=turn_plan,
                                  suggestions=session.suggestions,
-                                 clarify=turn_clarify)
+                                 clarify=turn_clarify,
+                                 usage_tokens=turn_tokens,
+                                 seconds=round(time.time() - t0, 1))
 
             # Run each requested tool, feed the results back as tool_result blocks.
             tool_results = []
@@ -266,9 +286,11 @@ class Orchestrator:
                 })
             session.messages.append({"role": "user", "content": tool_results})
 
+        LIVE["running"] = False
         return ChatReply(
             text="（已達單輪步數上限，請把需求拆小一點、或換個說法再試。）",
-            plan=turn_plan, suggestions=session.suggestions, clarify=turn_clarify)
+            plan=turn_plan, suggestions=session.suggestions, clarify=turn_clarify,
+            usage_tokens=turn_tokens, seconds=round(time.time() - t0, 1))
 
     # ----------------------------------------------------------------------- #
     def _dispatch(self, name: str, inp: dict, session: ChatSession) -> dict:

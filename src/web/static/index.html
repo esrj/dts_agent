@@ -155,18 +155,18 @@
     .intro h1 { font-size: 1.35rem; margin: 0 0 .35rem; }
     .intro p  { margin: 0; color: var(--text-soft); }
 
-    .examples { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
-    .examples .chip {
+    /* 開場的目前板子提示（隨左上選單切換即時更新，內容由 app.js 填） */
+    .board-hint {
+      display: inline-flex; align-items: center; gap: .45rem;
+      margin-top: .9rem;
       border: 1px solid var(--border);
       background: var(--bg-soft);
       color: var(--text-soft);
       border-radius: 12px;
       padding: .5rem .75rem;
       font-size: .82rem;
-      cursor: pointer;
-      transition: border-color .15s, color .15s;
     }
-    .examples .chip:hover { border-color: var(--accent); color: var(--text); }
+    .board-hint b { color: var(--text); font-weight: 600; }
 
     /* ---- per-message status line ---- */
     .status { margin: 0; font-size: .9rem; color: var(--text-soft); }
@@ -185,6 +185,8 @@
     .loading.validating .spinner { border-top-color: var(--warn); }
     .loading.validating .loading-label { color: var(--warn); font-weight: 600; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    /* 等待中的即時指標與完成後的最終指標（思考秒數 ・ token 消耗） */
+    .live-metrics { color: var(--text-soft); font-size: .82rem; margin: .35rem 0 0; }
     @media (prefers-reduced-motion: reduce) {
       .spinner { animation-duration: 1.6s; }   /* 尊重減量動態偏好：放慢不停轉 */
     }
@@ -656,11 +658,7 @@
         <div class="body">
           <h1>需要分配哪些硬體週邊？</h1>
           <p>用自然語言描述需求，我會解析並算出 pin 對應。點下方範例或直接輸入。</p>
-          <div class="examples">
-            <span class="chip">我要兩個 FDCAN 跟一個 ETH</span>
-            <span class="chip">我要啟用 ETH1 ETH2 I2C2</span>
-            <span class="chip">一個 i2c 用 AF8</span>
-          </div>
+          <div class="board-hint" id="intro-board" hidden></div>
         </div>
       </div>
     </div>

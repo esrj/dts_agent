@@ -1,0 +1,106 @@
+{
+ "soc": "MA35D1 Series",
+ "source": "baseline DTS(ma35d1-evb.dts)boot 節點判定 + 手冊 boot 章節(require.json 草稿)交叉查證",
+ "description": "開機必備(node 級,patch 消費;與 require.json 的腳位級判定同源)",
+ "board_pin_locked": {
+  "description": "實體已繞線、必須鎖回官方腳位的開機介面;solver 會把這些腳從其他訊號的候選域移除。",
+  "peripherals": [
+   "NAND_FLASH_BOOT",
+   "QSPI0_SPI_FLASH_BOOT",
+   "SD0_EMMC0_BOOT",
+   "SD1_EMMC1_BOOT"
+  ],
+  "why": "kernel 板 DTS 有效啟用(增項 A 判定為 emit_fixed_assignment)"
+ },
+ "peripherals": {
+  "nand": {
+   "block": "NAND_FLASH_BOOT",
+   "why": "kernel 板 DTS &nand 有效啟用,kernel 會驅動 → plan 必帶",
+   "signals": [
+    "NAND_DATA0",
+    "NAND_DATA1",
+    "NAND_DATA2",
+    "NAND_DATA3",
+    "NAND_DATA4",
+    "NAND_DATA5",
+    "NAND_DATA6",
+    "NAND_DATA7",
+    "NAND_RDY",
+    "NAND_nRE",
+    "NAND_nWE",
+    "NAND_CLE",
+    "NAND_ALE",
+    "NAND_nCS",
+    "NAND_nWP"
+   ],
+   "dts_node": "&nand",
+   "solver_action": "emit_fixed_assignment"
+  },
+  "power_on_setting_straps": {
+   "block": "POWER_ON_SETTING_STRAPS",
+   "why": "DTS 無對應節點或未啟用——視為 bootloader/strap 持有,kernel 不碰",
+   "signals": [],
+   "dts_node": null,
+   "solver_action": "reserve_only"
+  },
+  "qspi0": {
+   "block": "QSPI0_SPI_FLASH_BOOT",
+   "why": "kernel 板 DTS &qspi0 有效啟用,kernel 會驅動 → plan 必帶",
+   "signals": [
+    "QSPI0_SS0",
+    "QSPI0_CLK",
+    "QSPI0_MOSI0",
+    "QSPI0_MISO0",
+    "QSPI0_MOSI1",
+    "QSPI0_MISO1"
+   ],
+   "dts_node": "&qspi0",
+   "solver_action": "emit_fixed_assignment"
+  },
+  "sdhci0": {
+   "block": "SD0_EMMC0_BOOT",
+   "why": "kernel 板 DTS &sdhci0 有效啟用,kernel 會驅動 → plan 必帶",
+   "signals": [
+    "eMMC0_CMD",
+    "eMMC0_CLK",
+    "eMMC0_DAT0",
+    "eMMC0_DAT1",
+    "eMMC0_DAT2",
+    "eMMC0_DAT3",
+    "SD0_nCD",
+    "SD0_WP"
+   ],
+   "dts_node": "&sdhci0",
+   "solver_action": "emit_fixed_assignment"
+  },
+  "sdhci1": {
+   "block": "SD1_EMMC1_BOOT",
+   "why": "kernel 板 DTS &sdhci1 有效啟用,kernel 會驅動 → plan 必帶",
+   "signals": [
+    "eMMC1_DAT4",
+    "eMMC1_DAT5",
+    "eMMC1_DAT6",
+    "eMMC1_DAT7",
+    "SD1_WP",
+    "SD1_nCD",
+    "eMMC1_CMD",
+    "eMMC1_CLK",
+    "eMMC1_DAT0",
+    "eMMC1_DAT1",
+    "eMMC1_DAT2",
+    "eMMC1_DAT3"
+   ],
+   "dts_node": "&sdhci1",
+   "solver_action": "emit_fixed_assignment"
+  },
+  "usb_boot": {
+   "block": "USB_BOOT",
+   "why": "DTS 無對應節點或未啟用——視為 bootloader/strap 持有,kernel 不碰",
+   "signals": [],
+   "dts_node": null,
+   "solver_action": "reserve_only"
+  }
+ },
+ "recommended_not_strictly_mandatory": {},
+ "_review_status": "pending_human_review(與 require.json 的 emit/reserve 判定同批,須一併人工確認)"
+}

@@ -40,10 +40,33 @@ async function loadBoards(selectSlug) {
       sel.addEventListener("change", onBoardChange);
       sel._bcBound = true;
     }
+    updateIntroBoard();
   } catch (e) {
     // 取不到清單（舊後端 / 失敗）-> 隱藏選單，沿用後端預設板
     sel.style.display = "none";
   }
+}
+
+// 開場的目前板子提示：顯示現在對話針對哪塊板（display name，缺 manifest
+// 退回 slug）。板子清單載入與每次換板都會更新。
+function updateIntroBoard() {
+  const hint = $("intro-board");
+  if (!hint) return;
+  if (!currentBoard) { hint.hidden = true; return; }
+  const name = boardNames[currentBoard] || currentBoard;
+  hint.innerHTML = "目前板子：<b>" + escapeHtml(name) + "</b>";
+  hint.hidden = false;
+}
+
+function clearChat() {
+  // 清空對話、只留開場 intro——換板後畫面上不殘留上一塊板的 plan/驗證卡片
+  //（那些卡片的按鈕與輪詢都綁舊板，留著會誤導）。進行中的背景輪詢會因
+  // 目標節點已脫離 DOM 而靜默失效，fingerprint 對賬也擋掉錯板渲染。
+  const box = $("messages");
+  if (!box) return;
+  Array.from(box.children).forEach((el) => {
+    if (!el.classList.contains("intro")) el.remove();
+  });
 }
 
 function onBoardChange(e) {
@@ -54,8 +77,11 @@ function onBoardChange(e) {
   }
   currentBoard = e.target.value;
   // 換板等於開新話題：丟掉 Agent 對話 session，避免拿新板的 Σ/DTS
-  // 去回答舊板的問題（後端 session 綁定某塊板的對話歷史）。
+  // 去回答舊板的問題（後端 session 綁定某塊板的對話歷史）；
+  // 同時清空畫面上的對話（不同板的對話不互相影響）。
   chatSessionId = null;
+  clearChat();
+  updateIntroBoard();
   initDts();                                  // DTS 生成可用性依板而定
 }
 
@@ -260,6 +286,7 @@ async function bcRenderDone(s) {
   $("bc-review-md").textContent = rv.review_md || "（無 REVIEW.md）";
   await loadBoards(s.landed);                   // 重載選單並選中新板
   chatSessionId = null;
+  clearChat();                                  // 自動切到新板＝換板，同樣清對話
   initDts();
   if (!$("bc-overlay").hidden) bcShow("review");
 }
@@ -304,6 +331,7 @@ function syncBoard(board) {
   currentBoard = board;
   const sel = $("board-select");
   if (sel) sel.value = board;
+  updateIntroBoard();
   initDts();                                  // DTS 生成可用性依板而定
 }
 
@@ -337,32 +365,75 @@ function appendUser(text) {
 }
 
 // 建一則 assistant 訊息，回傳它的 .body 供後續填內容（先放一個轉圈圈載入占位）。
-// validatePhase=true：請求超過閾值仍未回 → 幾乎必是在跑 CubeMX
-// （系統中唯一的慢操作，1–3 分鐘）→ 把標籤切成「CubeMX 驗證中」。回應到達時
-// 由 renderChat/setStatus 呼叫 body._stopLoading() 收掉計時器。
-const VALIDATE_HINT_MS = 6000;
-function appendAssistant(label, { validatePhase = false } = {}) {
+// 等待標籤一律「思考中…」——一般使用者不需要分辨求解/驗證等內部階段，
+// 階段細節由即時指標行（秒數/tokens）與最終輸出呈現。
+
+// 等待中的即時指標行（灰字，chat 求解與 DTS 生成共用）：本地起錶每秒平順
+// 跳動（同 bcMetrics 的決策——不隨輪詢重設基準）；progressUrl 每 3 秒輪詢
+// 一次取 tokens（chat 用 /api/chat/progress、DTS 由呼叫端以 update(s) 餵入
+// /api/dts/status 的欄位，不另開輪詢）。完成時呼叫 stop() 收掉計時器。
+function attachLiveMetrics(progressUrl) {
+  const line = el("div", "live-metrics");
+  const startAt = Date.now();
+  let tokens = 0;
+  const render = () => {
+    const sec = Math.max(0, Math.floor((Date.now() - startAt) / 1000));
+    const m = Math.floor(sec / 60), s = sec % 60;
+    line.textContent =
+      `已思考 ${m ? m + " 分 " : ""}${s} 秒 ・ 已消耗 ${tokens.toLocaleString()} tokens`;
+  };
+  render();
+  const tick = setInterval(render, 1000);
+  let poll = null;
+  if (progressUrl) {
+    poll = setInterval(async () => {
+      try {
+        const d = await (await fetch(progressUrl)).json();
+        if (d && d.tokens != null) tokens = d.tokens;
+      } catch (e) { /* 網路抖動：略過，下一輪再試 */ }
+    }, 3000);
+  }
+  return {
+    el: line,
+    update: (s) => { if (s && s.tokens != null) tokens = s.tokens; },
+    // LLM 段結束後仍要繼續計秒（驗證階段）時：只停 tokens 輪詢、凍結 token 值
+    stopPoll: () => { if (poll) { clearInterval(poll); poll = null; } },
+    elapsedSec: () => Math.max(0, Math.floor((Date.now() - startAt) / 1000)),
+    stop: () => {
+      clearInterval(tick);
+      if (poll) clearInterval(poll);
+    },
+  };
+}
+
+// 最終指標行（完成輸出用）：seconds/tokens 由伺服器凍結值提供
+function finalMetricsLine(seconds, tokens) {
+  if (seconds == null && tokens == null) return null;
+  const sec = Math.round(seconds || 0);
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return el("div", "live-metrics",
+    `共思考 ${m ? m + " 分 " : ""}${s} 秒 ・ 消耗 ${(tokens || 0).toLocaleString()} tokens`);
+}
+
+function appendAssistant(label) {
   const msg = el("div", "msg assistant");
   msg.appendChild(el("div", "avatar", "P"));
   const body = el("div", "body");
   msg.appendChild(body);
   $("messages").appendChild(msg);
 
-  let timer = null;
   if (label) {
     const load = el("div", "loading");
     load.appendChild(el("span", "spinner"));
-    const lab = el("span", "loading-label", label);
-    load.appendChild(lab);
+    load.appendChild(el("span", "loading-label", label));
     body.appendChild(load);
-    if (validatePhase) {
-      timer = setTimeout(() => {
-        lab.textContent = "CubeMX 驗證中…（約 1–3 分鐘）";
-        load.classList.add("validating");
-      }, VALIDATE_HINT_MS);
-    }
   }
-  body._stopLoading = () => { if (timer) { clearTimeout(timer); timer = null; } };
+  // 求解等待的即時指標（每秒跳秒數；tokens 由 /api/chat/progress 輪詢）。
+  // metrics 掛在 body 上：renderChat 進驗證階段時接手續跑（秒數不歸零）。
+  const metrics = label ? attachLiveMetrics("/api/chat/progress") : null;
+  if (metrics) body.appendChild(metrics.el);
+  body._metrics = metrics;
+  body._stopLoading = () => { if (metrics) metrics.stop(); };
   scrollBottom();
   return body;
 }
@@ -412,7 +483,7 @@ async function send() {
   ta.focus();                                 // 保持 focus，方便繼續輸入
 
   appendUser(text);
-  const body = appendAssistant("思考中…", { validatePhase: true });
+  const body = appendAssistant("思考中…");
   $("go").disabled = true;
   setBoardEnabled(false);                      // 進行中鎖住板子選單，避免中途切板
   try {
@@ -429,36 +500,57 @@ async function send() {
 // --------------------------------------------------------------------------- //
 // Agent 模式：渲染 orchestrator 的回覆（人話 + 一句為什麼）＋（若有）新的 plan 表格
 //
-// 有新 plan 時（伺服器已自動排入背景 CubeMX 驗證）：先「只」顯示驗證中轉圈，
+// 有新 plan 時（伺服器已自動排入背景 CubeMX 驗證）：先「只」顯示思考中轉圈，
 // 等驗證完成再一次輸出 LLM 回覆＋plan 表格＋驗證卡片——避免使用者先看到
 // 未經驗證的結果。無 plan（clarify / unsat / 純回覆）或本輪模型已顯式驗過
 // （d.validator）則立即完整渲染。
 // --------------------------------------------------------------------------- //
 function renderChat(r, d, body) {
-  if (body._stopLoading) body._stopLoading();
+  // 「思考中」的即時指標先不停——若接著進驗證階段要續跑（秒數不歸零，
+  // 使用者不必分辨哪段有用 LLM）；不進驗證的路徑在下面各自收掉。
+  const live = body._metrics || null;
+  const stopLive = () => { if (live) live.stop(); body._metrics = null; };
+
   body.innerHTML = "";
-  if (!r.ok) { setNote(body, (d && d.error) || ("發生問題（HTTP " + r.status + "）")); return; }
+  if (!r.ok) {
+    stopLive();
+    setNote(body, (d && d.error) || ("發生問題（HTTP " + r.status + "）"));
+    return;
+  }
   if (d.session_id) chatSessionId = d.session_id;   // 保存伺服器端 session
   if (d.board) syncBoard(d.board);
 
   const waitFp = (d.plan && d.plan.length && !d.validator && d.plan_fingerprint)
     ? d.plan_fingerprint : null;
-  if (!waitFp) { renderChatContent(d, body, null); return; }
+  if (!waitFp) { stopLive(); renderChatContent(d, body, null); return; }
 
-  // 只顯示驗證中；完成（或被更新的 plan 取代／逾時）後一次輸出全部內容
-  const load = el("div", "loading validating");
+  // 背景驗證期間維持「思考中…」（使用者不需分辨內部階段）；完成（或被
+  // 更新的 plan 取代／逾時）後一次輸出全部內容。
+  // 指標行續跑：秒數延續本輪起錶點；tokens 凍結在 LLM 段的最終值。
+  const load = el("div", "loading");
   load.appendChild(el("span", "spinner"));
-  load.appendChild(el("span", "loading-label", "CubeMX 驗證中…（約 1–3 分鐘）"));
+  load.appendChild(el("span", "loading-label", "思考中…"));
   body.appendChild(load);
+  if (live) {
+    live.stopPoll();
+    live.update({ tokens: d.usage_tokens });
+    body.appendChild(live.el);
+  }
   scrollBottom();
   waitForValidation(waitFp).then((result) => {
+    // 最終秒數＝含驗證的總耗時（凍結即時指標最後的值）；沒有續跑的
+    // 指標（重載等邊界）退回後端凍結的 LLM 耗時。
+    const totalSec = live ? live.elapsedSec() : null;
+    stopLive();
     body.innerHTML = "";
-    renderChatContent(d, body, result);   // result=null → 附表格時掛回輪詢備援
+    renderChatContent(d, body, result, totalSec);   // result=null → 附表格時掛回輪詢備援
   });
 }
 
-// 一次渲染完整內容。autoResult = 背景自動驗證的 result（指紋已對上）或 null。
-function renderChatContent(d, body, autoResult) {
+// 一次渲染完整內容。autoResult = 背景自動驗證的 result（指紋已對上）或 null；
+// totalSec = 含驗證階段的總耗時（renderChat 續跑的指標凍結值；null＝用後端
+// 凍結的 LLM 耗時 d.seconds）。
+function renderChatContent(d, body, autoResult, totalSec) {
   const reply = el("div", "reply");
   reply.innerHTML = renderMarkdown(d.reply || "（沒有回覆）");
   body.appendChild(reply);
@@ -474,7 +566,8 @@ function renderChatContent(d, body, autoResult) {
   // 驗證已完成（v）→ 不再輪詢；逾時/被取代（autoResult=null）→ 掛輪詢備援。
   if (d.plan && d.plan.length) {
     body.appendChild(buildResultBlock(
-      d.plan, v ? null : d.plan_fingerprint, d.plan_fingerprint || null));
+      d.plan, v ? null : d.plan_fingerprint, d.plan_fingerprint || null,
+      d.usage_tokens));
   }
 
   // 驗證過的修改建議（G6）：卡片可一鍵採納
@@ -487,6 +580,17 @@ function renderChatContent(d, body, autoResult) {
   // 由編排模型把選擇折回 intent 重解。
   if (d.clarify && d.clarify.options && d.clarify.options.length) {
     body.appendChild(buildChatClarify(d.clarify));
+  }
+
+  // 最終指標：本輪求解（含驗證）的思考時間與 token 消耗。有 plan 表格時
+  // 插在 result-block 內、DTS 反問之前——之後的 DTS 生成內容都掛在
+  // result-block 尾端，這樣 plan 的指標留在 plan 輸出下方，不會跟 DTS
+  // 卡片自己的指標擠在一起。
+  const fm = finalMetricsLine(totalSec != null ? totalSec : d.seconds, d.usage_tokens);
+  if (fm) {
+    const ask = body.querySelector(".dts-ask");
+    if (ask) ask.parentNode.insertBefore(fm, ask);
+    else body.appendChild(fm);
   }
   scrollBottom();
 }
@@ -529,7 +633,7 @@ async function chooseChatOption(option, btn, optsEl) {
 
   const text = "選擇：" + option.label + (option.note ? "（" + option.note + "）" : "");
   appendUser(text);
-  const body = appendAssistant("思考中…", { validatePhase: true });
+  const body = appendAssistant("思考中…");
   $("go").disabled = true;
   setBoardEnabled(false);
   try {
@@ -634,7 +738,7 @@ async function adoptSuggestion(s, btn, wrap) {
   btn.classList.add("chosen");
 
   appendUser("採納建議：" + s.summary);
-  const body = appendAssistant("依採納的方案重新求解中…", { validatePhase: true });
+  const body = appendAssistant("思考中…");
   $("go").disabled = true;
   setBoardEnabled(false);
   try {
@@ -691,7 +795,7 @@ function groupByPeripheral(rows) {
 // 工具列(複製) + 表格(peripheral 合併成一大格) + 下載 CSV/XLSX/CubeMX 驗證結果
 // planFp = 這份 plan 的指紋（「產生 DTS」用它向伺服器指認畫面上的 plan；
 // watchFp 只在還沒驗完時非空，兩者語意不同所以分開帶）。
-function buildResultBlock(rows, watchFp, planFp) {
+function buildResultBlock(rows, watchFp, planFp, seedTokens) {
   const block = el("div", "result-block");
 
   // 有任何 row 帶板上外部 IC 才顯示 ic 欄（G7；無 IC 的板子表格維持四欄）
@@ -744,7 +848,7 @@ function buildResultBlock(rows, watchFp, planFp) {
 
   // 每個新 plan 伺服器都會自動排入背景 CubeMX 驗證：這裡輪詢直到「result 的
   // 指紋 == 這份 plan 的指紋」，把驗證卡片掛在表格下方、亮起下載鈕。
-  if (watchFp) watchAutoValidation(block, vBtn, watchFp);
+  if (watchFp) watchAutoValidation(block, vBtn, watchFp, seedTokens);
 
   return block;
 }
@@ -752,11 +856,17 @@ function buildResultBlock(rows, watchFp, planFp) {
 // 輪詢背景自動驗證（fingerprint 對上才算「驗的是這份 plan」）。
 // 使用者連續求解時，舊 plan 的 watcher 會在看到「閒置且指紋屬於別份 plan」時
 // 靜默退場——永遠只有最新 plan 的卡片會出現。
-async function watchAutoValidation(block, vBtn, watchFp) {
+async function watchAutoValidation(block, vBtn, watchFp, seedTokens) {
   const line = el("div", "loading");
   line.appendChild(el("span", "spinner"));
-  line.appendChild(el("span", "loading-label", "CubeMX 自動驗證中…（約 1–3 分鐘）"));
+  line.appendChild(el("span", "loading-label", "思考中…"));
   block.appendChild(line);
+  // 驗證中也持續顯示指標（秒數續算；tokens 凍結在 LLM 段的值——驗證不耗
+  // token，但使用者不必分辨哪段有用 LLM）
+  const metrics = attachLiveMetrics(null);
+  if (seedTokens != null) metrics.update({ tokens: seedTokens });
+  block.appendChild(metrics.el);
+  const stopMetrics = () => { metrics.stop(); metrics.el.remove(); };
 
   const deadline = Date.now() + 8 * 60 * 1000;
   while (Date.now() < deadline) {
@@ -765,6 +875,7 @@ async function watchAutoValidation(block, vBtn, watchFp) {
       const fp = d.exists && d.result && d.result.validated
         ? d.result.validated.fingerprint : null;
       if (!d.running && fp === watchFp) {          // 驗完，而且驗的就是這份
+        stopMetrics();
         line.remove();
         block.appendChild(buildValidatorCard(d.result));
         setValidatorBadge(d.result.status);
@@ -774,12 +885,14 @@ async function watchAutoValidation(block, vBtn, watchFp) {
         return;
       }
       if (!d.running && fp && fp !== watchFp) {    // 已被更新的 plan 取代
+        stopMetrics();
         line.remove();
         return;
       }
     } catch (e) { /* 網路抖動：下一輪再試 */ }
     await new Promise((r) => setTimeout(r, 8000));
   }
+  stopMetrics();
   line.querySelector(".loading-label").textContent =
     "（驗證仍在進行——完成後可由「⤓ CubeMX 驗證結果」下載）";
   line.querySelector(".spinner").remove();
@@ -899,6 +1012,10 @@ async function runDtsGeneration(block, planFp, onEarlyFail) {
   line.appendChild(el("span", "loading-label",
     "DTS patch 生成中…（定位 → 生成 → 驗證 → 修復，約 1–5 分鐘）"));
   block.appendChild(line);
+  // DTS 生成的即時指標：tokens 直接取自既有的 /api/dts/status 輪詢（update），
+  // 不另開輪詢；秒數本地每秒平順跳動。
+  const metrics = attachLiveMetrics(null);
+  block.appendChild(metrics.el);
   scrollBottom();
 
   const deadline = Date.now() + 15 * 60 * 1000;
@@ -906,13 +1023,19 @@ async function runDtsGeneration(block, planFp, onEarlyFail) {
     await new Promise((res) => setTimeout(res, 5000));
     try {
       const s = await (await fetch("/api/dts/status")).json();
+      metrics.update(s);
       if (!s.running && s.result && s.result.fingerprint === planFp) {
+        // 最終秒數＝凍結即時計數器（程式執行時間也算思考時間——cache 命中
+        // 幾乎不耗時、tokens 0，但秒數仍如實反映使用者等待的時間）
+        const totalSec = metrics.elapsedSec();
+        metrics.stop(); metrics.el.remove();
         line.remove();
-        block.appendChild(buildDtsCard(s.result));
+        block.appendChild(buildDtsCard(s.result, totalSec));
         scrollBottom();
         return;
       }
       if (!s.running && (!s.result || s.result.fingerprint !== planFp)) {
+        metrics.stop(); metrics.el.remove();
         line.remove();
         const p = el("p", "note");
         p.textContent = s.result
@@ -924,6 +1047,7 @@ async function runDtsGeneration(block, planFp, onEarlyFail) {
     } catch (e) { /* 網路抖動：下一輪再試 */ }
   }
   // 逾時（15 分鐘）：停止輪詢，但附上常駐下載鈕——完成後仍可取得產物。
+  metrics.stop(); metrics.el.remove();
   line.querySelector(".loading-label").textContent =
     "（生成仍在進行或狀態已遺失——完成後可用下方按鈕下載產物）";
   line.querySelector(".spinner").remove();
@@ -933,7 +1057,7 @@ async function runDtsGeneration(block, planFp, onEarlyFail) {
 // DTS 生成結果卡片。三種收尾：
 // passed → 無外框、綠色標題＋產物展開／下載；needs-human（locator_blocked /
 // needs_info / boot_conflict）→ 黃卡列出待補資訊；其他 → 紅卡附摘要。
-function buildDtsCard(res) {
+function buildDtsCard(res, totalSec) {
   const NEEDS_HUMAN = ["locator_blocked", "needs_info", "boot_conflict"];
 
   // 成功：不用 val-card 綠框，只保留綠色標題文字。
@@ -980,6 +1104,8 @@ function buildDtsCard(res) {
     files.appendChild(buildDtsFileToggle(dtsName.split("/").pop()));
     done.appendChild(files);
     done.appendChild(buildDtsDownloadBtn());
+    const fm = finalMetricsLine(totalSec != null ? totalSec : res.seconds, res.tokens);
+    if (fm) done.appendChild(fm);
     return done;
   }
 
@@ -1011,6 +1137,8 @@ function buildDtsCard(res) {
     pre.textContent = res.summary;
     card.appendChild(pre);
   }
+  const fm = finalMetricsLine(totalSec != null ? totalSec : res.seconds, res.tokens);
+  if (fm) card.appendChild(fm);
   return card;
 }
 
@@ -1201,14 +1329,6 @@ $("q").addEventListener("keydown", (e) => {
 $("q").addEventListener("input", function () {
   this.style.height = "auto";
   this.style.height = Math.min(this.scrollHeight, 180) + "px";
-});
-
-// 範例 chip：點一下就填入並送出
-document.querySelectorAll(".examples .chip").forEach((chip) => {
-  chip.addEventListener("click", () => {
-    $("q").value = chip.textContent;
-    send();
-  });
 });
 
 // 啟動：載入可選板子清單 + 以伺服器最近一次驗證結果初始化 CubeMX 徽章

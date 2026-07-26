@@ -1,0 +1,1792 @@
+{
+ "PA0": {
+  "2": "UART1_nCTS",
+  "3": "UART16_RXD",
+  "6": "NAND_DATA0",
+  "7": "EBI_AD0",
+  "9": "EBI_ADR0"
+ },
+ "PA1": {
+  "2": "UART1_nRTS",
+  "3": "UART16_TXD",
+  "6": "NAND_DATA1",
+  "7": "EBI_AD1",
+  "9": "EBI_ADR1"
+ },
+ "PA10": {
+  "2": "UART5_RXD",
+  "6": "NAND_nWE",
+  "7": "EBI_AD10",
+  "9": "EBI_ADR10"
+ },
+ "PA11": {
+  "2": "UART5_TXD",
+  "6": "NAND_CLE",
+  "7": "EBI_AD11",
+  "9": "EBI_ADR11"
+ },
+ "PA12": {
+  "2": "UART7_nCTS",
+  "3": "UART8_RXD",
+  "6": "NAND_ALE",
+  "7": "EBI_AD12",
+  "9": "EBI_ADR12"
+ },
+ "PA13": {
+  "2": "UART7_nRTS",
+  "3": "UART8_TXD",
+  "6": "NAND_nCS",
+  "7": "EBI_AD13",
+  "9": "EBI_ADR13"
+ },
+ "PA14": {
+  "2": "UART7_RXD",
+  "3": "CAN3_RXD",
+  "4": "USBHL3_DM",
+  "6": "NAND_nWP",
+  "7": "EBI_AD14",
+  "9": "EBI_ADR14"
+ },
+ "PA15": {
+  "1": "EPWM0_CH2",
+  "2": "UART9_nCTS",
+  "3": "UART6_RXD",
+  "4": "I2C4_SDA",
+  "5": "CAN2_RXD",
+  "6": "USBHL0_DM",
+  "7": "EBI_ALE",
+  "9": "QEI0_A",
+  "11": "TM1",
+  "14": "RGMII0_PPS",
+  "15": "RMII0_PPS"
+ },
+ "PA2": {
+  "2": "UART1_RXD",
+  "6": "NAND_DATA2",
+  "7": "EBI_AD2",
+  "9": "EBI_ADR2"
+ },
+ "PA3": {
+  "2": "UART1_TXD",
+  "6": "NAND_DATA3",
+  "7": "EBI_AD3",
+  "9": "EBI_ADR3"
+ },
+ "PA4": {
+  "2": "UART3_nCTS",
+  "3": "UART2_RXD",
+  "6": "NAND_DATA4",
+  "7": "EBI_AD4",
+  "9": "EBI_ADR4"
+ },
+ "PA5": {
+  "2": "UART3_nRTS",
+  "3": "UART2_TXD",
+  "6": "NAND_DATA5",
+  "7": "EBI_AD5",
+  "9": "EBI_ADR5"
+ },
+ "PA6": {
+  "2": "UART3_RXD",
+  "6": "NAND_DATA6",
+  "7": "EBI_AD6",
+  "9": "EBI_ADR6"
+ },
+ "PA7": {
+  "2": "UART3_TXD",
+  "6": "NAND_DATA7",
+  "7": "EBI_AD7",
+  "9": "EBI_ADR7"
+ },
+ "PA8": {
+  "2": "UART5_nCTS",
+  "3": "UART4_RXD",
+  "6": "NAND_RDY",
+  "7": "EBI_AD8",
+  "9": "EBI_ADR8"
+ },
+ "PA9": {
+  "2": "UART5_nRTS",
+  "3": "UART4_TXD",
+  "6": "NAND_nRE",
+  "7": "EBI_AD9",
+  "9": "EBI_ADR9"
+ },
+ "PB0": {
+  "8": "EADC0_CH0"
+ },
+ "PB1": {
+  "8": "EADC0_CH1"
+ },
+ "PB10": {
+  "1": "EPWM2_CH5",
+  "2": "UART2_RXD",
+  "3": "CAN0_RXD",
+  "4": "USBHL2_DM",
+  "5": "SPI0_MOSI",
+  "6": "EBI_MCLK",
+  "7": "CCAP1_VSYNC",
+  "8": "ADC0_CH2",
+  "9": "EBI_ADR15",
+  "10": "EBI_AD14",
+  "11": "TM5",
+  "12": "I2C1_SDA",
+  "13": "INT1",
+  "14": "QEI2_B"
+ },
+ "PB11": {
+  "1": "EPWM2_BRAKE1",
+  "2": "UART2_TXD",
+  "3": "CAN0_TXD",
+  "4": "USBHL2_DP",
+  "5": "SPI0_MISO",
+  "6": "I2S1_MCLK",
+  "7": "CCAP1_SFIELD",
+  "8": "ADC0_CH3",
+  "9": "EBI_nCS2",
+  "10": "EBI_ALE",
+  "11": "TM5_EXT",
+  "12": "I2C1_SCL",
+  "13": "INT2",
+  "14": "QEI2_INDEX"
+ },
+ "PB12": {
+  "1": "EPWM2_CH0",
+  "2": "UART4_nCTS",
+  "3": "UART3_RXD",
+  "4": "I2C3_SDA",
+  "5": "CAN2_RXD",
+  "6": "I2S1_LRCK",
+  "7": "USBHL1_DM",
+  "8": "ADC0_CH4",
+  "9": "EBI_ADR16",
+  "14": "ECAP2_IC0"
+ },
+ "PB13": {
+  "1": "EPWM2_CH1",
+  "2": "UART4_nRTS",
+  "3": "UART3_TXD",
+  "4": "I2C3_SCL",
+  "5": "CAN2_TXD",
+  "6": "I2S1_BCLK",
+  "7": "USBHL1_DP",
+  "8": "ADC0_CH5",
+  "9": "EBI_ADR17",
+  "14": "ECAP2_IC1"
+ },
+ "PB14": {
+  "1": "EPWM2_CH2",
+  "2": "UART4_RXD",
+  "3": "CAN1_RXD",
+  "4": "USBHL3_DM",
+  "5": "I2C4_SDA",
+  "6": "I2S1_DI",
+  "8": "ADC0_CH6",
+  "9": "EBI_ADR18",
+  "14": "ECAP2_IC2"
+ },
+ "PB15": {
+  "1": "EPWM2_CH3",
+  "2": "UART4_TXD",
+  "3": "CAN1_TXD",
+  "4": "USBHL3_DP",
+  "5": "I2C4_SCL",
+  "6": "I2S1_DO",
+  "8": "ADC0_CH7",
+  "9": "EBI_ADR19"
+ },
+ "PB2": {
+  "8": "EADC0_CH2"
+ },
+ "PB3": {
+  "8": "EADC0_CH3"
+ },
+ "PB4": {
+  "8": "EADC0_CH4"
+ },
+ "PB5": {
+  "8": "EADC0_CH5"
+ },
+ "PB6": {
+  "8": "EADC0_CH6"
+ },
+ "PB7": {
+  "8": "EADC0_CH7"
+ },
+ "PB8": {
+  "1": "EPWM2_BRAKE0",
+  "2": "UART2_nCTS",
+  "3": "UART1_RXD",
+  "4": "I2C2_SDA",
+  "5": "SPI0_SS1",
+  "6": "SPI0_I2SMCLK",
+  "8": "ADC0_CH0",
+  "9": "EBI_nCS0",
+  "11": "TM4",
+  "14": "QEI2_INDEX",
+  "15": "KPI_ROW6"
+ },
+ "PB9": {
+  "1": "EPWM2_CH4",
+  "2": "UART2_nRTS",
+  "3": "UART1_TXD",
+  "4": "I2C2_SCL",
+  "5": "SPI0_CLK",
+  "6": "I2S0_MCLK",
+  "7": "CCAP1_HSYNC",
+  "8": "ADC0_CH1",
+  "9": "EBI_ALE",
+  "10": "EBI_AD13",
+  "11": "TM0_EXT",
+  "12": "I2S1_MCLK",
+  "13": "SC0_nCD",
+  "14": "QEI2_A",
+  "15": "KPI_ROW7"
+ },
+ "PC0": {
+  "4": "I2C4_SDA",
+  "6": "eMMC0_CMD/SD0_CMD"
+ },
+ "PC1": {
+  "4": "I2C4_SCL",
+  "6": "eMMC0_CLK/SD0_CLK"
+ },
+ "PC10": {
+  "1": "EPWM2_CH2",
+  "2": "UART10_RXD",
+  "3": "CAN2_RXD",
+  "4": "USBHL0_DM",
+  "5": "SPI1_MOSI",
+  "6": "eMMC0_DAT6"
+ },
+ "PC11": {
+  "1": "EPWM2_CH3",
+  "2": "UART10_TXD",
+  "3": "CAN2_TXD",
+  "4": "USBHL0_DP",
+  "5": "SPI1_MISO",
+  "6": "eMMC0_DAT7"
+ },
+ "PC12": {
+  "2": "UART12_nCTS",
+  "3": "UART11_RXD",
+  "6": "LCM_DATA16"
+ },
+ "PC13": {
+  "2": "UART12_nRTS",
+  "3": "UART11_TXD",
+  "6": "LCM_DATA17"
+ },
+ "PC14": {
+  "2": "UART12_RXD",
+  "6": "LCM_DATA18"
+ },
+ "PC15": {
+  "2": "UART12_TXD",
+  "6": "LCM_DATA19",
+  "7": "LCM_MPU_TE",
+  "8": "LCM_MPU_VSYNC"
+ },
+ "PC2": {
+  "3": "CAN0_RXD",
+  "4": "USBHL4_DM",
+  "6": "eMMC0_DAT0/SD0_DAT0"
+ },
+ "PC3": {
+  "3": "CAN0_TXD",
+  "4": "USBHL4_DP",
+  "6": "eMMC0_DAT1/SD0_DAT1"
+ },
+ "PC4": {
+  "4": "I2C5_SDA",
+  "6": "eMMC0_DAT2/SD0_DAT2"
+ },
+ "PC5": {
+  "4": "I2C5_SCL",
+  "6": "eMMC0_DAT3/SD0_DAT3"
+ },
+ "PC6": {
+  "3": "CAN1_RXD",
+  "4": "USBHL5_DM",
+  "6": "SD0_nCD"
+ },
+ "PC7": {
+  "3": "CAN1_TXD",
+  "4": "USBHL5_DP",
+  "6": "SD0_WP"
+ },
+ "PC8": {
+  "1": "EPWM2_CH0",
+  "2": "UART10_nCTS",
+  "3": "UART9_RXD",
+  "4": "I2C0_SDA",
+  "5": "SPI1_SS0",
+  "6": "eMMC0_DAT4"
+ },
+ "PC9": {
+  "1": "EPWM2_CH1",
+  "2": "UART10_nRTS",
+  "3": "UART9_TXD",
+  "4": "I2C0_SCL",
+  "5": "SPI1_CLK",
+  "6": "eMMC0_DAT5"
+ },
+ "PD0": {
+  "2": "UART3_nCTS",
+  "3": "UART4_RXD",
+  "5": "QSPI0_SS0"
+ },
+ "PD1": {
+  "2": "UART3_nRTS",
+  "3": "UART4_TXD",
+  "5": "QSPI0_CLK"
+ },
+ "PD10": {
+  "1": "EPWM1_BRAKE0",
+  "2": "UART16_RXD",
+  "5": "QSPI1_MOSI0",
+  "7": "I2S1_DI",
+  "8": "EPWM0_CH4",
+  "9": "EBI_AD9",
+  "10": "SC1_RST",
+  "11": "TM2"
+ },
+ "PD11": {
+  "1": "EPWM1_BRAKE1",
+  "2": "UART16_TXD",
+  "5": "QSPI1_MISO0",
+  "7": "I2S1_DO",
+  "8": "EPWM0_CH5",
+  "9": "EBI_AD10",
+  "10": "SC1_PWR",
+  "11": "TM2_EXT"
+ },
+ "PD12": {
+  "1": "EPWM0_BRAKE0",
+  "2": "UART11_TXD",
+  "3": "UART10_RXD",
+  "4": "I2C4_SDA",
+  "6": "TRACE_DATA0",
+  "7": "EBI_nCS1",
+  "8": "EBI_AD4",
+  "9": "QEI0_INDEX",
+  "11": "TM5",
+  "12": "I2S1_LRCK",
+  "13": "INT1"
+ },
+ "PD13": {
+  "1": "EPWM0_BRAKE1",
+  "2": "UART11_RXD",
+  "3": "UART10_TXD",
+  "4": "I2C4_SCL",
+  "6": "TRACE_DATA1",
+  "7": "EBI_nCS2",
+  "8": "EBI_AD5",
+  "9": "ECAP0_IC0",
+  "11": "TM5_EXT",
+  "12": "I2S1_BCLK"
+ },
+ "PD14": {
+  "1": "EPWM0_SYNC_IN",
+  "2": "UART11_nCTS",
+  "3": "CAN3_RXD",
+  "4": "USBHL5_DM",
+  "6": "TRACE_DATA2",
+  "7": "EBI_MCLK",
+  "8": "EBI_AD6",
+  "9": "ECAP0_IC1",
+  "11": "TM6",
+  "12": "I2S1_DI",
+  "13": "INT3"
+ },
+ "PD15": {
+  "1": "EPWM0_SYNC_OUT",
+  "2": "UART11_nRTS",
+  "3": "CAN3_TXD",
+  "4": "USBHL5_DP",
+  "6": "TRACE_DATA3",
+  "7": "EBI_ALE",
+  "8": "EBI_AD7",
+  "9": "ECAP0_IC2",
+  "11": "TM6_EXT",
+  "12": "I2S1_DO"
+ },
+ "PD2": {
+  "2": "UART3_RXD",
+  "5": "QSPI0_MOSI0"
+ },
+ "PD3": {
+  "2": "UART3_TXD",
+  "5": "QSPI0_MISO0"
+ },
+ "PD4": {
+  "2": "UART1_nCTS",
+  "3": "UART2_RXD",
+  "4": "I2C2_SDA",
+  "5": "QSPI0_MOSI1"
+ },
+ "PD5": {
+  "2": "UART1_nRTS",
+  "3": "UART2_TXD",
+  "4": "I2C2_SCL",
+  "5": "QSPI0_MISO1"
+ },
+ "PD6": {
+  "1": "EPWM0_SYNC_IN",
+  "2": "UART1_RXD",
+  "4": "USBHL3_DM",
+  "5": "QSPI1_MOSI1",
+  "6": "I2C0_SDA",
+  "7": "I2S0_MCLK",
+  "8": "EPWM0_CH0",
+  "9": "EBI_AD5",
+  "10": "SPI3_SS1",
+  "11": "TRACE_CLK"
+ },
+ "PD7": {
+  "1": "EPWM0_SYNC_OUT",
+  "2": "UART1_TXD",
+  "4": "USBHL3_DP",
+  "5": "QSPI1_MISO1",
+  "6": "I2C0_SCL",
+  "7": "I2S1_MCLK",
+  "8": "EPWM0_CH1",
+  "9": "EBI_AD6",
+  "10": "SC1_nCD",
+  "11": "EADC0_ST"
+ },
+ "PD8": {
+  "1": "EPWM0_BRAKE0",
+  "2": "UART16_nCTS",
+  "3": "UART15_RXD",
+  "5": "QSPI1_SS0",
+  "7": "I2S1_LRCK",
+  "8": "EPWM0_CH2",
+  "9": "EBI_AD7",
+  "10": "SC1_CLK",
+  "11": "TM0"
+ },
+ "PD9": {
+  "1": "EPWM0_BRAKE1",
+  "2": "UART16_nRTS",
+  "3": "UART15_TXD",
+  "5": "QSPI1_CLK",
+  "7": "I2S1_BCLK",
+  "8": "EPWM0_CH3",
+  "9": "EBI_AD8",
+  "10": "SC1_DAT",
+  "11": "TM0_EXT"
+ },
+ "PE0": {
+  "2": "UART9_nCTS",
+  "3": "UART8_RXD",
+  "7": "CCAP1_DATA0",
+  "8": "RGMII0_MDC",
+  "9": "RMII0_MDC"
+ },
+ "PE1": {
+  "2": "UART9_nRTS",
+  "3": "UART8_TXD",
+  "7": "CCAP1_DATA1",
+  "8": "RGMII0_MDIO",
+  "9": "RMII0_MDIO"
+ },
+ "PE10": {
+  "2": "UART15_nCTS",
+  "3": "UART14_RXD",
+  "5": "SPI1_SS0",
+  "7": "CCAP1_HSYNC",
+  "8": "RGMII0_RXD3"
+ },
+ "PE11": {
+  "2": "UART15_nRTS",
+  "3": "UART14_TXD",
+  "5": "SPI1_CLK",
+  "7": "CCAP1_VSYNC",
+  "8": "RGMII0_TXCLK"
+ },
+ "PE12": {
+  "2": "UART15_RXD",
+  "5": "SPI1_MOSI",
+  "7": "CCAP1_DATA8",
+  "8": "RGMII0_TXD2"
+ },
+ "PE13": {
+  "2": "UART15_TXD",
+  "5": "SPI1_MISO",
+  "7": "CCAP1_DATA9",
+  "8": "RGMII0_TXD3"
+ },
+ "PE14": {
+  "1": "UART0_TXD"
+ },
+ "PE15": {
+  "1": "UART0_RXD"
+ },
+ "PE2": {
+  "2": "UART9_RXD",
+  "7": "CCAP1_DATA2",
+  "8": "RGMII0_TXCTL",
+  "9": "RMII0_TXEN"
+ },
+ "PE3": {
+  "2": "UART9_TXD",
+  "7": "CCAP1_DATA3",
+  "8": "RGMII0_TXD0",
+  "9": "RMII0_TXD0"
+ },
+ "PE4": {
+  "2": "UART4_nCTS",
+  "3": "UART3_RXD",
+  "7": "CCAP1_DATA4",
+  "8": "RGMII0_TXD1",
+  "9": "RMII0_TXD1"
+ },
+ "PE5": {
+  "2": "UART4_nRTS",
+  "3": "UART3_TXD",
+  "7": "CCAP1_DATA5",
+  "8": "RGMII0_RXCLK",
+  "9": "RMII0_REFCLK"
+ },
+ "PE6": {
+  "2": "UART4_RXD",
+  "7": "CCAP1_DATA6",
+  "8": "RGMII0_RXCTL",
+  "9": "RMII0_CRSDV"
+ },
+ "PE7": {
+  "2": "UART4_TXD",
+  "7": "CCAP1_DATA7",
+  "8": "RGMII0_RXD0",
+  "9": "RMII0_RXD0"
+ },
+ "PE8": {
+  "2": "UART13_nCTS",
+  "3": "UART12_RXD",
+  "7": "CCAP1_SCLK",
+  "8": "RGMII0_RXD1",
+  "9": "RMII0_RXD1"
+ },
+ "PE9": {
+  "2": "UART13_nRTS",
+  "3": "UART12_TXD",
+  "7": "CCAP1_PIXCLK",
+  "8": "RGMII0_RXD2",
+  "9": "RMII0_RXERR"
+ },
+ "PF0": {
+  "2": "UART2_nCTS",
+  "3": "UART1_RXD",
+  "6": "RGMII0_RXD3",
+  "8": "RGMII1_MDC",
+  "9": "RMII1_MDC",
+  "14": "KPI_COL0"
+ },
+ "PF1": {
+  "2": "UART2_nRTS",
+  "3": "UART1_TXD",
+  "6": "RGMII0_TXCLK",
+  "8": "RGMII1_MDIO",
+  "9": "RMII1_MDIO",
+  "14": "KPI_COL1"
+ },
+ "PF10": {
+  "2": "UART13_nCTS",
+  "5": "I2S0_LRCK",
+  "6": "SPI1_SS0",
+  "8": "RGMII1_RXD3",
+  "9": "SC0_CLK",
+  "14": "KPI_COL6"
+ },
+ "PF11": {
+  "2": "UART13_nRTS",
+  "5": "I2S0_BCLK",
+  "6": "SPI1_CLK",
+  "8": "RGMII1_TXCLK",
+  "9": "SC0_DAT",
+  "14": "KPI_COL7"
+ },
+ "PF12": {
+  "5": "I2S0_DI",
+  "6": "SPI1_MOSI",
+  "8": "RGMII1_TXD2",
+  "9": "SC0_RST",
+  "14": "KPI_ROW4"
+ },
+ "PF13": {
+  "5": "I2S0_DO",
+  "6": "SPI1_MISO",
+  "8": "RGMII1_TXD3",
+  "9": "SC0_PWR",
+  "14": "KPI_ROW5"
+ },
+ "PF14": {
+  "1": "EPWM2_BRAKE0",
+  "2": "EADC0_ST",
+  "3": "RGMII1_PPS",
+  "4": "RMII1_PPS",
+  "5": "SPI0_I2SMCLK",
+  "6": "SPI1_I2SMCLK",
+  "7": "CCAP1_SFIELD",
+  "8": "RGMII0_PPS",
+  "9": "RMII0_PPS",
+  "11": "TM0",
+  "12": "INT0",
+  "13": "SPI1_SS1",
+  "14": "QEI2_INDEX",
+  "15": "I2S0_MCLK"
+ },
+ "PF15": {
+  "1": "HSUSB0_VBUSVLD"
+ },
+ "PF2": {
+  "2": "UART2_RXD",
+  "6": "RGMII0_TXD2",
+  "8": "RGMII1_TXCTL",
+  "9": "RMII1_TXEN",
+  "14": "KPI_COL2"
+ },
+ "PF3": {
+  "2": "UART2_TXD",
+  "6": "RGMII0_TXD3",
+  "8": "RGMII1_TXD0",
+  "9": "RMII1_TXD0",
+  "14": "KPI_COL3"
+ },
+ "PF4": {
+  "2": "UART11_nCTS",
+  "3": "UART10_RXD",
+  "4": "I2S0_LRCK",
+  "5": "SPI1_SS0",
+  "8": "RGMII1_TXD1",
+  "9": "RMII1_TXD1",
+  "12": "USBHL0_DM",
+  "13": "CAN2_RXD",
+  "14": "KPI_ROW0"
+ },
+ "PF5": {
+  "2": "UART11_nRTS",
+  "3": "UART10_TXD",
+  "4": "I2S0_BCLK",
+  "5": "SPI1_CLK",
+  "8": "RGMII1_RXCLK",
+  "9": "RMII1_REFCLK",
+  "12": "USBHL0_DP",
+  "13": "CAN2_TXD",
+  "14": "KPI_ROW1"
+ },
+ "PF6": {
+  "2": "UART11_RXD",
+  "4": "I2S0_DI",
+  "5": "SPI1_MOSI",
+  "8": "RGMII1_RXCTL",
+  "9": "RMII1_CRSDV",
+  "10": "I2C4_SDA",
+  "13": "SC0_CLK",
+  "14": "KPI_ROW2"
+ },
+ "PF7": {
+  "2": "UART11_TXD",
+  "4": "I2S0_DO",
+  "5": "SPI1_MISO",
+  "8": "RGMII1_RXD0",
+  "9": "RMII1_RXD0",
+  "10": "I2C4_SCL",
+  "13": "SC0_DAT",
+  "14": "KPI_ROW3"
+ },
+ "PF8": {
+  "2": "UART13_RXD",
+  "4": "I2C5_SDA",
+  "5": "SPI0_SS0",
+  "8": "RGMII1_RXD1",
+  "9": "RMII1_RXD1",
+  "13": "SC0_RST",
+  "14": "KPI_COL4"
+ },
+ "PF9": {
+  "2": "UART13_TXD",
+  "4": "I2C5_SCL",
+  "5": "SPI0_SS1",
+  "8": "RGMII1_RXD2",
+  "9": "RMII1_RXERR",
+  "13": "SC0_PWR",
+  "14": "KPI_COL5"
+ },
+ "PG0": {
+  "1": "EPWM0_CH0",
+  "2": "UART7_TXD",
+  "3": "CAN3_TXD",
+  "5": "SPI0_SS0",
+  "6": "EADC0_ST",
+  "7": "EBI_AD15",
+  "9": "I2S1_MCLK",
+  "10": "QEI0_INDEX",
+  "11": "TM1",
+  "12": "CLKO",
+  "13": "INT0",
+  "15": "EBI_ADR15"
+ },
+ "PG1": {
+  "1": "EPWM0_CH3",
+  "2": "UART9_nRTS",
+  "3": "UART6_TXD",
+  "4": "I2C4_SCL",
+  "5": "CAN2_TXD",
+  "6": "USBHL0_DP",
+  "7": "EBI_nCS0",
+  "9": "QEI0_B",
+  "11": "TM1_EXT",
+  "14": "RGMII1_PPS",
+  "15": "RMII1_PPS"
+ },
+ "PG10": {
+  "2": "UART12_nRTS",
+  "3": "UART13_TXD",
+  "5": "SPI2_MOSI",
+  "6": "LCM_CLK",
+  "12": "EBI_AD9",
+  "13": "EBI_nWRH"
+ },
+ "PG11": {
+  "3": "JTAG_TDO",
+  "5": "I2S0_MCLK",
+  "7": "EBI_nWRH",
+  "8": "EBI_nCS1",
+  "10": "EBI_AD0"
+ },
+ "PG12": {
+  "3": "JTAG_TCK/SW_CLK",
+  "5": "I2S0_LRCK",
+  "7": "EBI_nWRL",
+  "10": "EBI_AD1"
+ },
+ "PG13": {
+  "3": "JTAG_TMS/SW_DIO",
+  "5": "I2S0_BCLK",
+  "7": "EBI_MCLK",
+  "10": "EBI_AD2"
+ },
+ "PG14": {
+  "3": "JTAG_TDI",
+  "5": "I2S0_DI",
+  "7": "EBI_ALE",
+  "10": "EBI_AD3"
+ },
+ "PG15": {
+  "3": "JTAG_nTRST",
+  "5": "I2S0_DO",
+  "7": "EBI_nCS0",
+  "10": "EBI_AD4"
+ },
+ "PG2": {
+  "1": "EPWM0_CH4",
+  "2": "UART9_RXD",
+  "3": "CAN0_RXD",
+  "5": "SPI0_SS1",
+  "6": "TSI_SWD_DAT",
+  "7": "EBI_ADR16",
+  "8": "EBI_nCS2",
+  "10": "QEI0_A",
+  "11": "TM3",
+  "13": "INT1"
+ },
+ "PG3": {
+  "1": "EPWM0_CH5",
+  "2": "UART9_TXD",
+  "3": "CAN0_TXD",
+  "5": "SPI0_I2SMCLK",
+  "6": "TSI_SWD_CLK",
+  "7": "EBI_ADR17",
+  "8": "EBI_nCS1",
+  "9": "EBI_MCLK",
+  "10": "QEI0_B",
+  "11": "TM3_EXT",
+  "12": "I2S1_MCLK"
+ },
+ "PG4": {
+  "1": "EPWM1_CH0",
+  "2": "UART5_nCTS",
+  "3": "UART6_RXD",
+  "5": "SPI3_SS0",
+  "6": "QEI1_INDEX",
+  "7": "EBI_ADR18",
+  "8": "EBI_nCS0",
+  "9": "I2S1_DO",
+  "10": "SC1_CLK",
+  "11": "TM4",
+  "12": "TSI_UART_RXD",
+  "13": "INT2",
+  "14": "ECAP1_IC2"
+ },
+ "PG5": {
+  "1": "EPWM1_CH1",
+  "2": "UART5_nRTS",
+  "3": "UART6_TXD",
+  "5": "SPI3_CLK",
+  "6": "ECAP0_IC0",
+  "7": "EBI_ADR19",
+  "8": "EBI_ALE",
+  "9": "I2S1_DI",
+  "10": "SC1_DAT",
+  "11": "TM4_EXT",
+  "12": "TSI_UART_TXD"
+ },
+ "PG6": {
+  "1": "EPWM1_CH2",
+  "2": "UART5_RXD",
+  "3": "CAN1_RXD",
+  "5": "SPI3_MOSI",
+  "6": "ECAP0_IC1",
+  "7": "EBI_nRD",
+  "9": "I2S1_BCLK",
+  "10": "SC1_RST",
+  "11": "TM7",
+  "13": "INT3"
+ },
+ "PG7": {
+  "1": "EPWM1_CH3",
+  "2": "UART5_TXD",
+  "3": "CAN1_TXD",
+  "5": "SPI3_MISO",
+  "6": "ECAP0_IC2",
+  "7": "EBI_nWR",
+  "9": "I2S1_LRCK",
+  "10": "SC1_PWR",
+  "11": "TM7_EXT"
+ },
+ "PG8": {
+  "1": "EPWM1_CH4",
+  "2": "UART12_RXD",
+  "3": "CAN3_RXD",
+  "4": "USBHL4_DM",
+  "5": "SPI2_SS0",
+  "6": "LCM_VSYNC",
+  "7": "I2C3_SDA",
+  "12": "EBI_AD7",
+  "13": "EBI_nCS0"
+ },
+ "PG9": {
+  "1": "EPWM1_CH5",
+  "2": "UART12_TXD",
+  "3": "CAN3_TXD",
+  "4": "USBHL4_DP",
+  "5": "SPI2_CLK",
+  "6": "LCM_HSYNC",
+  "7": "I2C3_SCL",
+  "12": "EBI_AD8",
+  "13": "EBI_nCS1"
+ },
+ "PH0": {
+  "2": "UART8_nCTS",
+  "3": "UART7_RXD",
+  "6": "LCM_DATA8"
+ },
+ "PH1": {
+  "2": "UART8_nRTS",
+  "3": "UART7_TXD",
+  "6": "LCM_DATA9"
+ },
+ "PH12": {
+  "2": "UART14_nCTS",
+  "3": "UART13_RXD",
+  "6": "LCM_DATA20"
+ },
+ "PH13": {
+  "2": "UART14_nRTS",
+  "3": "UART13_TXD",
+  "6": "LCM_DATA21"
+ },
+ "PH14": {
+  "2": "UART14_RXD",
+  "6": "LCM_DATA22"
+ },
+ "PH15": {
+  "2": "UART14_TXD",
+  "6": "LCM_DATA23"
+ },
+ "PH2": {
+  "2": "UART8_RXD",
+  "6": "LCM_DATA10"
+ },
+ "PH3": {
+  "2": "UART8_TXD",
+  "6": "LCM_DATA11"
+ },
+ "PH4": {
+  "2": "UART10_nCTS",
+  "3": "UART9_RXD",
+  "6": "LCM_DATA12"
+ },
+ "PH5": {
+  "2": "UART10_nRTS",
+  "3": "UART9_TXD",
+  "6": "LCM_DATA13"
+ },
+ "PH6": {
+  "2": "UART10_RXD",
+  "6": "LCM_DATA14"
+ },
+ "PH7": {
+  "2": "UART10_TXD",
+  "6": "LCM_DATA15"
+ },
+ "PH8": {
+  "6": "TAMPER0"
+ },
+ "PH9": {
+  "4": "CLK_32KOUT",
+  "6": "TAMPER1"
+ },
+ "PI0": {
+  "1": "EPWM0_CH0",
+  "2": "UART12_nCTS",
+  "3": "UART11_RXD",
+  "4": "I2C2_SDA",
+  "5": "SPI3_SS0",
+  "7": "SC0_nCD",
+  "8": "EBI_ADR0",
+  "11": "TM0",
+  "12": "ECAP1_IC0"
+ },
+ "PI1": {
+  "1": "EPWM0_CH1",
+  "2": "UART12_nRTS",
+  "3": "UART11_TXD",
+  "4": "I2C2_SCL",
+  "5": "SPI3_CLK",
+  "7": "SC0_CLK",
+  "8": "EBI_ADR1",
+  "11": "TM0_EXT",
+  "12": "ECAP1_IC1"
+ },
+ "PI10": {
+  "2": "UART4_RXD",
+  "6": "LCM_DATA2",
+  "12": "EBI_AD13"
+ },
+ "PI11": {
+  "2": "UART4_TXD",
+  "6": "LCM_DATA3",
+  "12": "EBI_AD14"
+ },
+ "PI12": {
+  "2": "UART6_nCTS",
+  "3": "UART5_RXD",
+  "6": "LCM_DATA4"
+ },
+ "PI13": {
+  "2": "UART6_nRTS",
+  "3": "UART5_TXD",
+  "6": "LCM_DATA5"
+ },
+ "PI14": {
+  "2": "UART6_RXD",
+  "6": "LCM_DATA6"
+ },
+ "PI15": {
+  "2": "UART6_TXD",
+  "6": "LCM_DATA7"
+ },
+ "PI2": {
+  "1": "EPWM0_CH2",
+  "2": "UART12_RXD",
+  "3": "CAN0_RXD",
+  "4": "USBHL2_DM",
+  "5": "SPI3_MOSI",
+  "7": "SC0_DAT",
+  "8": "EBI_ADR2",
+  "11": "TM1",
+  "12": "ECAP1_IC2"
+ },
+ "PI3": {
+  "1": "EPWM0_CH3",
+  "2": "UART12_TXD",
+  "3": "CAN0_TXD",
+  "4": "USBHL2_DP",
+  "5": "SPI3_MISO",
+  "7": "SC0_RST",
+  "8": "EBI_ADR3",
+  "11": "TM1_EXT"
+ },
+ "PI4": {
+  "1": "EPWM0_CH4",
+  "2": "UART14_nCTS",
+  "3": "UART13_RXD",
+  "4": "I2C3_SDA",
+  "5": "SPI2_SS1",
+  "6": "I2S1_LRCK",
+  "8": "EBI_ADR4",
+  "13": "INT0"
+ },
+ "PI5": {
+  "1": "EPWM0_CH5",
+  "2": "UART14_nRTS",
+  "3": "UART13_TXD",
+  "4": "I2C3_SCL",
+  "6": "I2S1_BCLK",
+  "8": "EBI_ADR5",
+  "13": "INT1"
+ },
+ "PI6": {
+  "1": "EPWM0_BRAKE0",
+  "2": "UART14_RXD",
+  "3": "CAN1_RXD",
+  "4": "USBHL3_DM",
+  "6": "I2S1_DI",
+  "8": "EBI_ADR6",
+  "12": "QEI1_INDEX",
+  "13": "INT2"
+ },
+ "PI7": {
+  "1": "EPWM0_BRAKE1",
+  "2": "UART14_TXD",
+  "3": "CAN1_TXD",
+  "4": "USBHL3_DP",
+  "6": "I2S1_DO",
+  "8": "EBI_ADR7",
+  "12": "ECAP0_IC0",
+  "13": "INT3"
+ },
+ "PI8": {
+  "2": "UART4_nCTS",
+  "3": "UART3_RXD",
+  "6": "LCM_DATA0",
+  "12": "EBI_AD11"
+ },
+ "PI9": {
+  "2": "UART4_nRTS",
+  "3": "UART3_TXD",
+  "6": "LCM_DATA1",
+  "12": "EBI_AD12"
+ },
+ "PJ0": {
+  "1": "EPWM1_BRAKE0",
+  "2": "UART8_nCTS",
+  "3": "UART7_RXD",
+  "4": "I2C2_SDA",
+  "5": "SPI2_SS0",
+  "6": "eMMC1_DAT4",
+  "7": "I2S0_LRCK",
+  "8": "SC0_CLK",
+  "9": "EBI_AD11",
+  "10": "EBI_ADR16",
+  "11": "EBI_nCS0",
+  "12": "EBI_AD7"
+ },
+ "PJ1": {
+  "1": "EPWM1_BRAKE1",
+  "2": "UART8_nRTS",
+  "3": "UART7_TXD",
+  "4": "I2C2_SCL",
+  "5": "SPI2_CLK",
+  "6": "eMMC1_DAT5",
+  "7": "I2S0_BCLK",
+  "8": "SC0_DAT",
+  "9": "EBI_AD12",
+  "10": "EBI_ADR17",
+  "11": "EBI_nCS1",
+  "12": "EBI_AD8"
+ },
+ "PJ10": {
+  "3": "CAN0_RXD",
+  "4": "USBHL1_DM",
+  "6": "eMMC1_DAT2/SD1_DAT2"
+ },
+ "PJ11": {
+  "3": "CAN0_TXD",
+  "4": "USBHL1_DP",
+  "6": "eMMC1_DAT3/SD1_DAT3"
+ },
+ "PJ12": {
+  "1": "EPWM1_CH2",
+  "2": "UART2_nCTS",
+  "3": "UART1_RXD",
+  "4": "I2C5_SDA",
+  "5": "SPI3_SS0",
+  "7": "SC1_CLK",
+  "8": "EBI_ADR12",
+  "11": "TM2",
+  "12": "QEI0_INDEX"
+ },
+ "PJ13": {
+  "1": "EPWM1_CH3",
+  "2": "UART2_nRTS",
+  "3": "UART1_TXD",
+  "4": "I2C5_SCL",
+  "5": "SPI3_MOSI",
+  "7": "SC1_DAT",
+  "8": "EBI_ADR13",
+  "11": "TM2_EXT"
+ },
+ "PJ14": {
+  "1": "EPWM1_CH4",
+  "2": "UART2_RXD",
+  "3": "CAN3_RXD",
+  "4": "USBHL5_DM",
+  "5": "SPI3_MISO",
+  "7": "SC1_RST",
+  "8": "EBI_ADR14",
+  "11": "TM3"
+ },
+ "PJ15": {
+  "1": "EPWM1_CH5",
+  "2": "UART2_TXD",
+  "3": "CAN3_TXD",
+  "4": "USBHL5_DP",
+  "5": "SPI3_CLK",
+  "6": "EADC0_ST",
+  "7": "SC1_PWR",
+  "8": "EBI_ADR15",
+  "11": "TM3_EXT",
+  "13": "INT1"
+ },
+ "PJ2": {
+  "1": "EPWM1_CH4",
+  "2": "UART8_RXD",
+  "3": "CAN1_RXD",
+  "4": "USBHL5_DM",
+  "5": "SPI2_MOSI",
+  "6": "eMMC1_DAT6",
+  "7": "I2S0_DI",
+  "8": "SC0_RST",
+  "9": "EBI_AD13",
+  "10": "EBI_ADR18",
+  "11": "EBI_nWRH",
+  "12": "EBI_AD9"
+ },
+ "PJ3": {
+  "1": "EPWM1_CH5",
+  "2": "UART8_TXD",
+  "3": "CAN1_TXD",
+  "4": "USBHL5_DP",
+  "5": "SPI2_MISO",
+  "6": "eMMC1_DAT7",
+  "7": "I2S0_DO",
+  "8": "SC0_PWR",
+  "9": "EBI_AD14",
+  "10": "EBI_ADR19",
+  "11": "EBI_nWRL",
+  "12": "EBI_AD10"
+ },
+ "PJ4": {
+  "4": "I2C3_SDA",
+  "6": "SD1_WP"
+ },
+ "PJ5": {
+  "4": "I2C3_SCL",
+  "6": "SD1_nCD"
+ },
+ "PJ6": {
+  "3": "CAN3_RXD",
+  "4": "USBHL0_DM",
+  "6": "eMMC1_CMD/SD1_CMD"
+ },
+ "PJ7": {
+  "3": "CAN3_TXD",
+  "4": "USBHL0_DP",
+  "6": "eMMC1_CLK/SD1_CLK"
+ },
+ "PJ8": {
+  "4": "I2C4_SDA",
+  "6": "eMMC1_DAT0/SD1_DAT0"
+ },
+ "PJ9": {
+  "4": "I2C4_SCL",
+  "6": "eMMC1_DAT1/SD1_DAT1"
+ },
+ "PK0": {
+  "1": "EPWM0_SYNC_IN",
+  "2": "UART16_nCTS",
+  "3": "UART15_RXD",
+  "4": "I2C4_SDA",
+  "6": "I2S1_MCLK",
+  "8": "EBI_ADR8",
+  "11": "TM7",
+  "12": "ECAP0_IC1"
+ },
+ "PK1": {
+  "1": "EPWM0_SYNC_OUT",
+  "2": "UART16_nRTS",
+  "3": "UART15_TXD",
+  "4": "I2C4_SCL",
+  "6": "EADC0_ST",
+  "8": "EBI_ADR9",
+  "11": "TM7_EXT",
+  "12": "ECAP0_IC2"
+ },
+ "PK10": {
+  "3": "CAN1_RXD",
+  "4": "USBHL3_DM",
+  "6": "CCAP0_PIXCLK",
+  "8": "EBI_AD1",
+  "10": "EBI_ADR1"
+ },
+ "PK11": {
+  "3": "CAN1_TXD",
+  "4": "USBHL3_DP",
+  "6": "CCAP0_HSYNC",
+  "8": "EBI_AD2",
+  "10": "EBI_ADR2"
+ },
+ "PK12": {
+  "1": "EPWM2_CH0",
+  "2": "UART1_nCTS",
+  "3": "UART13_RXD",
+  "4": "I2C4_SDA",
+  "5": "I2S0_LRCK",
+  "6": "SPI1_SS0",
+  "8": "SC0_CLK",
+  "11": "TM10",
+  "13": "INT2"
+ },
+ "PK13": {
+  "1": "EPWM2_CH1",
+  "2": "UART1_nRTS",
+  "3": "UART13_TXD",
+  "4": "I2C4_SCL",
+  "5": "I2S0_BCLK",
+  "6": "SPI1_CLK",
+  "8": "SC0_DAT",
+  "11": "TM10_EXT"
+ },
+ "PK14": {
+  "1": "EPWM2_CH2",
+  "2": "UART1_RXD",
+  "3": "CAN3_RXD",
+  "4": "USBHL4_DM",
+  "5": "I2S0_DI",
+  "6": "SPI1_MOSI",
+  "8": "SC0_RST",
+  "10": "I2C5_SDA",
+  "11": "TM11",
+  "13": "INT3"
+ },
+ "PK15": {
+  "1": "EPWM2_CH3",
+  "2": "UART1_TXD",
+  "3": "CAN3_TXD",
+  "4": "USBHL4_DP",
+  "5": "I2S0_DO",
+  "6": "SPI1_MISO",
+  "8": "SC0_PWR",
+  "10": "I2C5_SCL",
+  "11": "TM11_EXT"
+ },
+ "PK2": {
+  "1": "EPWM1_CH0",
+  "2": "UART16_RXD",
+  "3": "CAN2_RXD",
+  "4": "USBHL4_DM",
+  "5": "SPI3_I2SMCLK",
+  "7": "SC0_PWR",
+  "8": "EBI_ADR10",
+  "12": "QEI0_A"
+ },
+ "PK3": {
+  "1": "EPWM1_CH1",
+  "2": "UART16_TXD",
+  "3": "CAN2_TXD",
+  "4": "USBHL4_DP",
+  "5": "SPI3_SS1",
+  "7": "SC1_nCD",
+  "8": "EBI_ADR11",
+  "12": "QEI0_B"
+ },
+ "PK4": {
+  "2": "UART12_nCTS",
+  "3": "UART13_RXD",
+  "5": "SPI2_MISO",
+  "6": "LCM_DEN",
+  "12": "EBI_AD10",
+  "13": "EBI_nWRL"
+ },
+ "PK5": {
+  "1": "EPWM1_CH1",
+  "2": "UART12_nRTS",
+  "3": "UART13_TXD",
+  "4": "I2C4_SCL",
+  "5": "SPI2_CLK",
+  "7": "I2S1_DI",
+  "8": "SC0_DAT",
+  "9": "EADC0_ST",
+  "11": "TM8_EXT",
+  "13": "INT1"
+ },
+ "PK6": {
+  "1": "EPWM1_CH2",
+  "2": "UART12_RXD",
+  "3": "CAN0_RXD",
+  "4": "USBHL4_DM",
+  "5": "SPI2_MOSI",
+  "7": "I2S1_BCLK",
+  "8": "SC0_RST",
+  "11": "TM6",
+  "13": "INT2"
+ },
+ "PK7": {
+  "1": "EPWM1_CH3",
+  "2": "UART12_TXD",
+  "3": "CAN0_TXD",
+  "4": "USBHL4_DP",
+  "5": "SPI2_MISO",
+  "7": "I2S1_LRCK",
+  "8": "SC0_PWR",
+  "9": "CLKO",
+  "11": "TM6_EXT",
+  "13": "INT3"
+ },
+ "PK8": {
+  "1": "EPWM1_CH0",
+  "4": "I2C3_SDA",
+  "5": "SPI3_CLK",
+  "7": "EADC0_ST",
+  "8": "EBI_AD15",
+  "9": "EBI_MCLK",
+  "10": "EBI_ADR15",
+  "11": "TM8",
+  "12": "QEI1_INDEX"
+ },
+ "PK9": {
+  "4": "I2C3_SCL",
+  "6": "CCAP0_SCLK",
+  "8": "EBI_AD0",
+  "10": "EBI_ADR0"
+ },
+ "PL0": {
+  "1": "EPWM1_CH0",
+  "2": "UART11_nCTS",
+  "3": "UART10_RXD",
+  "4": "I2C3_SDA",
+  "5": "SPI2_MOSI",
+  "6": "QSPI1_MOSI1",
+  "7": "I2S0_LRCK",
+  "8": "EBI_AD11",
+  "9": "SC1_CLK",
+  "11": "TM5",
+  "12": "QEI1_A"
+ },
+ "PL1": {
+  "1": "EPWM1_CH1",
+  "2": "UART11_nRTS",
+  "3": "UART10_TXD",
+  "4": "I2C3_SCL",
+  "5": "SPI2_MISO",
+  "6": "QSPI1_MISO1",
+  "7": "I2S0_BCLK",
+  "8": "EBI_AD12",
+  "9": "SC1_DAT",
+  "11": "TM5_EXT",
+  "12": "QEI1_B"
+ },
+ "PL10": {
+  "1": "EPWM0_CH4",
+  "2": "UART14_RXD",
+  "3": "CAN3_RXD",
+  "4": "USBHL2_DM",
+  "5": "SPI3_MOSI",
+  "6": "EPWM0_CH5",
+  "7": "I2S1_DI",
+  "8": "EBI_AD9",
+  "9": "SC0_RST",
+  "11": "EBI_nWRH",
+  "12": "QEI0_B"
+ },
+ "PL11": {
+  "1": "EPWM0_CH5",
+  "2": "UART14_TXD",
+  "3": "CAN3_TXD",
+  "4": "USBHL2_DP",
+  "5": "SPI3_MISO",
+  "6": "EPWM1_CH5",
+  "7": "I2S1_DO",
+  "8": "EBI_AD10",
+  "9": "SC0_PWR",
+  "11": "EBI_nWRL",
+  "12": "QEI0_INDEX"
+ },
+ "PL12": {
+  "1": "EPWM0_SYNC_IN",
+  "2": "UART7_nCTS",
+  "3": "ECAP1_IC0",
+  "4": "UART14_RXD",
+  "5": "SPI0_SS0",
+  "6": "I2S1_LRCK",
+  "7": "SC1_CLK",
+  "8": "EBI_AD0",
+  "9": "HSUSBH_PWREN",
+  "10": "I2C2_SDA",
+  "11": "TM0",
+  "12": "EPWM0_CH2",
+  "13": "EBI_AD11",
+  "14": "RGMII0_PPS",
+  "15": "RMII0_PPS"
+ },
+ "PL13": {
+  "1": "EPWM0_SYNC_OUT",
+  "2": "UART7_nRTS",
+  "3": "ECAP1_IC1",
+  "4": "UART14_TXD",
+  "5": "SPI0_CLK",
+  "6": "I2S1_BCLK",
+  "7": "SC1_DAT",
+  "8": "EBI_AD1",
+  "9": "HSUSBH_OVC",
+  "10": "I2C2_SCL",
+  "11": "TM0_EXT",
+  "12": "EPWM0_CH3",
+  "13": "EBI_AD12",
+  "14": "RGMII1_PPS",
+  "15": "RMII1_PPS"
+ },
+ "PL14": {
+  "1": "EPWM0_CH2",
+  "2": "UART7_RXD",
+  "4": "CAN1_RXD",
+  "5": "SPI0_MOSI",
+  "6": "I2S1_DI",
+  "7": "SC1_RST",
+  "8": "EBI_AD2",
+  "11": "TM2",
+  "12": "INT0",
+  "13": "EBI_AD13"
+ },
+ "PL15": {
+  "1": "EPWM0_CH1",
+  "2": "UART7_TXD",
+  "3": "TRACE_CLK",
+  "4": "CAN1_TXD",
+  "5": "SPI0_MISO",
+  "6": "I2S1_DO",
+  "7": "SC1_PWR",
+  "8": "EBI_AD3",
+  "11": "TM2_EXT",
+  "12": "INT2",
+  "13": "EBI_AD14"
+ },
+ "PL2": {
+  "1": "EPWM1_CH2",
+  "2": "UART11_RXD",
+  "3": "CAN3_RXD",
+  "4": "USBHL4_DM",
+  "5": "SPI2_SS0",
+  "6": "QSPI1_SS1",
+  "7": "I2S0_DI",
+  "8": "EBI_AD13",
+  "9": "SC1_RST",
+  "11": "TM7",
+  "12": "QEI1_INDEX"
+ },
+ "PL3": {
+  "1": "EPWM1_CH3",
+  "2": "UART11_TXD",
+  "3": "CAN3_TXD",
+  "4": "USBHL4_DP",
+  "5": "SPI2_CLK",
+  "6": "QSPI1_CLK",
+  "7": "I2S0_DO",
+  "8": "EBI_AD14",
+  "9": "SC1_PWR",
+  "11": "TM7_EXT",
+  "12": "ECAP0_IC0"
+ },
+ "PL4": {
+  "1": "EPWM1_CH4",
+  "2": "UART2_nCTS",
+  "3": "UART1_RXD",
+  "4": "I2C4_SDA",
+  "5": "SPI3_MOSI",
+  "6": "QSPI1_MOSI0",
+  "7": "I2S0_MCLK",
+  "8": "EBI_nRD",
+  "9": "SC1_nCD",
+  "11": "TM9",
+  "12": "ECAP0_IC1"
+ },
+ "PL5": {
+  "1": "EPWM1_CH5",
+  "2": "UART2_nRTS",
+  "3": "UART1_TXD",
+  "4": "I2C4_SCL",
+  "5": "SPI3_MISO",
+  "6": "QSPI1_MISO0",
+  "7": "I2S1_MCLK",
+  "8": "EBI_nWR",
+  "9": "SC0_nCD",
+  "11": "TM9_EXT",
+  "12": "ECAP0_IC2"
+ },
+ "PL6": {
+  "1": "EPWM0_CH0",
+  "2": "UART2_RXD",
+  "3": "CAN0_RXD",
+  "4": "USBHL5_DM",
+  "6": "QSPI1_MOSI1",
+  "7": "TRACE_CLK",
+  "8": "EBI_AD5",
+  "11": "TM3",
+  "12": "ECAP1_IC0",
+  "13": "INT0"
+ },
+ "PL7": {
+  "1": "EPWM0_CH1",
+  "2": "UART2_TXD",
+  "3": "CAN0_TXD",
+  "4": "USBHL5_DP",
+  "6": "QSPI1_MISO1",
+  "8": "EBI_AD6",
+  "11": "TM3_EXT",
+  "12": "ECAP1_IC1",
+  "13": "INT1"
+ },
+ "PL8": {
+  "1": "EPWM0_CH2",
+  "2": "UART14_nCTS",
+  "3": "UART13_RXD",
+  "4": "I2C5_SDA",
+  "5": "SPI3_SS0",
+  "6": "EPWM0_CH4",
+  "7": "I2S1_LRCK",
+  "8": "EBI_AD7",
+  "9": "SC0_CLK",
+  "11": "TM4",
+  "12": "ECAP1_IC2",
+  "13": "INT2"
+ },
+ "PL9": {
+  "1": "EPWM0_CH3",
+  "2": "UART14_nRTS",
+  "3": "UART13_TXD",
+  "4": "I2C5_SCL",
+  "5": "SPI3_CLK",
+  "6": "EPWM1_CH4",
+  "7": "I2S1_BCLK",
+  "8": "EBI_AD8",
+  "9": "SC0_DAT",
+  "11": "TM4_EXT",
+  "12": "QEI0_A",
+  "13": "INT3"
+ },
+ "PM0": {
+  "4": "I2C4_SDA",
+  "6": "CCAP0_VSYNC",
+  "8": "EBI_AD3",
+  "10": "EBI_ADR3"
+ },
+ "PM1": {
+  "4": "I2C4_SCL",
+  "5": "SPI3_I2SMCLK",
+  "6": "CCAP0_SFIELD",
+  "8": "EBI_AD4",
+  "10": "EBI_ADR4"
+ },
+ "PM10": {
+  "1": "EPWM1_CH2",
+  "3": "CAN2_RXD",
+  "4": "USBHL4_DM",
+  "5": "SPI3_SS0",
+  "6": "CCAP0_DATA8",
+  "7": "SPI2_I2SMCLK",
+  "8": "EBI_AD13",
+  "10": "EBI_ADR13"
+ },
+ "PM11": {
+  "1": "EPWM1_CH3",
+  "3": "CAN2_TXD",
+  "4": "USBHL4_DP",
+  "5": "SPI3_SS1",
+  "6": "CCAP0_DATA9",
+  "7": "SPI2_SS1",
+  "8": "EBI_AD14",
+  "10": "EBI_ADR14"
+ },
+ "PM12": {
+  "1": "EPWM1_CH4",
+  "2": "UART10_nCTS",
+  "3": "TRACE_DATA0",
+  "4": "UART11_RXD",
+  "5": "I2C2_SDA",
+  "7": "SC1_nCD",
+  "8": "EBI_AD8",
+  "9": "I2S1_MCLK",
+  "11": "TM8"
+ },
+ "PM13": {
+  "1": "EPWM1_CH5",
+  "2": "UART10_nRTS",
+  "3": "TRACE_DATA1",
+  "4": "UART11_TXD",
+  "5": "I2C2_SCL",
+  "8": "EBI_AD9",
+  "9": "ECAP1_IC0",
+  "11": "TM8_EXT"
+ },
+ "PM14": {
+  "1": "EPWM1_BRAKE0",
+  "2": "UART10_RXD",
+  "3": "TRACE_DATA2",
+  "4": "CAN2_RXD",
+  "5": "USBHL3_DM",
+  "6": "I2C3_SDA",
+  "8": "EBI_AD10",
+  "9": "ECAP1_IC1",
+  "11": "TM10",
+  "13": "INT1"
+ },
+ "PM15": {
+  "1": "EPWM1_BRAKE1",
+  "2": "UART10_TXD",
+  "3": "TRACE_DATA3",
+  "4": "CAN2_TXD",
+  "5": "USBHL3_DP",
+  "6": "I2C3_SCL",
+  "8": "EBI_AD11",
+  "9": "ECAP1_IC2",
+  "11": "TM10_EXT",
+  "13": "INT2"
+ },
+ "PM2": {
+  "3": "CAN3_RXD",
+  "4": "USBHL0_DM",
+  "6": "CCAP0_DATA0",
+  "8": "EBI_AD5",
+  "10": "EBI_ADR5"
+ },
+ "PM3": {
+  "3": "CAN3_TXD",
+  "4": "USBHL0_DP",
+  "6": "CCAP0_DATA1",
+  "8": "EBI_AD6",
+  "10": "EBI_ADR6"
+ },
+ "PM4": {
+  "4": "I2C5_SDA",
+  "6": "CCAP0_DATA2",
+  "8": "EBI_AD7",
+  "10": "EBI_ADR7"
+ },
+ "PM5": {
+  "4": "I2C5_SCL",
+  "6": "CCAP0_DATA3",
+  "8": "EBI_AD8",
+  "10": "EBI_ADR8"
+ },
+ "PM6": {
+  "3": "CAN0_RXD",
+  "4": "USBHL1_DM",
+  "6": "CCAP0_DATA4",
+  "8": "EBI_AD9",
+  "10": "EBI_ADR9"
+ },
+ "PM7": {
+  "3": "CAN0_TXD",
+  "4": "USBHL1_DP",
+  "6": "CCAP0_DATA5",
+  "8": "EBI_AD10",
+  "10": "EBI_ADR10"
+ },
+ "PM8": {
+  "4": "I2C0_SDA",
+  "6": "CCAP0_DATA6",
+  "8": "EBI_AD11",
+  "10": "EBI_ADR11"
+ },
+ "PM9": {
+  "4": "I2C0_SCL",
+  "6": "CCAP0_DATA7",
+  "8": "EBI_AD12",
+  "10": "EBI_ADR12"
+ },
+ "PN0": {
+  "4": "I2C2_SDA",
+  "6": "CCAP1_DATA0"
+ },
+ "PN1": {
+  "4": "I2C2_SCL",
+  "6": "CCAP1_DATA1"
+ },
+ "PN10": {
+  "3": "CAN2_RXD",
+  "4": "USBHL2_DM",
+  "6": "CCAP1_SCLK"
+ },
+ "PN11": {
+  "3": "CAN2_TXD",
+  "4": "USBHL2_DP",
+  "6": "CCAP1_PIXCLK"
+ },
+ "PN12": {
+  "2": "UART6_nCTS",
+  "3": "UART12_RXD",
+  "4": "I2C5_SDA",
+  "6": "CCAP1_HSYNC"
+ },
+ "PN13": {
+  "2": "UART6_nRTS",
+  "3": "UART12_TXD",
+  "4": "I2C5_SCL",
+  "6": "CCAP1_VSYNC"
+ },
+ "PN14": {
+  "2": "UART6_RXD",
+  "3": "CAN3_RXD",
+  "4": "USBHL3_DM",
+  "5": "SPI1_SS1",
+  "6": "CCAP1_SFIELD",
+  "7": "SPI1_I2SMCLK"
+ },
+ "PN15": {
+  "1": "EPWM2_CH4",
+  "2": "UART6_TXD",
+  "3": "CAN3_TXD",
+  "4": "USBHL3_DP",
+  "5": "I2S0_MCLK",
+  "6": "SPI1_SS1",
+  "7": "SPI1_I2SMCLK",
+  "8": "SC0_nCD",
+  "9": "EADC0_ST",
+  "10": "CLKO",
+  "11": "TM6"
+ },
+ "PN2": {
+  "3": "CAN0_RXD",
+  "4": "USBHL0_DM",
+  "6": "CCAP1_DATA2"
+ },
+ "PN3": {
+  "3": "CAN0_TXD",
+  "4": "USBHL0_DP",
+  "6": "CCAP1_DATA3"
+ },
+ "PN4": {
+  "4": "I2C1_SDA",
+  "6": "CCAP1_DATA4"
+ },
+ "PN5": {
+  "4": "I2C1_SCL",
+  "6": "CCAP1_DATA5"
+ },
+ "PN6": {
+  "3": "CAN1_RXD",
+  "4": "USBHL1_DM",
+  "6": "CCAP1_DATA6"
+ },
+ "PN7": {
+  "3": "CAN1_TXD",
+  "4": "USBHL1_DP",
+  "6": "CCAP1_DATA7"
+ },
+ "PN8": {
+  "1": "EPWM2_CH4",
+  "4": "I2C0_SDA",
+  "5": "SPI2_I2SMCLK",
+  "6": "CCAP1_DATA8"
+ },
+ "PN9": {
+  "1": "EPWM2_CH5",
+  "4": "I2C0_SCL",
+  "5": "SPI1_I2SMCLK",
+  "6": "CCAP1_DATA9"
+ }
+}

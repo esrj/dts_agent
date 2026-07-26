@@ -1,0 +1,9 @@
+board_id: ma35d1
+vendor: Nuvoton
+name: ma35d1
+knowledge_base: .
+kernel_dts_path: arch/arm64/boot/dts/nuvoton/ma35d1-evb.dts
+validation:
+  enabled: false
+  type: none
+  script: null

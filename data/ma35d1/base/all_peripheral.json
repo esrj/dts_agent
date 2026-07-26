@@ -1,0 +1,684 @@
+{
+ "soc": "MA35D1 Series",
+ "source": "Derived from af_table.json by knowledge_extract. Keys are the peripheral prefix of each signal (token before the first '_'); 'system' holds non-peripheral SoC functions (debug/trace/clock-out/EVENTOUT etc.).",
+ "peripheral_count": 86,
+ "system_count": 5,
+ "signal_count": 491,
+ "peripherals": {
+  "ADC0": [
+   "ADC0_CH0",
+   "ADC0_CH1",
+   "ADC0_CH2",
+   "ADC0_CH3",
+   "ADC0_CH4",
+   "ADC0_CH5",
+   "ADC0_CH6",
+   "ADC0_CH7"
+  ],
+  "CAN0": [
+   "CAN0_RXD",
+   "CAN0_TXD"
+  ],
+  "CAN1": [
+   "CAN1_RXD",
+   "CAN1_TXD"
+  ],
+  "CAN2": [
+   "CAN2_RXD",
+   "CAN2_TXD"
+  ],
+  "CAN3": [
+   "CAN3_RXD",
+   "CAN3_TXD"
+  ],
+  "CCAP0": [
+   "CCAP0_SCLK",
+   "CCAP0_DATA0",
+   "CCAP0_DATA1",
+   "CCAP0_DATA2",
+   "CCAP0_DATA3",
+   "CCAP0_DATA4",
+   "CCAP0_DATA5",
+   "CCAP0_DATA6",
+   "CCAP0_DATA7",
+   "CCAP0_DATA8",
+   "CCAP0_DATA9",
+   "CCAP0_HSYNC",
+   "CCAP0_VSYNC",
+   "CCAP0_PIXCLK",
+   "CCAP0_SFIELD"
+  ],
+  "CCAP1": [
+   "CCAP1_SCLK",
+   "CCAP1_DATA0",
+   "CCAP1_DATA1",
+   "CCAP1_DATA2",
+   "CCAP1_DATA3",
+   "CCAP1_DATA4",
+   "CCAP1_DATA5",
+   "CCAP1_DATA6",
+   "CCAP1_DATA7",
+   "CCAP1_DATA8",
+   "CCAP1_DATA9",
+   "CCAP1_HSYNC",
+   "CCAP1_VSYNC",
+   "CCAP1_PIXCLK",
+   "CCAP1_SFIELD"
+  ],
+  "CLK": [
+   "CLK_32KOUT"
+  ],
+  "EADC0": [
+   "EADC0_ST",
+   "EADC0_CH0",
+   "EADC0_CH1",
+   "EADC0_CH2",
+   "EADC0_CH3",
+   "EADC0_CH4",
+   "EADC0_CH5",
+   "EADC0_CH6",
+   "EADC0_CH7"
+  ],
+  "EBI": [
+   "EBI_AD0",
+   "EBI_AD1",
+   "EBI_AD2",
+   "EBI_AD3",
+   "EBI_AD4",
+   "EBI_AD5",
+   "EBI_AD6",
+   "EBI_AD7",
+   "EBI_AD8",
+   "EBI_AD9",
+   "EBI_ALE",
+   "EBI_nRD",
+   "EBI_nWR",
+   "EBI_AD10",
+   "EBI_AD11",
+   "EBI_AD12",
+   "EBI_AD13",
+   "EBI_AD14",
+   "EBI_AD15",
+   "EBI_ADR0",
+   "EBI_ADR1",
+   "EBI_ADR2",
+   "EBI_ADR3",
+   "EBI_ADR4",
+   "EBI_ADR5",
+   "EBI_ADR6",
+   "EBI_ADR7",
+   "EBI_ADR8",
+   "EBI_ADR9",
+   "EBI_MCLK",
+   "EBI_nCS0",
+   "EBI_nCS1",
+   "EBI_nCS2",
+   "EBI_nWRH",
+   "EBI_nWRL",
+   "EBI_ADR10",
+   "EBI_ADR11",
+   "EBI_ADR12",
+   "EBI_ADR13",
+   "EBI_ADR14",
+   "EBI_ADR15",
+   "EBI_ADR16",
+   "EBI_ADR17",
+   "EBI_ADR18",
+   "EBI_ADR19"
+  ],
+  "ECAP0": [
+   "ECAP0_IC0",
+   "ECAP0_IC1",
+   "ECAP0_IC2"
+  ],
+  "ECAP1": [
+   "ECAP1_IC0",
+   "ECAP1_IC1",
+   "ECAP1_IC2"
+  ],
+  "ECAP2": [
+   "ECAP2_IC0",
+   "ECAP2_IC1",
+   "ECAP2_IC2"
+  ],
+  "EPWM0": [
+   "EPWM0_CH0",
+   "EPWM0_CH1",
+   "EPWM0_CH2",
+   "EPWM0_CH3",
+   "EPWM0_CH4",
+   "EPWM0_CH5",
+   "EPWM0_BRAKE0",
+   "EPWM0_BRAKE1",
+   "EPWM0_SYNC_IN",
+   "EPWM0_SYNC_OUT"
+  ],
+  "EPWM1": [
+   "EPWM1_CH0",
+   "EPWM1_CH1",
+   "EPWM1_CH2",
+   "EPWM1_CH3",
+   "EPWM1_CH4",
+   "EPWM1_CH5",
+   "EPWM1_BRAKE0",
+   "EPWM1_BRAKE1"
+  ],
+  "EPWM2": [
+   "EPWM2_CH0",
+   "EPWM2_CH1",
+   "EPWM2_CH2",
+   "EPWM2_CH3",
+   "EPWM2_CH4",
+   "EPWM2_CH5",
+   "EPWM2_BRAKE0",
+   "EPWM2_BRAKE1"
+  ],
+  "HSUSB0": [
+   "HSUSB0_VBUSVLD"
+  ],
+  "HSUSBH": [
+   "HSUSBH_OVC",
+   "HSUSBH_PWREN"
+  ],
+  "I2C0": [
+   "I2C0_SCL",
+   "I2C0_SDA"
+  ],
+  "I2C1": [
+   "I2C1_SCL",
+   "I2C1_SDA"
+  ],
+  "I2C2": [
+   "I2C2_SCL",
+   "I2C2_SDA"
+  ],
+  "I2C3": [
+   "I2C3_SCL",
+   "I2C3_SDA"
+  ],
+  "I2C4": [
+   "I2C4_SCL",
+   "I2C4_SDA"
+  ],
+  "I2C5": [
+   "I2C5_SCL",
+   "I2C5_SDA"
+  ],
+  "I2S0": [
+   "I2S0_DI",
+   "I2S0_DO",
+   "I2S0_BCLK",
+   "I2S0_LRCK",
+   "I2S0_MCLK"
+  ],
+  "I2S1": [
+   "I2S1_DI",
+   "I2S1_DO",
+   "I2S1_BCLK",
+   "I2S1_LRCK",
+   "I2S1_MCLK"
+  ],
+  "KPI": [
+   "KPI_COL0",
+   "KPI_COL1",
+   "KPI_COL2",
+   "KPI_COL3",
+   "KPI_COL4",
+   "KPI_COL5",
+   "KPI_COL6",
+   "KPI_COL7",
+   "KPI_ROW0",
+   "KPI_ROW1",
+   "KPI_ROW2",
+   "KPI_ROW3",
+   "KPI_ROW4",
+   "KPI_ROW5",
+   "KPI_ROW6",
+   "KPI_ROW7"
+  ],
+  "LCM": [
+   "LCM_CLK",
+   "LCM_DEN",
+   "LCM_DATA0",
+   "LCM_DATA1",
+   "LCM_DATA2",
+   "LCM_DATA3",
+   "LCM_DATA4",
+   "LCM_DATA5",
+   "LCM_DATA6",
+   "LCM_DATA7",
+   "LCM_DATA8",
+   "LCM_DATA9",
+   "LCM_HSYNC",
+   "LCM_VSYNC",
+   "LCM_DATA10",
+   "LCM_DATA11",
+   "LCM_DATA12",
+   "LCM_DATA13",
+   "LCM_DATA14",
+   "LCM_DATA15",
+   "LCM_DATA16",
+   "LCM_DATA17",
+   "LCM_DATA18",
+   "LCM_DATA19",
+   "LCM_DATA20",
+   "LCM_DATA21",
+   "LCM_DATA22",
+   "LCM_DATA23",
+   "LCM_MPU_TE",
+   "LCM_MPU_VSYNC"
+  ],
+  "NAND": [
+   "NAND_ALE",
+   "NAND_CLE",
+   "NAND_RDY",
+   "NAND_nCS",
+   "NAND_nRE",
+   "NAND_nWE",
+   "NAND_nWP",
+   "NAND_DATA0",
+   "NAND_DATA1",
+   "NAND_DATA2",
+   "NAND_DATA3",
+   "NAND_DATA4",
+   "NAND_DATA5",
+   "NAND_DATA6",
+   "NAND_DATA7"
+  ],
+  "QEI0": [
+   "QEI0_A",
+   "QEI0_B",
+   "QEI0_INDEX"
+  ],
+  "QEI1": [
+   "QEI1_A",
+   "QEI1_B",
+   "QEI1_INDEX"
+  ],
+  "QEI2": [
+   "QEI2_A",
+   "QEI2_B",
+   "QEI2_INDEX"
+  ],
+  "QSPI0": [
+   "QSPI0_CLK",
+   "QSPI0_SS0",
+   "QSPI0_MISO0",
+   "QSPI0_MISO1",
+   "QSPI0_MOSI0",
+   "QSPI0_MOSI1"
+  ],
+  "QSPI1": [
+   "QSPI1_CLK",
+   "QSPI1_SS0",
+   "QSPI1_SS1",
+   "QSPI1_MISO0",
+   "QSPI1_MISO1",
+   "QSPI1_MOSI0",
+   "QSPI1_MOSI1"
+  ],
+  "RGMII0": [
+   "RGMII0_MDC",
+   "RGMII0_PPS",
+   "RGMII0_MDIO",
+   "RGMII0_RXD0",
+   "RGMII0_RXD1",
+   "RGMII0_RXD2",
+   "RGMII0_RXD3",
+   "RGMII0_TXD0",
+   "RGMII0_TXD1",
+   "RGMII0_TXD2",
+   "RGMII0_TXD3",
+   "RGMII0_RXCLK",
+   "RGMII0_RXCTL",
+   "RGMII0_TXCLK",
+   "RGMII0_TXCTL"
+  ],
+  "RGMII1": [
+   "RGMII1_MDC",
+   "RGMII1_PPS",
+   "RGMII1_MDIO",
+   "RGMII1_RXD0",
+   "RGMII1_RXD1",
+   "RGMII1_RXD2",
+   "RGMII1_RXD3",
+   "RGMII1_TXD0",
+   "RGMII1_TXD1",
+   "RGMII1_TXD2",
+   "RGMII1_TXD3",
+   "RGMII1_RXCLK",
+   "RGMII1_RXCTL",
+   "RGMII1_TXCLK",
+   "RGMII1_TXCTL"
+  ],
+  "RMII0": [
+   "RMII0_MDC",
+   "RMII0_PPS",
+   "RMII0_MDIO",
+   "RMII0_RXD0",
+   "RMII0_RXD1",
+   "RMII0_TXD0",
+   "RMII0_TXD1",
+   "RMII0_TXEN",
+   "RMII0_CRSDV",
+   "RMII0_RXERR",
+   "RMII0_REFCLK"
+  ],
+  "RMII1": [
+   "RMII1_MDC",
+   "RMII1_PPS",
+   "RMII1_MDIO",
+   "RMII1_RXD0",
+   "RMII1_RXD1",
+   "RMII1_TXD0",
+   "RMII1_TXD1",
+   "RMII1_TXEN",
+   "RMII1_CRSDV",
+   "RMII1_RXERR",
+   "RMII1_REFCLK"
+  ],
+  "SC0": [
+   "SC0_CLK",
+   "SC0_DAT",
+   "SC0_PWR",
+   "SC0_RST",
+   "SC0_nCD"
+  ],
+  "SC1": [
+   "SC1_CLK",
+   "SC1_DAT",
+   "SC1_PWR",
+   "SC1_RST",
+   "SC1_nCD"
+  ],
+  "SD0": [
+   "SD0_WP",
+   "SD0_CLK",
+   "SD0_CMD",
+   "SD0_nCD",
+   "SD0_DAT0",
+   "SD0_DAT1",
+   "SD0_DAT2",
+   "SD0_DAT3"
+  ],
+  "SD1": [
+   "SD1_WP",
+   "SD1_CLK",
+   "SD1_CMD",
+   "SD1_nCD",
+   "SD1_DAT0",
+   "SD1_DAT1",
+   "SD1_DAT2",
+   "SD1_DAT3"
+  ],
+  "SPI0": [
+   "SPI0_CLK",
+   "SPI0_SS0",
+   "SPI0_SS1",
+   "SPI0_MISO",
+   "SPI0_MOSI",
+   "SPI0_I2SMCLK"
+  ],
+  "SPI1": [
+   "SPI1_CLK",
+   "SPI1_SS0",
+   "SPI1_SS1",
+   "SPI1_MISO",
+   "SPI1_MOSI",
+   "SPI1_I2SMCLK"
+  ],
+  "SPI2": [
+   "SPI2_CLK",
+   "SPI2_SS0",
+   "SPI2_SS1",
+   "SPI2_MISO",
+   "SPI2_MOSI",
+   "SPI2_I2SMCLK"
+  ],
+  "SPI3": [
+   "SPI3_CLK",
+   "SPI3_SS0",
+   "SPI3_SS1",
+   "SPI3_MISO",
+   "SPI3_MOSI",
+   "SPI3_I2SMCLK"
+  ],
+  "SW": [
+   "SW_CLK",
+   "SW_DIO"
+  ],
+  "TM0": [
+   "TM0_EXT"
+  ],
+  "TM1": [
+   "TM1_EXT"
+  ],
+  "TM10": [
+   "TM10_EXT"
+  ],
+  "TM11": [
+   "TM11_EXT"
+  ],
+  "TM2": [
+   "TM2_EXT"
+  ],
+  "TM3": [
+   "TM3_EXT"
+  ],
+  "TM4": [
+   "TM4_EXT"
+  ],
+  "TM5": [
+   "TM5_EXT"
+  ],
+  "TM6": [
+   "TM6_EXT"
+  ],
+  "TM7": [
+   "TM7_EXT"
+  ],
+  "TM8": [
+   "TM8_EXT"
+  ],
+  "TM9": [
+   "TM9_EXT"
+  ],
+  "TRACE": [
+   "TRACE_CLK",
+   "TRACE_DATA0",
+   "TRACE_DATA1",
+   "TRACE_DATA2",
+   "TRACE_DATA3"
+  ],
+  "TSI": [
+   "TSI_SWD_CLK",
+   "TSI_SWD_DAT",
+   "TSI_UART_RXD",
+   "TSI_UART_TXD"
+  ],
+  "UART0": [
+   "UART0_RXD",
+   "UART0_TXD"
+  ],
+  "UART1": [
+   "UART1_RXD",
+   "UART1_TXD",
+   "UART1_nCTS",
+   "UART1_nRTS"
+  ],
+  "UART10": [
+   "UART10_RXD",
+   "UART10_TXD",
+   "UART10_nCTS",
+   "UART10_nRTS"
+  ],
+  "UART11": [
+   "UART11_RXD",
+   "UART11_TXD",
+   "UART11_nCTS",
+   "UART11_nRTS"
+  ],
+  "UART12": [
+   "UART12_RXD",
+   "UART12_TXD",
+   "UART12_nCTS",
+   "UART12_nRTS"
+  ],
+  "UART13": [
+   "UART13_RXD",
+   "UART13_TXD",
+   "UART13_nCTS",
+   "UART13_nRTS"
+  ],
+  "UART14": [
+   "UART14_RXD",
+   "UART14_TXD",
+   "UART14_nCTS",
+   "UART14_nRTS"
+  ],
+  "UART15": [
+   "UART15_RXD",
+   "UART15_TXD",
+   "UART15_nCTS",
+   "UART15_nRTS"
+  ],
+  "UART16": [
+   "UART16_RXD",
+   "UART16_TXD",
+   "UART16_nCTS",
+   "UART16_nRTS"
+  ],
+  "UART2": [
+   "UART2_RXD",
+   "UART2_TXD",
+   "UART2_nCTS",
+   "UART2_nRTS"
+  ],
+  "UART3": [
+   "UART3_RXD",
+   "UART3_TXD",
+   "UART3_nCTS",
+   "UART3_nRTS"
+  ],
+  "UART4": [
+   "UART4_RXD",
+   "UART4_TXD",
+   "UART4_nCTS",
+   "UART4_nRTS"
+  ],
+  "UART5": [
+   "UART5_RXD",
+   "UART5_TXD",
+   "UART5_nCTS",
+   "UART5_nRTS"
+  ],
+  "UART6": [
+   "UART6_RXD",
+   "UART6_TXD",
+   "UART6_nCTS",
+   "UART6_nRTS"
+  ],
+  "UART7": [
+   "UART7_RXD",
+   "UART7_TXD",
+   "UART7_nCTS",
+   "UART7_nRTS"
+  ],
+  "UART8": [
+   "UART8_RXD",
+   "UART8_TXD",
+   "UART8_nCTS",
+   "UART8_nRTS"
+  ],
+  "UART9": [
+   "UART9_RXD",
+   "UART9_TXD",
+   "UART9_nCTS",
+   "UART9_nRTS"
+  ],
+  "USBHL0": [
+   "USBHL0_DM",
+   "USBHL0_DP"
+  ],
+  "USBHL1": [
+   "USBHL1_DM",
+   "USBHL1_DP"
+  ],
+  "USBHL2": [
+   "USBHL2_DM",
+   "USBHL2_DP"
+  ],
+  "USBHL3": [
+   "USBHL3_DM",
+   "USBHL3_DP"
+  ],
+  "USBHL4": [
+   "USBHL4_DM",
+   "USBHL4_DP"
+  ],
+  "USBHL5": [
+   "USBHL5_DM",
+   "USBHL5_DP"
+  ],
+  "eMMC0": [
+   "eMMC0_CLK",
+   "eMMC0_CMD",
+   "eMMC0_DAT0",
+   "eMMC0_DAT1",
+   "eMMC0_DAT2",
+   "eMMC0_DAT3",
+   "eMMC0_DAT4",
+   "eMMC0_DAT5",
+   "eMMC0_DAT6",
+   "eMMC0_DAT7"
+  ],
+  "eMMC1": [
+   "eMMC1_CLK",
+   "eMMC1_CMD",
+   "eMMC1_DAT0",
+   "eMMC1_DAT1",
+   "eMMC1_DAT2",
+   "eMMC1_DAT3",
+   "eMMC1_DAT4",
+   "eMMC1_DAT5",
+   "eMMC1_DAT6",
+   "eMMC1_DAT7"
+  ]
+ },
+ "system": {
+  "CLKO": [
+   "CLKO"
+  ],
+  "INT": [
+   "INT0",
+   "INT1",
+   "INT2",
+   "INT3"
+  ],
+  "JTAG": [
+   "JTAG_TCK",
+   "JTAG_TDI",
+   "JTAG_TDO",
+   "JTAG_TMS",
+   "JTAG_nTRST"
+  ],
+  "TAMPER": [
+   "TAMPER0",
+   "TAMPER1"
+  ],
+  "TM": [
+   "TM0",
+   "TM1",
+   "TM2",
+   "TM3",
+   "TM4",
+   "TM5",
+   "TM6",
+   "TM7",
+   "TM8",
+   "TM9",
+   "TM10",
+   "TM11"
+  ]
+ }
+}

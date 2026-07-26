@@ -1,0 +1,176 @@
+{
+ "board": "ma35d1",
+ "description": "Protected GPIO pins reserved in the baseline DTS via *-gpios/gpios refs. `protected_pins` = reserved by an active consumer; `reserved_by_disabled_only` = reserved only by a disabled node (re-muxable only with care).",
+ "source": "data/ma35d1/baseline/dts/ (auto-extracted, status-aware)",
+ "protected_pins": [
+  "PD12",
+  "PD13",
+  "PD8",
+  "PD9",
+  "PF14",
+  "PJ14",
+  "PJ15",
+  "PM12"
+ ],
+ "reserved_by_disabled_only": [
+  "PD15",
+  "PK5",
+  "PK7",
+  "PK8",
+  "PM1",
+  "PN14"
+ ],
+ "count": 14,
+ "reservations": [
+  {
+   "pin": "PD8",
+   "bank": "gpiod",
+   "line": 8,
+   "property": "gpios",
+   "consumer_node": "botton0",
+   "consumer_active": true,
+   "consumer_compatible": null,
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PD9",
+   "bank": "gpiod",
+   "line": 9,
+   "property": "gpios",
+   "consumer_node": "button1",
+   "consumer_active": true,
+   "consumer_compatible": null,
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PF14",
+   "bank": "gpiof",
+   "line": 14,
+   "property": "gpios",
+   "consumer_node": "button2",
+   "consumer_active": true,
+   "consumer_compatible": null,
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PJ14",
+   "bank": "gpioj",
+   "line": 14,
+   "property": "gpios",
+   "consumer_node": "led0",
+   "consumer_active": true,
+   "consumer_compatible": null,
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PJ15",
+   "bank": "gpioj",
+   "line": 15,
+   "property": "gpios",
+   "consumer_node": "led1",
+   "consumer_active": true,
+   "consumer_compatible": null,
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PM1",
+   "bank": "gpiom",
+   "line": 1,
+   "property": "reset-gpios",
+   "consumer_node": "hm1055@24",
+   "consumer_active": false,
+   "consumer_compatible": "himax,hm1055",
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PK8",
+   "bank": "gpiok",
+   "line": 8,
+   "property": "powerdown-gpios",
+   "consumer_node": "hm1055@24",
+   "consumer_active": false,
+   "consumer_compatible": "himax,hm1055",
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PN14",
+   "bank": "gpion",
+   "line": 14,
+   "property": "reset-gpios",
+   "consumer_node": "hm1055@24",
+   "consumer_active": false,
+   "consumer_compatible": "himax,hm1055",
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PD15",
+   "bank": "gpiod",
+   "line": 15,
+   "property": "powerdown-gpios",
+   "consumer_node": "hm1055@24",
+   "consumer_active": false,
+   "consumer_compatible": "himax,hm1055",
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PM12",
+   "bank": "gpiom",
+   "line": 12,
+   "property": "reset-gpios",
+   "consumer_node": "lt8718",
+   "consumer_active": false,
+   "consumer_compatible": "nvt, lt8718",
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PK7",
+   "bank": "gpiok",
+   "line": 7,
+   "property": "bl-gpios",
+   "consumer_node": "lt8718",
+   "consumer_active": false,
+   "consumer_compatible": "nvt, lt8718",
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PK5",
+   "bank": "gpiok",
+   "line": 5,
+   "property": "pwr-gpios",
+   "consumer_node": "lt8718",
+   "consumer_active": false,
+   "consumer_compatible": "nvt, lt8718",
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PM12",
+   "bank": "gpiom",
+   "line": 12,
+   "property": "reset-gpios",
+   "consumer_node": "goodix_ts@5d",
+   "consumer_active": true,
+   "consumer_compatible": "goodix,gt911",
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PD12",
+   "bank": "gpiod",
+   "line": 12,
+   "property": "irq-gpios",
+   "consumer_node": "goodix_ts@5d",
+   "consumer_active": true,
+   "consumer_compatible": "goodix,gt911",
+   "source": "ma35d1-evb.dts"
+  },
+  {
+   "pin": "PD13",
+   "bank": "gpiod",
+   "line": 13,
+   "property": "powerdown-gpios",
+   "consumer_node": "i2s0",
+   "consumer_active": true,
+   "consumer_compatible": null,
+   "source": "ma35d1-evb.dts"
+  }
+ ]
+}

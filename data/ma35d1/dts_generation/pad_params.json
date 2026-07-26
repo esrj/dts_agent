@@ -1,0 +1,1117 @@
+{
+ "board": "ma35d1",
+ "source": "dt-bindings/pinctrl pinfunc header(MFP 位段)",
+ "description": "pad → pinmux 渲染參數;鍵與 af_table 的 pin 鍵逐字一致。K3 鍵空間為 (domain, offset);MA35 為 (offset, shift) 位段。",
+ "pads": {
+  "PA0": {
+   "domain": "SYS",
+   "offset": "0x080",
+   "shift": "0x00"
+  },
+  "PA1": {
+   "domain": "SYS",
+   "offset": "0x080",
+   "shift": "0x04"
+  },
+  "PA10": {
+   "domain": "SYS",
+   "offset": "0x084",
+   "shift": "0x08"
+  },
+  "PA11": {
+   "domain": "SYS",
+   "offset": "0x084",
+   "shift": "0x0c"
+  },
+  "PA12": {
+   "domain": "SYS",
+   "offset": "0x084",
+   "shift": "0x10"
+  },
+  "PA13": {
+   "domain": "SYS",
+   "offset": "0x084",
+   "shift": "0x14"
+  },
+  "PA14": {
+   "domain": "SYS",
+   "offset": "0x084",
+   "shift": "0x18"
+  },
+  "PA15": {
+   "domain": "SYS",
+   "offset": "0x084",
+   "shift": "0x1c"
+  },
+  "PA2": {
+   "domain": "SYS",
+   "offset": "0x080",
+   "shift": "0x08"
+  },
+  "PA3": {
+   "domain": "SYS",
+   "offset": "0x080",
+   "shift": "0x0c"
+  },
+  "PA4": {
+   "domain": "SYS",
+   "offset": "0x080",
+   "shift": "0x10"
+  },
+  "PA5": {
+   "domain": "SYS",
+   "offset": "0x080",
+   "shift": "0x14"
+  },
+  "PA6": {
+   "domain": "SYS",
+   "offset": "0x080",
+   "shift": "0x18"
+  },
+  "PA7": {
+   "domain": "SYS",
+   "offset": "0x080",
+   "shift": "0x1c"
+  },
+  "PA8": {
+   "domain": "SYS",
+   "offset": "0x084",
+   "shift": "0x00"
+  },
+  "PA9": {
+   "domain": "SYS",
+   "offset": "0x084",
+   "shift": "0x04"
+  },
+  "PB0": {
+   "domain": "SYS",
+   "offset": "0x088",
+   "shift": "0x00"
+  },
+  "PB1": {
+   "domain": "SYS",
+   "offset": "0x088",
+   "shift": "0x04"
+  },
+  "PB10": {
+   "domain": "SYS",
+   "offset": "0x08c",
+   "shift": "0x08"
+  },
+  "PB11": {
+   "domain": "SYS",
+   "offset": "0x08c",
+   "shift": "0x0c"
+  },
+  "PB12": {
+   "domain": "SYS",
+   "offset": "0x08c",
+   "shift": "0x10"
+  },
+  "PB13": {
+   "domain": "SYS",
+   "offset": "0x08c",
+   "shift": "0x14"
+  },
+  "PB14": {
+   "domain": "SYS",
+   "offset": "0x08c",
+   "shift": "0x18"
+  },
+  "PB15": {
+   "domain": "SYS",
+   "offset": "0x08c",
+   "shift": "0x1c"
+  },
+  "PB2": {
+   "domain": "SYS",
+   "offset": "0x088",
+   "shift": "0x08"
+  },
+  "PB3": {
+   "domain": "SYS",
+   "offset": "0x088",
+   "shift": "0x0c"
+  },
+  "PB4": {
+   "domain": "SYS",
+   "offset": "0x088",
+   "shift": "0x10"
+  },
+  "PB5": {
+   "domain": "SYS",
+   "offset": "0x088",
+   "shift": "0x14"
+  },
+  "PB6": {
+   "domain": "SYS",
+   "offset": "0x088",
+   "shift": "0x18"
+  },
+  "PB7": {
+   "domain": "SYS",
+   "offset": "0x088",
+   "shift": "0x1c"
+  },
+  "PB8": {
+   "domain": "SYS",
+   "offset": "0x08c",
+   "shift": "0x00"
+  },
+  "PB9": {
+   "domain": "SYS",
+   "offset": "0x08c",
+   "shift": "0x04"
+  },
+  "PC0": {
+   "domain": "SYS",
+   "offset": "0x090",
+   "shift": "0x00"
+  },
+  "PC1": {
+   "domain": "SYS",
+   "offset": "0x090",
+   "shift": "0x04"
+  },
+  "PC10": {
+   "domain": "SYS",
+   "offset": "0x094",
+   "shift": "0x08"
+  },
+  "PC11": {
+   "domain": "SYS",
+   "offset": "0x094",
+   "shift": "0x0c"
+  },
+  "PC12": {
+   "domain": "SYS",
+   "offset": "0x094",
+   "shift": "0x10"
+  },
+  "PC13": {
+   "domain": "SYS",
+   "offset": "0x094",
+   "shift": "0x14"
+  },
+  "PC14": {
+   "domain": "SYS",
+   "offset": "0x094",
+   "shift": "0x18"
+  },
+  "PC15": {
+   "domain": "SYS",
+   "offset": "0x094",
+   "shift": "0x1c"
+  },
+  "PC2": {
+   "domain": "SYS",
+   "offset": "0x090",
+   "shift": "0x08"
+  },
+  "PC3": {
+   "domain": "SYS",
+   "offset": "0x090",
+   "shift": "0x0c"
+  },
+  "PC4": {
+   "domain": "SYS",
+   "offset": "0x090",
+   "shift": "0x10"
+  },
+  "PC5": {
+   "domain": "SYS",
+   "offset": "0x090",
+   "shift": "0x14"
+  },
+  "PC6": {
+   "domain": "SYS",
+   "offset": "0x090",
+   "shift": "0x18"
+  },
+  "PC7": {
+   "domain": "SYS",
+   "offset": "0x090",
+   "shift": "0x1c"
+  },
+  "PC8": {
+   "domain": "SYS",
+   "offset": "0x094",
+   "shift": "0x00"
+  },
+  "PC9": {
+   "domain": "SYS",
+   "offset": "0x094",
+   "shift": "0x04"
+  },
+  "PD0": {
+   "domain": "SYS",
+   "offset": "0x098",
+   "shift": "0x00"
+  },
+  "PD1": {
+   "domain": "SYS",
+   "offset": "0x098",
+   "shift": "0x04"
+  },
+  "PD10": {
+   "domain": "SYS",
+   "offset": "0x09c",
+   "shift": "0x08"
+  },
+  "PD11": {
+   "domain": "SYS",
+   "offset": "0x09c",
+   "shift": "0x0c"
+  },
+  "PD12": {
+   "domain": "SYS",
+   "offset": "0x09c",
+   "shift": "0x10"
+  },
+  "PD13": {
+   "domain": "SYS",
+   "offset": "0x09c",
+   "shift": "0x14"
+  },
+  "PD14": {
+   "domain": "SYS",
+   "offset": "0x09c",
+   "shift": "0x18"
+  },
+  "PD15": {
+   "domain": "SYS",
+   "offset": "0x09c",
+   "shift": "0x1c"
+  },
+  "PD2": {
+   "domain": "SYS",
+   "offset": "0x098",
+   "shift": "0x08"
+  },
+  "PD3": {
+   "domain": "SYS",
+   "offset": "0x098",
+   "shift": "0x0c"
+  },
+  "PD4": {
+   "domain": "SYS",
+   "offset": "0x098",
+   "shift": "0x10"
+  },
+  "PD5": {
+   "domain": "SYS",
+   "offset": "0x098",
+   "shift": "0x14"
+  },
+  "PD6": {
+   "domain": "SYS",
+   "offset": "0x098",
+   "shift": "0x18"
+  },
+  "PD7": {
+   "domain": "SYS",
+   "offset": "0x098",
+   "shift": "0x1c"
+  },
+  "PD8": {
+   "domain": "SYS",
+   "offset": "0x09c",
+   "shift": "0x00"
+  },
+  "PD9": {
+   "domain": "SYS",
+   "offset": "0x09c",
+   "shift": "0x04"
+  },
+  "PE0": {
+   "domain": "SYS",
+   "offset": "0x0a0",
+   "shift": "0x00"
+  },
+  "PE1": {
+   "domain": "SYS",
+   "offset": "0x0a0",
+   "shift": "0x04"
+  },
+  "PE10": {
+   "domain": "SYS",
+   "offset": "0x0a4",
+   "shift": "0x08"
+  },
+  "PE11": {
+   "domain": "SYS",
+   "offset": "0x0a4",
+   "shift": "0x0c"
+  },
+  "PE12": {
+   "domain": "SYS",
+   "offset": "0x0a4",
+   "shift": "0x10"
+  },
+  "PE13": {
+   "domain": "SYS",
+   "offset": "0x0a4",
+   "shift": "0x14"
+  },
+  "PE14": {
+   "domain": "SYS",
+   "offset": "0x0a4",
+   "shift": "0x18"
+  },
+  "PE15": {
+   "domain": "SYS",
+   "offset": "0x0a4",
+   "shift": "0x1c"
+  },
+  "PE2": {
+   "domain": "SYS",
+   "offset": "0x0a0",
+   "shift": "0x08"
+  },
+  "PE3": {
+   "domain": "SYS",
+   "offset": "0x0a0",
+   "shift": "0x0c"
+  },
+  "PE4": {
+   "domain": "SYS",
+   "offset": "0x0a0",
+   "shift": "0x10"
+  },
+  "PE5": {
+   "domain": "SYS",
+   "offset": "0x0a0",
+   "shift": "0x14"
+  },
+  "PE6": {
+   "domain": "SYS",
+   "offset": "0x0a0",
+   "shift": "0x18"
+  },
+  "PE7": {
+   "domain": "SYS",
+   "offset": "0x0a0",
+   "shift": "0x1c"
+  },
+  "PE8": {
+   "domain": "SYS",
+   "offset": "0x0a4",
+   "shift": "0x00"
+  },
+  "PE9": {
+   "domain": "SYS",
+   "offset": "0x0a4",
+   "shift": "0x04"
+  },
+  "PF0": {
+   "domain": "SYS",
+   "offset": "0x0a8",
+   "shift": "0x00"
+  },
+  "PF1": {
+   "domain": "SYS",
+   "offset": "0x0a8",
+   "shift": "0x04"
+  },
+  "PF10": {
+   "domain": "SYS",
+   "offset": "0x0ac",
+   "shift": "0x08"
+  },
+  "PF11": {
+   "domain": "SYS",
+   "offset": "0x0ac",
+   "shift": "0x0c"
+  },
+  "PF12": {
+   "domain": "SYS",
+   "offset": "0x0ac",
+   "shift": "0x10"
+  },
+  "PF13": {
+   "domain": "SYS",
+   "offset": "0x0ac",
+   "shift": "0x14"
+  },
+  "PF14": {
+   "domain": "SYS",
+   "offset": "0x0ac",
+   "shift": "0x18"
+  },
+  "PF15": {
+   "domain": "SYS",
+   "offset": "0x0ac",
+   "shift": "0x1c"
+  },
+  "PF2": {
+   "domain": "SYS",
+   "offset": "0x0a8",
+   "shift": "0x08"
+  },
+  "PF3": {
+   "domain": "SYS",
+   "offset": "0x0a8",
+   "shift": "0x0c"
+  },
+  "PF4": {
+   "domain": "SYS",
+   "offset": "0x0a8",
+   "shift": "0x10"
+  },
+  "PF5": {
+   "domain": "SYS",
+   "offset": "0x0a8",
+   "shift": "0x14"
+  },
+  "PF6": {
+   "domain": "SYS",
+   "offset": "0x0a8",
+   "shift": "0x18"
+  },
+  "PF7": {
+   "domain": "SYS",
+   "offset": "0x0a8",
+   "shift": "0x1c"
+  },
+  "PF8": {
+   "domain": "SYS",
+   "offset": "0x0ac",
+   "shift": "0x00"
+  },
+  "PF9": {
+   "domain": "SYS",
+   "offset": "0x0ac",
+   "shift": "0x04"
+  },
+  "PG0": {
+   "domain": "SYS",
+   "offset": "0x0b0",
+   "shift": "0x00"
+  },
+  "PG1": {
+   "domain": "SYS",
+   "offset": "0x0b0",
+   "shift": "0x04"
+  },
+  "PG10": {
+   "domain": "SYS",
+   "offset": "0x0b4",
+   "shift": "0x08"
+  },
+  "PG11": {
+   "domain": "SYS",
+   "offset": "0x0b4",
+   "shift": "0x0c"
+  },
+  "PG12": {
+   "domain": "SYS",
+   "offset": "0x0b4",
+   "shift": "0x10"
+  },
+  "PG13": {
+   "domain": "SYS",
+   "offset": "0x0b4",
+   "shift": "0x14"
+  },
+  "PG14": {
+   "domain": "SYS",
+   "offset": "0x0b4",
+   "shift": "0x18"
+  },
+  "PG15": {
+   "domain": "SYS",
+   "offset": "0x0b4",
+   "shift": "0x1c"
+  },
+  "PG2": {
+   "domain": "SYS",
+   "offset": "0x0b0",
+   "shift": "0x08"
+  },
+  "PG3": {
+   "domain": "SYS",
+   "offset": "0x0b0",
+   "shift": "0x0c"
+  },
+  "PG4": {
+   "domain": "SYS",
+   "offset": "0x0b0",
+   "shift": "0x10"
+  },
+  "PG5": {
+   "domain": "SYS",
+   "offset": "0x0b0",
+   "shift": "0x14"
+  },
+  "PG6": {
+   "domain": "SYS",
+   "offset": "0x0b0",
+   "shift": "0x18"
+  },
+  "PG7": {
+   "domain": "SYS",
+   "offset": "0x0b0",
+   "shift": "0x1c"
+  },
+  "PG8": {
+   "domain": "SYS",
+   "offset": "0x0b4",
+   "shift": "0x00"
+  },
+  "PG9": {
+   "domain": "SYS",
+   "offset": "0x0b4",
+   "shift": "0x04"
+  },
+  "PH0": {
+   "domain": "SYS",
+   "offset": "0x0b8",
+   "shift": "0x00"
+  },
+  "PH1": {
+   "domain": "SYS",
+   "offset": "0x0b8",
+   "shift": "0x04"
+  },
+  "PH12": {
+   "domain": "SYS",
+   "offset": "0x0bc",
+   "shift": "0x10"
+  },
+  "PH13": {
+   "domain": "SYS",
+   "offset": "0x0bc",
+   "shift": "0x14"
+  },
+  "PH14": {
+   "domain": "SYS",
+   "offset": "0x0bc",
+   "shift": "0x18"
+  },
+  "PH15": {
+   "domain": "SYS",
+   "offset": "0x0bc",
+   "shift": "0x1c"
+  },
+  "PH2": {
+   "domain": "SYS",
+   "offset": "0x0b8",
+   "shift": "0x08"
+  },
+  "PH3": {
+   "domain": "SYS",
+   "offset": "0x0b8",
+   "shift": "0x0c"
+  },
+  "PH4": {
+   "domain": "SYS",
+   "offset": "0x0b8",
+   "shift": "0x10"
+  },
+  "PH5": {
+   "domain": "SYS",
+   "offset": "0x0b8",
+   "shift": "0x14"
+  },
+  "PH6": {
+   "domain": "SYS",
+   "offset": "0x0b8",
+   "shift": "0x18"
+  },
+  "PH7": {
+   "domain": "SYS",
+   "offset": "0x0b8",
+   "shift": "0x1c"
+  },
+  "PH8": {
+   "domain": "SYS",
+   "offset": "0x0bc",
+   "shift": "0x00"
+  },
+  "PH9": {
+   "domain": "SYS",
+   "offset": "0x0bc",
+   "shift": "0x04"
+  },
+  "PI0": {
+   "domain": "SYS",
+   "offset": "0x0c0",
+   "shift": "0x00"
+  },
+  "PI1": {
+   "domain": "SYS",
+   "offset": "0x0c0",
+   "shift": "0x04"
+  },
+  "PI10": {
+   "domain": "SYS",
+   "offset": "0x0c4",
+   "shift": "0x08"
+  },
+  "PI11": {
+   "domain": "SYS",
+   "offset": "0x0c4",
+   "shift": "0x0c"
+  },
+  "PI12": {
+   "domain": "SYS",
+   "offset": "0x0c4",
+   "shift": "0x10"
+  },
+  "PI13": {
+   "domain": "SYS",
+   "offset": "0x0c4",
+   "shift": "0x14"
+  },
+  "PI14": {
+   "domain": "SYS",
+   "offset": "0x0c4",
+   "shift": "0x18"
+  },
+  "PI15": {
+   "domain": "SYS",
+   "offset": "0x0c4",
+   "shift": "0x1c"
+  },
+  "PI2": {
+   "domain": "SYS",
+   "offset": "0x0c0",
+   "shift": "0x08"
+  },
+  "PI3": {
+   "domain": "SYS",
+   "offset": "0x0c0",
+   "shift": "0x0c"
+  },
+  "PI4": {
+   "domain": "SYS",
+   "offset": "0x0c0",
+   "shift": "0x10"
+  },
+  "PI5": {
+   "domain": "SYS",
+   "offset": "0x0c0",
+   "shift": "0x14"
+  },
+  "PI6": {
+   "domain": "SYS",
+   "offset": "0x0c0",
+   "shift": "0x18"
+  },
+  "PI7": {
+   "domain": "SYS",
+   "offset": "0x0c0",
+   "shift": "0x1c"
+  },
+  "PI8": {
+   "domain": "SYS",
+   "offset": "0x0c4",
+   "shift": "0x00"
+  },
+  "PI9": {
+   "domain": "SYS",
+   "offset": "0x0c4",
+   "shift": "0x04"
+  },
+  "PJ0": {
+   "domain": "SYS",
+   "offset": "0x0c8",
+   "shift": "0x00"
+  },
+  "PJ1": {
+   "domain": "SYS",
+   "offset": "0x0c8",
+   "shift": "0x04"
+  },
+  "PJ10": {
+   "domain": "SYS",
+   "offset": "0x0cc",
+   "shift": "0x08"
+  },
+  "PJ11": {
+   "domain": "SYS",
+   "offset": "0x0cc",
+   "shift": "0x0c"
+  },
+  "PJ12": {
+   "domain": "SYS",
+   "offset": "0x0cc",
+   "shift": "0x10"
+  },
+  "PJ13": {
+   "domain": "SYS",
+   "offset": "0x0cc",
+   "shift": "0x14"
+  },
+  "PJ14": {
+   "domain": "SYS",
+   "offset": "0x0cc",
+   "shift": "0x18"
+  },
+  "PJ15": {
+   "domain": "SYS",
+   "offset": "0x0cc",
+   "shift": "0x1c"
+  },
+  "PJ2": {
+   "domain": "SYS",
+   "offset": "0x0c8",
+   "shift": "0x08"
+  },
+  "PJ3": {
+   "domain": "SYS",
+   "offset": "0x0c8",
+   "shift": "0x0c"
+  },
+  "PJ4": {
+   "domain": "SYS",
+   "offset": "0x0c8",
+   "shift": "0x10"
+  },
+  "PJ5": {
+   "domain": "SYS",
+   "offset": "0x0c8",
+   "shift": "0x14"
+  },
+  "PJ6": {
+   "domain": "SYS",
+   "offset": "0x0c8",
+   "shift": "0x18"
+  },
+  "PJ7": {
+   "domain": "SYS",
+   "offset": "0x0c8",
+   "shift": "0x1c"
+  },
+  "PJ8": {
+   "domain": "SYS",
+   "offset": "0x0cc",
+   "shift": "0x00"
+  },
+  "PJ9": {
+   "domain": "SYS",
+   "offset": "0x0cc",
+   "shift": "0x04"
+  },
+  "PK0": {
+   "domain": "SYS",
+   "offset": "0x0d0",
+   "shift": "0x00"
+  },
+  "PK1": {
+   "domain": "SYS",
+   "offset": "0x0d0",
+   "shift": "0x04"
+  },
+  "PK10": {
+   "domain": "SYS",
+   "offset": "0x0d4",
+   "shift": "0x08"
+  },
+  "PK11": {
+   "domain": "SYS",
+   "offset": "0x0d4",
+   "shift": "0x0c"
+  },
+  "PK12": {
+   "domain": "SYS",
+   "offset": "0x0d4",
+   "shift": "0x10"
+  },
+  "PK13": {
+   "domain": "SYS",
+   "offset": "0x0d4",
+   "shift": "0x14"
+  },
+  "PK14": {
+   "domain": "SYS",
+   "offset": "0x0d4",
+   "shift": "0x18"
+  },
+  "PK15": {
+   "domain": "SYS",
+   "offset": "0x0d4",
+   "shift": "0x1c"
+  },
+  "PK2": {
+   "domain": "SYS",
+   "offset": "0x0d0",
+   "shift": "0x08"
+  },
+  "PK3": {
+   "domain": "SYS",
+   "offset": "0x0d0",
+   "shift": "0x0c"
+  },
+  "PK4": {
+   "domain": "SYS",
+   "offset": "0x0d0",
+   "shift": "0x10"
+  },
+  "PK5": {
+   "domain": "SYS",
+   "offset": "0x0d0",
+   "shift": "0x14"
+  },
+  "PK6": {
+   "domain": "SYS",
+   "offset": "0x0d0",
+   "shift": "0x18"
+  },
+  "PK7": {
+   "domain": "SYS",
+   "offset": "0x0d0",
+   "shift": "0x1c"
+  },
+  "PK8": {
+   "domain": "SYS",
+   "offset": "0x0d4",
+   "shift": "0x00"
+  },
+  "PK9": {
+   "domain": "SYS",
+   "offset": "0x0d4",
+   "shift": "0x04"
+  },
+  "PL0": {
+   "domain": "SYS",
+   "offset": "0x0d8",
+   "shift": "0x00"
+  },
+  "PL1": {
+   "domain": "SYS",
+   "offset": "0x0d8",
+   "shift": "0x04"
+  },
+  "PL10": {
+   "domain": "SYS",
+   "offset": "0x0dc",
+   "shift": "0x08"
+  },
+  "PL11": {
+   "domain": "SYS",
+   "offset": "0x0dc",
+   "shift": "0x0c"
+  },
+  "PL12": {
+   "domain": "SYS",
+   "offset": "0x0dc",
+   "shift": "0x10"
+  },
+  "PL13": {
+   "domain": "SYS",
+   "offset": "0x0dc",
+   "shift": "0x14"
+  },
+  "PL14": {
+   "domain": "SYS",
+   "offset": "0x0dc",
+   "shift": "0x18"
+  },
+  "PL15": {
+   "domain": "SYS",
+   "offset": "0x0dc",
+   "shift": "0x1c"
+  },
+  "PL2": {
+   "domain": "SYS",
+   "offset": "0x0d8",
+   "shift": "0x08"
+  },
+  "PL3": {
+   "domain": "SYS",
+   "offset": "0x0d8",
+   "shift": "0x0c"
+  },
+  "PL4": {
+   "domain": "SYS",
+   "offset": "0x0d8",
+   "shift": "0x10"
+  },
+  "PL5": {
+   "domain": "SYS",
+   "offset": "0x0d8",
+   "shift": "0x14"
+  },
+  "PL6": {
+   "domain": "SYS",
+   "offset": "0x0d8",
+   "shift": "0x18"
+  },
+  "PL7": {
+   "domain": "SYS",
+   "offset": "0x0d8",
+   "shift": "0x1c"
+  },
+  "PL8": {
+   "domain": "SYS",
+   "offset": "0x0dc",
+   "shift": "0x00"
+  },
+  "PL9": {
+   "domain": "SYS",
+   "offset": "0x0dc",
+   "shift": "0x04"
+  },
+  "PM0": {
+   "domain": "SYS",
+   "offset": "0x0e0",
+   "shift": "0x00"
+  },
+  "PM1": {
+   "domain": "SYS",
+   "offset": "0x0e0",
+   "shift": "0x04"
+  },
+  "PM10": {
+   "domain": "SYS",
+   "offset": "0x0e4",
+   "shift": "0x08"
+  },
+  "PM11": {
+   "domain": "SYS",
+   "offset": "0x0e4",
+   "shift": "0x0c"
+  },
+  "PM12": {
+   "domain": "SYS",
+   "offset": "0x0e4",
+   "shift": "0x10"
+  },
+  "PM13": {
+   "domain": "SYS",
+   "offset": "0x0e4",
+   "shift": "0x14"
+  },
+  "PM14": {
+   "domain": "SYS",
+   "offset": "0x0e4",
+   "shift": "0x18"
+  },
+  "PM15": {
+   "domain": "SYS",
+   "offset": "0x0e4",
+   "shift": "0x1c"
+  },
+  "PM2": {
+   "domain": "SYS",
+   "offset": "0x0e0",
+   "shift": "0x08"
+  },
+  "PM3": {
+   "domain": "SYS",
+   "offset": "0x0e0",
+   "shift": "0x0c"
+  },
+  "PM4": {
+   "domain": "SYS",
+   "offset": "0x0e0",
+   "shift": "0x10"
+  },
+  "PM5": {
+   "domain": "SYS",
+   "offset": "0x0e0",
+   "shift": "0x14"
+  },
+  "PM6": {
+   "domain": "SYS",
+   "offset": "0x0e0",
+   "shift": "0x18"
+  },
+  "PM7": {
+   "domain": "SYS",
+   "offset": "0x0e0",
+   "shift": "0x1c"
+  },
+  "PM8": {
+   "domain": "SYS",
+   "offset": "0x0e4",
+   "shift": "0x00"
+  },
+  "PM9": {
+   "domain": "SYS",
+   "offset": "0x0e4",
+   "shift": "0x04"
+  },
+  "PN0": {
+   "domain": "SYS",
+   "offset": "0x0e8",
+   "shift": "0x00"
+  },
+  "PN1": {
+   "domain": "SYS",
+   "offset": "0x0e8",
+   "shift": "0x04"
+  },
+  "PN10": {
+   "domain": "SYS",
+   "offset": "0x0ec",
+   "shift": "0x08"
+  },
+  "PN11": {
+   "domain": "SYS",
+   "offset": "0x0ec",
+   "shift": "0x0c"
+  },
+  "PN12": {
+   "domain": "SYS",
+   "offset": "0x0ec",
+   "shift": "0x10"
+  },
+  "PN13": {
+   "domain": "SYS",
+   "offset": "0x0ec",
+   "shift": "0x14"
+  },
+  "PN14": {
+   "domain": "SYS",
+   "offset": "0x0ec",
+   "shift": "0x18"
+  },
+  "PN15": {
+   "domain": "SYS",
+   "offset": "0x0ec",
+   "shift": "0x1c"
+  },
+  "PN2": {
+   "domain": "SYS",
+   "offset": "0x0e8",
+   "shift": "0x08"
+  },
+  "PN3": {
+   "domain": "SYS",
+   "offset": "0x0e8",
+   "shift": "0x0c"
+  },
+  "PN4": {
+   "domain": "SYS",
+   "offset": "0x0e8",
+   "shift": "0x10"
+  },
+  "PN5": {
+   "domain": "SYS",
+   "offset": "0x0e8",
+   "shift": "0x14"
+  },
+  "PN6": {
+   "domain": "SYS",
+   "offset": "0x0e8",
+   "shift": "0x18"
+  },
+  "PN7": {
+   "domain": "SYS",
+   "offset": "0x0e8",
+   "shift": "0x1c"
+  },
+  "PN8": {
+   "domain": "SYS",
+   "offset": "0x0ec",
+   "shift": "0x00"
+  },
+  "PN9": {
+   "domain": "SYS",
+   "offset": "0x0ec",
+   "shift": "0x04"
+  }
+ }
+}

@@ -1,0 +1,250 @@
+{
+ "board": "ma35d1",
+ "description": "Per-family non-pinctrl property template, aggregated from ENABLED board overrides (status-aware).",
+ "source": "data/ma35d1/baseline/dts/ma35d1-evb.dts",
+ "families": {
+  "adc": {
+   "total_overrides": 1,
+   "enabled_labels": [],
+   "enabled_instances": 0,
+   "extra_properties": {}
+  },
+  "can": {
+   "total_overrides": 2,
+   "enabled_labels": [
+    "can1",
+    "can3"
+   ],
+   "enabled_instances": 2,
+   "extra_properties": {}
+  },
+  "ccap": {
+   "total_overrides": 2,
+   "enabled_labels": [],
+   "enabled_instances": 0,
+   "extra_properties": {}
+  },
+  "display": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "display"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {
+    "memory-region": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<&display_buf>"
+     ]
+    }
+   }
+  },
+  "eadc": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "eadc0"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "ebi": {
+   "total_overrides": 1,
+   "enabled_labels": [],
+   "enabled_instances": 0,
+   "extra_properties": {}
+  },
+  "ehci": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "ehci0"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "epwm": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "epwm1"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "gc520l": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "gc520l"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {
+    "memory-region": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<&gc520l_buf>"
+     ]
+    }
+   }
+  },
+  "gmac": {
+   "total_overrides": 2,
+   "enabled_labels": [
+    "gmac0",
+    "gmac1"
+   ],
+   "enabled_instances": 2,
+   "extra_properties": {}
+  },
+  "i2c": {
+   "total_overrides": 3,
+   "enabled_labels": [
+    "i2c2",
+    "i2c5"
+   ],
+   "enabled_instances": 2,
+   "extra_properties": {}
+  },
+  "i2c_gpio": {
+   "total_overrides": 2,
+   "enabled_labels": [],
+   "enabled_instances": 0,
+   "extra_properties": {}
+  },
+  "i2s": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "i2s0"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {
+    "powerdown-gpios": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<&gpiod 13 GPIO_ACTIVE_HIGH> /* PD13 */"
+     ]
+    }
+   }
+  },
+  "i2s_pcm": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "i2s_pcm"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "keypad": {
+   "total_overrides": 1,
+   "enabled_labels": [],
+   "enabled_instances": 0,
+   "extra_properties": {}
+  },
+  "mem": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "mem"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {
+    "device_type": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "\"memory\""
+     ]
+    },
+    "reg": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<0x00000000 0x80000000 0 0x20000000> /* DRAM space - 1, size : 512MB DRAM */"
+     ]
+    }
+   }
+  },
+  "nand": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "nand"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "qspi": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "qspi0"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "sdhci": {
+   "total_overrides": 2,
+   "enabled_labels": [
+    "sdhci0",
+    "sdhci1"
+   ],
+   "enabled_instances": 2,
+   "extra_properties": {
+    "vqmmc-supply": {
+     "occurrences": 1,
+     "in_all_enabled_instances": false,
+     "boolean_flag": false,
+     "example_values": [
+      "<&volt0_sdhci1>"
+     ]
+    }
+   }
+  },
+  "sound": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "sound"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "uart": {
+   "total_overrides": 4,
+   "enabled_labels": [
+    "uart10",
+    "uart12",
+    "uart14",
+    "uart16"
+   ],
+   "enabled_instances": 4,
+   "extra_properties": {}
+  },
+  "usb": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "usb"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {}
+  },
+  "vc8k": {
+   "total_overrides": 1,
+   "enabled_labels": [
+    "vc8k"
+   ],
+   "enabled_instances": 1,
+   "extra_properties": {
+    "memory-region": {
+     "occurrences": 1,
+     "in_all_enabled_instances": true,
+     "boolean_flag": false,
+     "example_values": [
+      "<&vc8k_buf>"
+     ]
+    }
+   }
+  }
+ }
+}

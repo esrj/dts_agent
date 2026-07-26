@@ -145,6 +145,19 @@ def solve():
         return jsonify(error=str(exc)), 422
 
 
+@app.get("/api/chat/progress")
+def chat_progress():
+    """本輪 LLM 活動的即時進度（前端等待畫面輪詢：已思考秒數/已消耗 tokens）。"""
+    import time as _time
+    from orchestrator import agent as _agent
+    live = _agent.LIVE
+    started = live.get("started_at")
+    return jsonify(
+        running=bool(live.get("running")),
+        elapsed=int(_time.time() - started) if (live.get("running") and started) else None,
+        tokens=live.get("tokens") or 0)
+
+
 def _adopt_message(adopt: dict) -> str:
     """建議卡片「一鍵採納」→ 折成一則標準使用者訊息（intent 原樣入訊，模型只需
     照著送 solve_pinmux；方案本身在提案時已被伺服器驗證過 SAT）。"""
@@ -190,6 +203,8 @@ def chat():
     try:
         reply = _get_orchestrator().step(sess, message)
     except Exception as exc:                     # LLM / 設定 / 工具層失敗
+        from orchestrator import agent as _agent
+        _agent.LIVE["running"] = False           # 例外也要收掉即時計數
         return jsonify(error=str(exc), session_id=sess.session_id), 502
     # 只取「本輪」的 CubeMX 驗證結果——跨輪的舊結果不可污染新 plan 的徽章。
     turn_validator = None
@@ -212,6 +227,8 @@ def chat():
         suggestions=reply.suggestions,           # 驗證過的建議卡片（可一鍵採納）
         clarify=reply.clarify,                   # 待答歧義（前端渲染選項按鈕；無則 null）
         validator=turn_validator,                # 本輪驗證結果（無則 null）
+        usage_tokens=reply.usage_tokens,         # 本輪 LLM 消耗（最終值，前端顯示）
+        seconds=reply.seconds,                   # 本輪耗時（秒）
         trace=sess.trace[-12:],                  # 末段 trace，供前端 debug（可忽略）
     )
 
@@ -310,7 +327,30 @@ def export():
 # --------------------------------------------------------------------------- #
 _last_plan = {"lock": threading.Lock(), "rows": None, "board": None, "fp": None}
 _dts = {"lock": threading.Lock(), "running": False, "result": None,
-        "started_fp": None}
+        "started_fp": None, "started_at": None, "tokens": 0}
+
+
+class _DtsTokenTracker:
+    """包住 LLM provider：把 usage 即時累進 _dts["tokens"]（/api/dts/status
+    輪詢顯示）。其餘屬性透傳（同 board_create._UsageTracker 手法）。"""
+
+    def __init__(self, real):
+        self._real = real
+
+    def __getattr__(self, item):
+        attr = getattr(self._real, item)
+        if item in ("complete", "complete_raw") and callable(attr):
+            def wrapped(*a, **kw):
+                resp = attr(*a, **kw)
+                u = getattr(resp, "usage", None) or {}
+                tot = (u.get("total_tokens")
+                       or (u.get("prompt_tokens", 0) + u.get("completion_tokens", 0))
+                       or 0)
+                with _dts["lock"]:
+                    _dts["tokens"] = (_dts.get("tokens") or 0) + int(tot)
+                return resp
+            return wrapped
+        return attr
 
 
 def _remember_plan(rows, board, fp):
@@ -366,8 +406,11 @@ def _dts_worker(board: str, fp: str, snapshot_csv: str):
         # pipeline 讀 run 專屬快照而非共用的 output/plan/plan.csv——後者隨時可能
         # 被並行的 /api/solve、emit_plan 覆寫（TOCTOU），會讓產物與 fingerprint
         # 指認的 plan 不一致。plan.used.csv 同時留在產物夾作為溯源紀錄。
+        from llm_provider import get_provider as _gp
+        _prov = _DtsTokenTracker(_gp(module="dts_patch", allow_mock=False))
         res = m8_run(plan_csv=snapshot_csv, write=True,
-                     run_compile=run_compile)
+                     run_compile=run_compile,
+                     provider=_prov, repair_provider=_prov)
         _write_locator_reports(res)                  # diff_plan / locator_report 落地
         result = {
             "passed": bool(res.passed),
@@ -396,6 +439,7 @@ def _dts_worker(board: str, fp: str, snapshot_csv: str):
     result.update(fingerprint=fp, board=board,
                   ran_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
                   seconds=round(time.time() - started, 1),
+                  tokens=_dts.get("tokens") or 0,
                   artifacts=_dts_files())
     with _dts["lock"]:
         _dts["result"] = result
@@ -432,6 +476,8 @@ def dts_generate():
                            running=True), 409
         _dts["running"] = True
         _dts["started_fp"] = have_fp
+        _dts["started_at"] = time.time()
+        _dts["tokens"] = 0
     try:
         csv_text = plan_csv_text(rows)
         # 交棒介面落地：plan.csv 只寫伺服器保存的 rows（防偽），覆寫制單一位置
@@ -467,8 +513,13 @@ def dts_status():
         running = _dts["running"]
         started_fp = _dts["started_fp"]
         result = _dts["result"]
+        started_at = _dts.get("started_at")
+        tokens = _dts.get("tokens") or 0
     return jsonify(available=_dts_available(board), running=running,
-                   started_fingerprint=started_fp, result=result)
+                   started_fingerprint=started_fp, result=result,
+                   elapsed=int(time.time() - started_at)
+                           if (running and started_at) else None,
+                   tokens=tokens if running else None)
 
 
 @app.get("/api/dts/file")

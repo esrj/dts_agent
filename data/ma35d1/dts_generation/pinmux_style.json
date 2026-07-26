@@ -1,0 +1,23 @@
+{
+ "style": "nuvoton-mfp",
+ "description": "Nuvoton MA35 nuvoton,pins 條目:<MFP巨集 &pcfg組態>;巨集展開為 (reg, shift, value) 三 cell,value 即 af_table 的 mux",
+ "source": "ma35d1-evb.dts + dt-bindings/pinctrl/ma35d1-pinfunc.h",
+ "macros": {
+  "SYS": "SYS_GP{bank}_MFP{half}_P{bank}{num}MFP_{signal}"
+ },
+ "macro_rules": {
+  "half": "num 0-7 -> L;num 8-15 -> H",
+  "cells": "(offset, shift, value);offset/shift 見 pad_params,value = af_table 的 mux"
+ },
+ "role_flags": {
+  "default": "&pcfg_default"
+ },
+ "conf_labels": [
+  "pcfg_default",
+  "pcfg_emac_1_8V",
+  "pcfg_keypad",
+  "pcfg_sdhci_drive1_3_3V",
+  "pcfg_sdhci_drive7_1_8V",
+  "pcfg_sdhci_drive7_3_3V"
+ ]
+}

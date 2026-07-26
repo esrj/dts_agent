@@ -1,0 +1,303 @@
+{
+ "soc": "MA35D1 Series",
+ "source": "ma35d1-evb.dts (kernel 官方 DTS)",
+ "description": "官方 ma35d1-evb.dts 啟用的 peripheral → signal",
+ "peripherals": {
+  "can1": {
+   "signals": [
+    "CAN1_RXD",
+    "CAN1_TXD"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_can1"
+   ]
+  },
+  "can3": {
+   "signals": [
+    "CAN3_RXD",
+    "CAN3_TXD"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_can3"
+   ]
+  },
+  "display": {
+   "signals": [
+    "LCM_VSYNC",
+    "LCM_HSYNC",
+    "LCM_CLK",
+    "LCM_DEN",
+    "LCM_DATA0",
+    "LCM_DATA1",
+    "LCM_DATA2",
+    "LCM_DATA3",
+    "LCM_DATA4",
+    "LCM_DATA5",
+    "LCM_DATA6",
+    "LCM_DATA7",
+    "LCM_DATA8",
+    "LCM_DATA9",
+    "LCM_DATA10",
+    "LCM_DATA11",
+    "LCM_DATA12",
+    "LCM_DATA13",
+    "LCM_DATA14",
+    "LCM_DATA15",
+    "LCM_DATA16",
+    "LCM_DATA17",
+    "LCM_DATA18",
+    "LCM_DATA19",
+    "LCM_DATA20",
+    "LCM_DATA21",
+    "LCM_DATA22",
+    "LCM_DATA23"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_display0"
+   ]
+  },
+  "eadc0": {
+   "signals": [
+    "EADC0_CH0",
+    "EADC0_CH1",
+    "EADC0_CH2",
+    "EADC0_CH3",
+    "EADC0_CH4",
+    "EADC0_CH5",
+    "EADC0_CH6",
+    "EADC0_CH7"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_eadc0"
+   ]
+  },
+  "ehci0": {
+   "signals": [
+    "HSUSBH_PWREN",
+    "HSUSBH_OVC"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_hsusbh"
+   ]
+  },
+  "epwm1": {
+   "signals": [
+    "EPWM1_CH5"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_epwm1"
+   ]
+  },
+  "gc520l": {
+   "signals": [],
+   "pinctrl_groups": []
+  },
+  "gmac0": {
+   "signals": [
+    "RGMII0_MDC",
+    "RGMII0_MDIO",
+    "RGMII0_TXCTL",
+    "RGMII0_TXD0",
+    "RGMII0_TXD1",
+    "RGMII0_RXCLK",
+    "RGMII0_RXCTL",
+    "RGMII0_RXD0",
+    "RGMII0_RXD1",
+    "RGMII0_RXD2",
+    "RGMII0_RXD3",
+    "RGMII0_TXCLK",
+    "RGMII0_TXD2",
+    "RGMII0_TXD3"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_gmac0"
+   ]
+  },
+  "gmac1": {
+   "signals": [
+    "RGMII1_MDC",
+    "RGMII1_MDIO",
+    "RGMII1_TXCTL",
+    "RGMII1_TXD0",
+    "RGMII1_TXD1",
+    "RGMII1_RXCLK",
+    "RGMII1_RXCTL",
+    "RGMII1_RXD0",
+    "RGMII1_RXD1",
+    "RGMII1_RXD2",
+    "RGMII1_RXD3",
+    "RGMII1_TXCLK",
+    "RGMII1_TXD2",
+    "RGMII1_TXD3"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_gmac1"
+   ]
+  },
+  "i2c2": {
+   "signals": [
+    "I2C2_SDA",
+    "I2C2_SCL"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_i2c2"
+   ]
+  },
+  "i2c5": {
+   "signals": [
+    "I2C5_SDA",
+    "I2C5_SCL"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_i2c5"
+   ]
+  },
+  "i2s0": {
+   "signals": [
+    "I2S0_MCLK",
+    "I2S0_LRCK",
+    "I2S0_BCLK",
+    "I2S0_DI",
+    "I2S0_DO"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_i2s0"
+   ]
+  },
+  "i2s_pcm": {
+   "signals": [],
+   "pinctrl_groups": []
+  },
+  "mem": {
+   "signals": [],
+   "pinctrl_groups": []
+  },
+  "nand": {
+   "signals": [
+    "NAND_DATA0",
+    "NAND_DATA1",
+    "NAND_DATA2",
+    "NAND_DATA3",
+    "NAND_DATA4",
+    "NAND_DATA5",
+    "NAND_DATA6",
+    "NAND_DATA7",
+    "NAND_RDY",
+    "NAND_nRE",
+    "NAND_nWE",
+    "NAND_CLE",
+    "NAND_ALE",
+    "NAND_nCS",
+    "NAND_nWP"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_nand"
+   ]
+  },
+  "qspi0": {
+   "signals": [
+    "QSPI0_SS0",
+    "QSPI0_CLK",
+    "QSPI0_MOSI0",
+    "QSPI0_MISO0",
+    "QSPI0_MOSI1",
+    "QSPI0_MISO1"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_qspi0"
+   ]
+  },
+  "sdhci0": {
+   "signals": [
+    "eMMC0_CMD",
+    "eMMC0_CLK",
+    "eMMC0_DAT0",
+    "eMMC0_DAT1",
+    "eMMC0_DAT2",
+    "eMMC0_DAT3",
+    "SD0_nCD",
+    "SD0_WP"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_sdhci0"
+   ]
+  },
+  "sdhci1": {
+   "signals": [
+    "eMMC1_DAT4",
+    "eMMC1_DAT5",
+    "eMMC1_DAT6",
+    "eMMC1_DAT7",
+    "SD1_WP",
+    "SD1_nCD",
+    "eMMC1_CMD",
+    "eMMC1_CLK",
+    "eMMC1_DAT0",
+    "eMMC1_DAT1",
+    "eMMC1_DAT2",
+    "eMMC1_DAT3"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_sdhci1_3_3V"
+   ]
+  },
+  "sound": {
+   "signals": [],
+   "pinctrl_groups": []
+  },
+  "uart10": {
+   "signals": [
+    "UART10_nCTS",
+    "UART10_nRTS",
+    "UART10_RXD",
+    "UART10_TXD"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_uart10"
+   ]
+  },
+  "uart12": {
+   "signals": [
+    "UART12_nRTS",
+    "UART12_RXD",
+    "UART12_TXD"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_uart12"
+   ]
+  },
+  "uart14": {
+   "signals": [
+    "UART14_nRTS",
+    "UART14_RXD",
+    "UART14_TXD"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_uart14"
+   ]
+  },
+  "uart16": {
+   "signals": [
+    "UART16_nCTS",
+    "UART16_nRTS",
+    "UART16_RXD",
+    "UART16_TXD"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_uart16"
+   ]
+  },
+  "usb": {
+   "signals": [
+    "HSUSB0_VBUSVLD"
+   ],
+   "pinctrl_groups": [
+    "pinctrl_usb"
+   ]
+  },
+  "vc8k": {
+   "signals": [],
+   "pinctrl_groups": []
+  }
+ }
+}

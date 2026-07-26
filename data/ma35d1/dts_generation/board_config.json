@@ -1,0 +1,227 @@
+{
+ "board": "ma35d1",
+ "description": "Board-specific peripheral configuration from the baseline board DTS overrides (depth-1 non-pinctrl props + child devices + /delete-property directives). DTS-derived; nothing guessed.",
+ "source": "data/ma35d1/baseline/dts/ma35d1-evb.dts",
+ "_needs_board_doc": [
+  "connector_routing (which CN/header a peripheral routes to) — not in DTS."
+ ],
+ "peripherals": {
+  "can1": {
+   "family": "can",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "can3": {
+   "family": "can",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "display": {
+   "family": "display",
+   "status": "okay",
+   "board_knobs": {
+    "memory-region": "<&display_buf>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "eadc0": {
+   "family": "eadc",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "ehci0": {
+   "family": "ehci",
+   "status": "okay(default)",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "epwm1": {
+   "family": "epwm",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "gc520l": {
+   "family": "gc520l",
+   "status": "okay",
+   "board_knobs": {
+    "memory-region": "<&gc520l_buf>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "gmac0": {
+   "family": "gmac",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "gmac1": {
+   "family": "gmac",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "i2c2": {
+   "family": "i2c",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": [
+    {
+     "path": "nau8822@1a",
+     "label": "nau8822",
+     "compatible": "nuvoton,nau8822",
+     "reg": "<0x1a>",
+     "status": null,
+     "props": {
+      "nuvoton,spk-btl": null
+     }
+    }
+   ]
+  },
+  "i2c5": {
+   "family": "i2c",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": [
+    {
+     "path": "goodix_ts@5d",
+     "label": null,
+     "compatible": "goodix,gt911",
+     "reg": "<0x5d>",
+     "status": "okay",
+     "props": {
+      "interrupt-parent": "<&gpiod>",
+      "interrupts": "<12 2>",
+      "reset-gpios": "<&gpiom 12 0x00>",
+      "irq-gpios": "<&gpiod 12 0x00>",
+      "touchscreen-size-x": "<1024>",
+      "touchscreen-size-y": "<600>",
+      "touchscreen-inverted-x": "<1>",
+      "touchscreen-inverted-y": "<1>"
+     }
+    }
+   ]
+  },
+  "i2s0": {
+   "family": "i2s",
+   "status": "okay",
+   "board_knobs": {
+    "powerdown-gpios": "<&gpiod 13 GPIO_ACTIVE_HIGH> /* PD13 */"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "i2s_pcm": {
+   "family": "i2s_pcm",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "mem": {
+   "family": "mem",
+   "status": "okay(default)",
+   "board_knobs": {
+    "device_type": "\"memory\"",
+    "reg": "<0x00000000 0x80000000 0 0x20000000> /* DRAM space - 1, size : 512MB DRAM */"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "nand": {
+   "family": "nand",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "qspi0": {
+   "family": "qspi",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "sdhci0": {
+   "family": "sdhci",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "sdhci1": {
+   "family": "sdhci",
+   "status": "okay",
+   "board_knobs": {
+    "vqmmc-supply": "<&volt0_sdhci1>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "sound": {
+   "family": "sound",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "uart10": {
+   "family": "uart",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "uart12": {
+   "family": "uart",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "uart14": {
+   "family": "uart",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "uart16": {
+   "family": "uart",
+   "status": "okay",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "usb": {
+   "family": "usb",
+   "status": "okay(default)",
+   "board_knobs": {},
+   "deleted_properties": [],
+   "child_devices": []
+  },
+  "vc8k": {
+   "family": "vc8k",
+   "status": "okay",
+   "board_knobs": {
+    "memory-region": "<&vc8k_buf>"
+   },
+   "deleted_properties": [],
+   "child_devices": []
+  }
+ }
+}
