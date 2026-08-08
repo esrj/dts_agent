@@ -327,6 +327,9 @@ def normalize_items(intent: dict) -> dict:
                 "level": "count", "family": it.get("family"), "mode": it.get("mode"),
                 "count": 1, "pins": pins, "pin_mode": "required" if pins else None,
                 "af": None,
+                # label（使用者對此介面的稱呼，如 RS485）是純註記：一路透傳到
+                # plan 輸出的 function 欄，絕不影響求解
+                **({"label": it["label"]} if it.get("label") else {}),
             })
             changed = True
         else:

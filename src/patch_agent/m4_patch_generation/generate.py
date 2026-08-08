@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from .. import config
 from ..m1_dts_parser import build_index
 from ..pinmux_style import get_style, assemble_group_sections
+from ..supersede import apply as supersede_apply
 
 # patch diff 檔頭的 kernel 樹路徑改由 config.KERNEL_DTS_PATH 供給（多板：
 # 隨 init_board 重算；board.yaml 可用 kernel_dts_path 欄位覆寫）。
@@ -274,7 +275,16 @@ def generate(validated_plan_ir, stage2, index, skip_peripherals=None, to_disable
     managed = "\n".join(body)
 
     baseline = open(config.BOARD_DTS).read()
-    base_noeol = baseline.rstrip("\n")
+    # supersede 政策：換腳周邊（generate/reuse）的官方 pinctrl 行註解掉
+    sup_targets = [r["node"] for r in reports
+                   if r.get("action") in ("generate", "reuse") and r.get("node")]
+    base_sup, sup_changed = supersede_apply(baseline, sup_targets)
+    for lb in sup_changed:
+        edits.append({"type": "comment_out_pinctrl", "target": f"&{lb}",
+                      "source": "deterministic:supersede",
+                      "reason": "official pinctrl superseded by the managed "
+                                "region (pins changed by plan)"})
+    base_noeol = base_sup.rstrip("\n")
     generated = base_noeol + "\n\n" + managed + "\n"
 
     patch = "".join(difflib.unified_diff(

@@ -1,6 +1,6 @@
 # am6548 知識庫待審查清單(REVIEW)
 
-產出時間:2026-07-26 02:32(knowledge_extract 自動生成)
+產出時間:2026-07-29 10:42(knowledge_extract 自動生成)
 
 ## boot 群組 emit/reserve 判定(增項 A)
 
@@ -8,8 +8,8 @@
 
 | ✓ | 群組 | action | DTS 節點 | 依據 | 信心 |
 |---|---|---|---|---|---|
-| ☐ | BOOTMODE_MAIN | reserve_only | — | DTS 無對應節點或未啟用——視為 bootloader/strap 持有,kernel 不碰 | low |
-| ☐ | BOOTMODE_MCU | reserve_only | — | DTS 無對應節點或未啟用——視為 bootloader/strap 持有,kernel 不碰 | low |
+| ☐ | MAIN_BOOTMODE_STRAP | reserve_only | — | DTS 無對應節點或未啟用——視為 bootloader/strap 持有,kernel 不碰 | low |
+| ☐ | MCU_BOOTMODE_STRAP | reserve_only | — | DTS 無對應節點或未啟用——視為 bootloader/strap 持有,kernel 不碰 | low |
 | ☐ | MMC0 | emit_fixed_assignment | &sdhci0 | compatible "ti,am654-sdhci-5.1" ＝開機媒體（eMMC/SD）且有效啟用 | medium |
 | ☐ | MMC1 | emit_fixed_assignment | &sdhci1 | compatible "ti,am654-sdhci-5.1" ＝開機媒體（eMMC/SD）且有效啟用 | medium |
 | ☐ | UART0 | emit_fixed_assignment | &main_uart0 | /chosen stdout-path 指向 &main_uart0（開機 console） | medium |

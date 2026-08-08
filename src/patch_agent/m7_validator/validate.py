@@ -15,7 +15,9 @@ first failing layer stops the run and its structured errors go to M8 Repairer:
   3. multi-state       — pinctrl-names == baseline-declared states; every
                          pinctrl-N present and resolvable (§7.4a)
   4. regression        — protected GPIOs unused; boot-required never disabled;
-                         baseline byte-identical outside the managed region;
+                         baseline byte-identical outside the managed region
+                         (modulo the deterministic supersede pinctrl comment-out,
+                         recomputed here from the same pure function);
                          to_disable all rendered; untouched nodes absent
   5. structural        — no label collision/duplication; STM32_PINMUX macro
                          not expanded; pinctrl phandles resolvable
@@ -36,6 +38,7 @@ from ..m1_dts_parser import build_index
 from ..m1_dts_parser.parser import parse_dts, iter_all
 from ..m2_validation_harness.harness import _boot_required_nodes
 from ..m4_patch_generation.generate import MARK_BEGIN, MARK_END
+from ..supersede import apply as supersede_apply
 from ..pinmux_style import get_style
 
 # ---- error types (M8 Repairer classifier consumes these, plan.md §8.2) ----
@@ -158,7 +161,8 @@ def _layer1_schema(dp, edits, errs):
         et = e.get("type")
         if et == "append_managed_region":
             continue
-        if et not in ("pinctrl_group", "node_override", "disable_override"):
+        if et not in ("pinctrl_group", "node_override", "disable_override",
+                      "comment_out_pinctrl"):
             errs.append(VError(SCHEMA_VIOLATION, f"unknown edit type {et!r}", 1))
             continue
         if not e.get("source") or not e.get("reason"):
@@ -166,7 +170,8 @@ def _layer1_schema(dp, edits, errs):
                                f"edit missing source/reason: {et} "
                                f"{e.get('target') or e.get('label') or ''}".strip(), 1))
         tgt = e.get("target")
-        if et in ("node_override", "disable_override") and tgt not in allowed:
+        if et in ("node_override", "disable_override", "comment_out_pinctrl") \
+                and tgt not in allowed:
             errs.append(VError(SCHEMA_VIOLATION,
                                f"edit target {tgt!r} is not in the diff plan", 1,
                                peripheral=(tgt or "").lstrip("&")))
@@ -285,11 +290,17 @@ def _layer4_regression(dp, art, baseline, gpio_pins, require, errs):
                                f"boot-required &{ref} is disabled by the managed region",
                                4, ref, line=art.line_of(f"&{ref} {{")))
 
-    # zero diff outside the managed region
-    base_noeol = baseline.rstrip("\n")
+    # zero diff outside the managed region — baseline modulo the deterministic
+    # supersede transform（換腳周邊的官方 pinctrl 行註解），此處以同一純函式
+    # 對 baseline 重算 expected prefix，任何其他改動仍是 regression。
+    sup_targets = [t["target_node"] for t in dp["to_enable_or_update"]
+                   if t["action"] in ("generate", "reuse")]
+    expected, _ = supersede_apply(baseline, sup_targets)
+    base_noeol = expected.rstrip("\n")
     if not art.text.startswith(base_noeol):
         errs.append(VError(REGRESSION_OUTSIDE_REGION,
-                           "baseline is not preserved byte-identically before the managed region", 4))
+                           "baseline is not preserved byte-identically before the managed region "
+                           "(modulo the supersede pinctrl comment-out)", 4))
     elif art.region:
         tail = art.text[len(base_noeol):]
         if tail.strip() != art.region.strip():

@@ -53,8 +53,17 @@ _INTENT_SCHEMA = {
         "bootable_default": {"type": "boolean"},
         "items": {"type": "array", "items": {"type": "object"},
                   "description": "每個 item 一個 level（count / peripheral / signal）；"
-                                 "條件式需求的 item 可帶 optional:true（見 system prompt）"},
+                                 "條件式需求的 item 可帶 optional:true（見 system prompt）。"
+                                 "使用者用功能名稱呼介面時（RS232/RS485/console…），該功能"
+                                 "自成一個 item 並帶 label:\"<原詞>\"——同 family 多個具名"
+                                 "功能各自一個 count item（各 count 1），不可合併；label 會"
+                                 "成為 plan 的 function 欄，漏掉＝使用者無法區分同類介面。"},
         "loose_pins": {"type": "array", "items": {"type": "string"}},
+        "reserve_gpio": {"type": "array", "items": {"type": "string"},
+                         "description": "要讓出/保留給其他用途的腳位（PXn），或 instance "
+                                        "名（如 \"I2C2\"＝該週邊的官方腳整組，伺服器展開，"
+                                        "不要自己猜腳位）。這些腳會從所有 signal 候選域"
+                                        "剔除，官方基底中用到它們的週邊整組讓出。"},
         "unresolved": {"type": "array", "items": {"type": "string"}},
     },
 }
@@ -83,10 +92,17 @@ ANTHROPIC_TOOLS = [
             "週邊(standalone_peripherals)、開機必備已固定佔用的 instance"
             "(boot_provided，不可沿用)、secure/bootloader 保留週邊"
             "(reserved_instances，不可請求)、GPIO 鎖腳數。不確定週邊是否存在或"
-            "數量上限時先呼叫。"),
+            "數量上限時先呼叫。帶 instance 可加查該 instance 每個 signal 的合法"
+            "候選腳（instance_detail）——「換腳/讓腳/避開某腳」的需求先查這個： "
+            "usable_pins 只剩一支＝無法換腳，直接告知使用者，不要嘗試重解。"),
         "input_schema": {
             "type": "object",
-            "properties": {"board": {"type": "string"}},
+            "properties": {
+                "board": {"type": "string"},
+                "instance": {"type": "string",
+                             "description": "加查此 instance 的 signal 候選腳明細"
+                                            "（如 \"I2C2\"）"},
+            },
         },
     },
     {
@@ -304,7 +320,8 @@ class Orchestrator:
                     session.last_plan = out.get("assignment")
                 return out
             if name == "get_capabilities":
-                return self.tools.get_capabilities(inp.get("board") or session.board)
+                return self.tools.get_capabilities(inp.get("board") or session.board,
+                                                   instance=inp.get("instance"))
             if name == "lookup_binding":
                 return self.tools.lookup_binding(
                     inp.get("peripheral"), inp.get("board") or session.board)

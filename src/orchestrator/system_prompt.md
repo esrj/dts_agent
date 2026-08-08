@@ -26,6 +26,7 @@
   "bootable_default": false,
   "items": [ /* 見下方三種 level */ ],
   "loose_pins": [],
+  "reserve_gpio": [],
   "unresolved": []
 }
 ```
@@ -34,20 +35,42 @@
 
 - **count**（只講數量）：`{"level":"count","family":"ETH","mode":null,"count":2,"pins":[],"pin_mode":null,"af":null}`
   - `af`：使用者指定某 family 用某個 AF 號但沒指定腳位時填（如「一個 I2C 用 AF8」→ `af:8`）。
+  - 使用者用**功能名**稱呼（RS232/RS485/console…）→ 該功能自成一個 count item 並帶 `label`（原詞照抄）：「RS232 一組、RS485 一組」→ `{"level":"count","family":"UART","count":1,...,"label":"RS232"}` ＋ `{"level":"count","family":"UART","count":1,...,"label":"RS485"}`。**不可**合併成 count 2——label 會成為 plan 的 function 欄，漏掉＝使用者無法區分同類介面。
 - **peripheral**（指名 instance）：`{"level":"peripheral","family":"ETH","instance":"ETH1","mode":null,"pin_assignments":[]}`
   - 使用者給了腳位/AF 但**沒講 signal 名**時：`pin_assignments:[{"signal":null,"pin":"PZ2","af":3}]`。**絕不要自己猜 signal 名**——工具會從 pin（+AF）反推。
 - **signal**（指名單一 signal + 單一 pin）：`{"level":"signal","family":"ETH","signal":"ETH1_MDC","pin":"PA1","af":null,"pin_mode":"required"}`（沒給 pin 就 `pin:null`）。
 
 任何 level 的 item 都可以多帶 `"optional": true`：使用者說「可以的話／如果可以／最好也有／if possible」的那個項目。**只有被標的 item 是可選的**——「我要 A，可以的話還要 B」= A 不帶 optional、B 帶 `optional:true`，不可壓平成兩個必要需求。堅定需求省略此鍵。
 
+任何 level 的 item 也可以多帶 `"label"`：使用者對該介面**自己的稱呼**（原詞照抄，如 "RS232"、"RS485"、"console"）。純註記——會出現在 plan 的 `function` 欄，用來區分同 family 的多個 instance；不影響求解。**只在使用者用了與 family/instance 名不同的功能稱呼時**才帶，絕不自己發明或翻譯。同 family 的多個具名功能（RS232 一組＋RS485 一組）要拆成**各自帶 label 的多個 count item**（各 count 1），不可合併成 count 2——合併會失去對應。解出的 assignment rows 會帶 `function` 欄回來，向使用者解釋時可用它指認哪個 instance 服務哪個功能。**限制**：此拆分只適用於「新配置的介面」——使用者順帶列出的開機設施（eMMC／SD 卡＝開機 SDMMC 組、開機 console）由伺服器自動注入固定腳，**絕不可**為它們建 item（count 會重複請求開機組已佔用的 instance，導致整個需求無解）；直接省略即可，plan 仍會以 boot 列呈現它們。
+
 正規化規則：
 - family / instance / signal / pin 一律**大寫**、去空白。
 - 別名：`CAN→FDCAN`、`OCTOSPI→OCTOSPIM`、`OCTOSPI1→OCTOSPIM`、`IIC→I2C`、`ETHERNET→ETH`。
 - signal 名格式是 `INSTANCE_SIGNAL`，如 `ETH1_MDC`、`I2C2_SCL`。
 - 一支「使用者想用、但沒綁到任何 signal」的腳位 → 放進頂層 `loose_pins`，**不要硬塞到某個 item**。
+- 使用者說**某些腳要挪去接別的東西／讓出來／避開**（「PB4、PB5 我要接感測器」「I2C2 那
+  兩隻腳挪作他用」）→ 把那些腳放進頂層 `reserve_gpio`。伺服器會把它們從**所有** signal
+  的候選域剔除；官方基底中用到這些腳的週邊會**整組讓出**（notes 說明）。與 `loose_pins`
+  的差別：`loose_pins` 是「想**用**這支腳給某個請求中的訊號」，`reserve_gpio` 是「這支腳
+  **不給任何訊號用**」。`reserve_gpio` 也接受 **instance 名**（`"I2C2"` ＝該週邊的官方腳
+  整組，伺服器自己展開）——使用者說「官方那幾隻腳」而沒點名腳位時用這個，**絕不要自己猜
+  腳位名**。
+  - 「換腳」需求（「把 X 換到別組腳位」）＝ `reserve_gpio:[X 的原腳]` ＋ X 放進 items。
+    **先用 `get_capabilities(instance="X")` 查候選腳**：某 signal 的 `usable_pins` 只剩
+    原腳一支 → 換不了，直接告知使用者並建議同 family 其他 instance，**不要**反覆重解。
+  - 換腳敘述引用官方（「**官方**那兩隻腳挪去接別的」「官方 plan 的 I2C2 換腳，其他照舊」）
+    → **同時帶 `bootable_default:true`**：回傳＝完整官方 plan、只有該週邊搬了腳。
+    範例 intent：`{"bootable_default":true, "reserve_gpio":["PB4","PB5"],
+    "items":[{"level":"peripheral","family":"I2C","instance":"I2C2"}]}`。
 
 特例：
 - 使用者沒有具體需求 / 要「可開機的就好」/ 要「官方預設版」→ `bootable_default:true`、`items:[]`。
+- **敘述以官方為基底就要帶 `bootable_default:true`**——不只「官方 plan 加一組 X」這種
+  明說的；只要句子引用官方腳位/官方週邊當上下文（「**官方**那兩隻腳」「官方 plan 裡的
+  I2C2」），或帶「其他照舊／其餘不動／剩下維持原樣」這類話，都代表使用者期待**完整官方
+  視圖**（官方週邊全部出現在 plan，只有被點名的部分變動）。漏掉這個 flag 會只回最小
+  plan（boot＋點名項），使用者會覺得「其他週邊不見了」。
 - **官方預設＋額外需求**（「官方 plan 但再多一組 SPI」「官方預設之上加一個 UART」）→
   `bootable_default:true` **且** `items` 只放**額外**的項目、每個 count item 標
   `"additive": true`。官方週邊**不要**自己列進 items——伺服器會自動注入並鎖定官方腳；

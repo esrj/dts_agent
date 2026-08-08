@@ -174,11 +174,15 @@ class SolverTools:
     # ----------------------------------------------------------------------- #
     # READ-ONLY: let the model construct valid intents / reason about limits   #
     # ----------------------------------------------------------------------- #
-    def get_capabilities(self, board: str | None = None) -> dict:
+    def get_capabilities(self, board: str | None = None,
+                         instance: str | None = None) -> dict:
         """What this board can do: families & their instances present in Σ, each
         family's modes, the boot-essential set already provided (deductible from
         a count), and how many pins are GPIO-locked. The model uses this to build
-        a satisfiable intent and to explain magnitude limits ("only 2 ETH free")."""
+        a satisfiable intent and to explain magnitude limits ("only 2 ETH free").
+
+        instance（可選）：加查該 instance 每個 signal 的合法候選腳（Σ 域）——
+        「換腳/讓腳」需求先看這個：usable 只剩一支＝無法換腳，直接回答不可行。"""
         board = board or DEFAULT_BOARD
         try:
             b = self._pipeline._load_board(board)
@@ -228,11 +232,40 @@ class SolverTools:
             if fam:
                 boot_provided.setdefault(fam[2].upper(), set()).add(tok)
 
+        # 指定 instance 的 signal 候選腳明細（唯讀；「換腳/讓腳」判斷的依據）
+        instance_detail = None
+        if instance:
+            tok = str(instance).strip().upper()
+            doms: dict[str, set] = {}
+            for pin, sigs in b.af.items():
+                for s in sigs:
+                    if str(s).upper().split("_", 1)[0] == tok:
+                        doms.setdefault(str(s), set()).add(pin)
+            official = {s: p for s, p in b.baseline.items()
+                        if s.split("_", 1)[0].upper() == tok}
+            instance_detail = {
+                "instance": tok,
+                "signals": {
+                    s: {"candidate_pins": sorted(v),
+                        "usable_pins": sorted(v - b.must_gpio),
+                        "official_pin": official.get(s)}
+                    for s, v in sorted(doms.items())
+                },
+                "note": ("candidate_pins = Σ 全部合法腳；usable_pins 已扣掉板級"
+                         "保留腳（gpio/secure）。usable 只剩 1 支＝該 signal 無法"
+                         "換腳；為空＝完全不可用。"),
+            } if doms else {
+                "instance": tok,
+                "signals": {},
+                "note": "此 instance 在 Σ 中沒有任何 signal——名稱可能有誤。",
+            }
+
         return {
             "status": "ok",
             "board": board,
             "families": families,
             "modes": modes,
+            **({"instance_detail": instance_detail} if instance_detail else {}),
             "standalone_peripherals": standalone,
             "boot_provided": {k: sorted(v) for k, v in boot_provided.items()},
             "boot_required_signals": sorted(b.boot_required),
@@ -451,7 +484,8 @@ class SolverTools:
              "signal": r.get("signal"), "pin": r.get("pin"),
              "af": "" if r.get("af") is None else r.get("af"),
              **({"ic": r.get("ic") or b.ic_of((r.get("signal") or "").upper())}
-                if dataio.IC_BINDING_ENABLED else {})}
+                if dataio.IC_BINDING_ENABLED else {}),
+             **({"function": r["function"]} if r.get("function") else {})}
             for r in rows
         ]
         outdir = os.path.join(OUTPUT, "plan")

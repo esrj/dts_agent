@@ -9,8 +9,8 @@
    "af"
   ],
   "groups": {
-   "BOOTMODE_MAIN": {
-    "role": "Dedicated MAIN domain boot mode configuration straps BOOTMODE[18:00] (Table 4-65: BOOTMODE00=M27, BOOTMODE01=M23, BOOTMODE02=M28, BOOTMODE03=M24, BOOTMODE04=N24, BOOTMODE05=N27, BOOTMODE06=N28, BOOTMODE07=M25, BOOTMODE08=N23, BOOTMODE09=M26, BOOTMODE10=P28, BOOTMODE11=P27, BOOTMODE12=N26, BOOTMODE13=N25, BOOTMODE14=P24, BOOTMODE15=R27, BOOTMODE16=P25, BOOTMODE17=P26, BOOTMODE18=U28). Sampled as Boot Mode Configuration / device select and must be valid 2000 ns before PORz goes inactive (BC1/BC2). Not part of the pin multiplexing table.",
+   "MAIN_BOOTMODE_STRAP": {
+    "role": "Dedicated MAIN domain boot mode configuration straps BOOTMODE[18:00] (Table 4-65: BOOTMODE00=M27, BOOTMODE01=M23, BOOTMODE02=M28, BOOTMODE03=M24, BOOTMODE04=N24, BOOTMODE05=N27, BOOTMODE06=N28, BOOTMODE07=M25, BOOTMODE08=N23, BOOTMODE09=M26, BOOTMODE10=P28, BOOTMODE11=P27, BOOTMODE12=N26, BOOTMODE13=N25, BOOTMODE14=P24, BOOTMODE15=R27, BOOTMODE16=P25, BOOTMODE17=P26, BOOTMODE18=U28). Sampled as 'Boot Mode Configuration / devices select' and must be valid with setup/hold relative to PORz (Table 5-18 BC1/BC2). Not part of the pin-mux table.",
     "in_kernel_dt": false,
     "solver_action": "reserve_only",
     "profile_status": "needs_confirmation",
@@ -20,8 +20,8 @@
      "confidence": "low"
     }
    },
-   "BOOTMODE_MCU": {
-    "role": "Dedicated MCU domain boot mode configuration straps MCU_BOOTMODE[09:00] (Table 4-66: MCU_BOOTMODE00=AF4, MCU_BOOTMODE01=AF3, MCU_BOOTMODE02=AE3, MCU_BOOTMODE03=AD1, MCU_BOOTMODE04=AC3, MCU_BOOTMODE05=Y2, MCU_BOOTMODE06=Y1, MCU_BOOTMODE07=Y3, MCU_BOOTMODE08=AC5, MCU_BOOTMODE09=AB4). Select MCU boot mode system clock speed and fail-safe boot device; must be valid 2000 ns before MCU_PORz goes inactive (BC3/BC4). Not part of the pin multiplexing table.",
+   "MCU_BOOTMODE_STRAP": {
+    "role": "Dedicated MCU domain boot mode configuration straps MCU_BOOTMODE[09:00] (Table 4-66: MCU_BOOTMODE00=AF4, MCU_BOOTMODE01=AF3, MCU_BOOTMODE02=AE3, MCU_BOOTMODE03=AD1, MCU_BOOTMODE04=AC3, MCU_BOOTMODE05=Y2, MCU_BOOTMODE06=Y1, MCU_BOOTMODE07=Y3, MCU_BOOTMODE08=AC5, MCU_BOOTMODE09=AB4). Select 'MCU Boot Mode system clock speed and fail-safe boot device' and must be valid with setup/hold relative to MCU_PORz (Table 5-18 BC3/BC4). Not part of the pin-mux table.",
     "in_kernel_dt": false,
     "solver_action": "reserve_only",
     "profile_status": "needs_confirmation",

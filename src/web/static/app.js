@@ -447,11 +447,12 @@ function setStatus(body, text, kind) {
   scrollBottom();
 }
 
-// 一般對話式訊息（不支援的週邊、無解…）—— 中性文字，不用紅色錯誤樣式
+// 一般對話式訊息（不支援的週邊、無解…）—— 中性文字，不用紅色錯誤樣式。
+// LLM 文字常帶 markdown → 走 renderMarkdown（先跳脫再還原白名單，安全）。
 function setNote(body, text) {
   body.innerHTML = "";
-  const p = el("p", "note");
-  p.textContent = text;
+  const p = el("div", "reply note");
+  p.innerHTML = renderMarkdown(text);
   body.appendChild(p);
   scrollBottom();
 }
@@ -759,26 +760,81 @@ async function adoptSuggestion(s, btn, wrap) {
   }
 }
 
-// 極簡 markdown -> 安全 HTML：先跳脫，再還原 **粗體**、`code`、- 清單、段落換行。
-// 只允許這幾種，避免 XSS（不還原任何標籤）。
+// markdown -> 安全 HTML：先整段跳脫，再只還原白名單語法（標題、清單、圍欄
+// 程式碼、引用、分隔線、表格、粗斜體、行內 code、http(s) 連結）。不還原任何
+// 使用者提供的標籤；連結 URL 禁含引號（escapeHtml 不跳脫引號→自防屬性注入）。
 function renderMarkdown(src) {
   const esc = escapeHtml(src);
   const lines = esc.split("\n");
-  let html = "", inList = false;
-  const inline = (s) =>
-    s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-     .replace(/`([^`]+)`/g, "<code>$1</code>");
-  for (let raw of lines) {
-    const line = raw.trim();
-    if (/^[-*]\s+/.test(line)) {
-      if (!inList) { html += "<ul>"; inList = true; }
-      html += "<li>" + inline(line.replace(/^[-*]\s+/, "")) + "</li>";
-    } else {
-      if (inList) { html += "</ul>"; inList = false; }
-      if (line) html += "<p>" + inline(line) + "</p>";
+
+  // 行內語法。code span 先切出來保護，其餘段落才套粗斜體/連結。
+  const inline = (s) => {
+    const parts = s.split(/(`[^`]+`)/);
+    return parts.map((seg) => {
+      if (/^`[^`]+`$/.test(seg)) return "<code>" + seg.slice(1, -1) + "</code>";
+      return seg
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)"']+)\)/g,
+                 '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/(^|[^*\w])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>");
+    }).join("");
+  };
+
+  let html = "", list = null;                   // list: "ul" | "ol" | null
+  const closeList = () => { if (list) { html += "</" + list + ">"; list = null; } };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    // ``` 圍欄程式碼：收到下一個 ``` 為止，內容原樣（已跳脫）保留
+    if (/^```/.test(line)) {
+      closeList();
+      const buf = [];
+      for (i++; i < lines.length && !/^```/.test(lines[i].trim()); i++) buf.push(lines[i]);
+      html += "<pre><code>" + buf.join("\n") + "</code></pre>";
+      continue;
     }
+    // GFM 表格：| 開頭連續行，第二行是 |---|--- 分隔列
+    if (/^\|.*\|$/.test(line) && i + 1 < lines.length &&
+        /^\|[\s:|-]+\|$/.test(lines[i + 1].trim())) {
+      closeList();
+      const cells = (l) => l.replace(/^\||\|$/g, "").split("|").map((c) => inline(c.trim()));
+      html += "<table><thead><tr>" +
+        cells(line).map((c) => "<th>" + c + "</th>").join("") + "</tr></thead><tbody>";
+      for (i += 2; i < lines.length && /^\|.*\|$/.test(lines[i].trim()); i++) {
+        html += "<tr>" + cells(lines[i].trim()).map((c) => "<td>" + c + "</td>").join("") + "</tr>";
+      }
+      i--;
+      html += "</tbody></table>";
+      continue;
+    }
+    const h = line.match(/^(#{1,4})\s+(.*)$/);
+    if (h) { closeList(); html += `<h${h[1].length}>` + inline(h[2]) + `</h${h[1].length}>`; continue; }
+    if (/^(-{3,}|\*{3,})$/.test(line)) { closeList(); html += "<hr>"; continue; }
+    if (/^&gt;\s?/.test(line)) {
+      closeList();
+      html += "<blockquote><p>" + inline(line.replace(/^&gt;\s?/, "")) + "</p></blockquote>";
+      continue;
+    }
+    if (/^[-*]\s+/.test(line)) {
+      if (list !== "ul") { closeList(); html += "<ul>"; list = "ul"; }
+      html += "<li>" + inline(line.replace(/^[-*]\s+/, "")) + "</li>";
+      continue;
+    }
+    const ol = line.match(/^(\d+)[.)]\s+(.*)$/);
+    if (ol) {
+      if (list !== "ol") {
+        closeList();
+        html += ol[1] === "1" ? "<ol>" : `<ol start="${ol[1]}">`;
+        list = "ol";
+      }
+      html += "<li>" + inline(ol[2]) + "</li>";
+      continue;
+    }
+    closeList();
+    if (line) html += "<p>" + inline(line) + "</p>";
   }
-  if (inList) html += "</ul>";
+  closeList();
   return html || "<p></p>";
 }
 
@@ -807,7 +863,11 @@ function buildResultBlock(rows, watchFp, planFp, seedTokens) {
     g.rows.forEach((a, i) => {
       html += "<tr>";
       if (i === 0) {
-        html += `<td class="periph" rowspan="${g.rows.length}">${escapeHtml(g.peripheral)}</td>`;
+        // function 徽章：使用者對此介面的稱呼（RS232/RS485…），一個周邊標一次
+        const fn = g.rows[0].function
+          ? `<br><span class="badge-fn" style="margin-left:0" title="使用者需求中對此介面的稱呼">${escapeHtml(g.rows[0].function)}</span>`
+          : "";
+        html += `<td class="periph" rowspan="${g.rows.length}">${escapeHtml(g.peripheral)}${fn}</td>`;
       }
       const badge = a.boot_reserved
         ? ' <span class="badge-boot" title="require.json 自動保留的開機必要 signal">boot</span>'
@@ -1253,10 +1313,19 @@ function buildDtsDownloadBtn() {
 
 function copyRows(rows, btn) {
   const hasIc = rows.some((a) => a.ic);
-  const head = "peripheral\tsignal\tpin\taf" + (hasIc ? "\tic" : "");
+  const hasFn = rows.some((a) => a.function);
+  const head = "peripheral\tsignal\tpin\taf" + (hasIc ? "\tic" : "") + (hasFn ? "\tfunction" : "");
+  const fnDone = new Set();   // function 欄與 CSV 同規則：一個周邊只標第一列
   const text = [head,
-    ...rows.map((a) => `${a.peripheral}\t${a.signal}\t${a.pin}\t${a.af == null ? "" : a.af}` +
-                       (hasIc ? `\t${a.ic || ""}` : ""))].join("\n");
+    ...rows.map((a) => {
+      let fn = "";
+      if (hasFn && !fnDone.has(a.peripheral)) {
+        fn = a.function || "";
+        fnDone.add(a.peripheral);
+      }
+      return `${a.peripheral}\t${a.signal}\t${a.pin}\t${a.af == null ? "" : a.af}` +
+             (hasIc ? `\t${a.ic || ""}` : "") + (hasFn ? `\t${fn}` : "");
+    })].join("\n");
   const flash = () => {
     const orig = btn.innerHTML;
     btn.innerHTML = "✓ 已複製";

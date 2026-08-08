@@ -12,15 +12,8 @@
   "why": "kernel 板 DTS 有效啟用(增項 A 判定為 emit_fixed_assignment)"
  },
  "peripherals": {
-  "bootmode_main": {
-   "block": "BOOTMODE_MAIN",
-   "why": "DTS 無對應節點或未啟用——視為 bootloader/strap 持有,kernel 不碰",
-   "signals": [],
-   "dts_node": null,
-   "solver_action": "reserve_only"
-  },
-  "bootmode_mcu": {
-   "block": "BOOTMODE_MCU",
+  "main_bootmode_strap": {
+   "block": "MAIN_BOOTMODE_STRAP",
    "why": "DTS 無對應節點或未啟用——視為 bootloader/strap 持有,kernel 不碰",
    "signals": [],
    "dts_node": null,
@@ -37,6 +30,13 @@
    ],
    "dts_node": "&main_uart0",
    "solver_action": "emit_fixed_assignment"
+  },
+  "mcu_bootmode_strap": {
+   "block": "MCU_BOOTMODE_STRAP",
+   "why": "DTS 無對應節點或未啟用——視為 bootloader/strap 持有,kernel 不碰",
+   "signals": [],
+   "dts_node": null,
+   "solver_action": "reserve_only"
   },
   "sdhci0": {
    "block": "MMC0",

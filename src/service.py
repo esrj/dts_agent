@@ -79,6 +79,19 @@ class _Board:
         self.baseline = load_signal_to_pin(paths["signals"])
         # 板上外部 IC 對照（G4，optional 檔）：instance -> {ic, compatible, …}
         self.components = load_board_components(paths.get("components"))
+        # 開機群組的角色短名（require.json role 的括號前段）：boot 列的 function
+        # 欄預設值——資料驅動（隨板），使用者的具名稱呼（label）優先於它
+        self.boot_roles = {}
+        try:
+            with open(paths["require"], encoding="utf-8") as fh:
+                _groups = json.load(fh).get("boot_pin_locked", {}).get("groups", {})
+            for g, d in _groups.items():
+                if d.get("solver_action") == "emit_fixed_assignment":
+                    role = (d.get("role") or "").split("(")[0].strip()
+                    if role:
+                        self.boot_roles[g.upper()] = role
+        except Exception:
+            pass
 
     def ic_of(self, signal: str) -> str:
         """該 signal 所屬 instance 的板上外部 IC 型號；無 IC 周邊回空字串。"""
@@ -204,6 +217,49 @@ class Pipeline:
         intent["items"] = injected + kept       # 前置，當成已指定的固定 prefix
         return intent
 
+    @staticmethod
+    def _reserve_pins(intent: dict, b: _Board) -> set:
+        """intent.reserve_gpio（「這些腳我要挪去接別的東西」）-> 正規化的腳位集合。
+
+        反腐層職責：大寫正規化＋去重寫回 intent（clarify 來回、answer() 折返
+        原樣攜帶）；未知腳位、開機必要走線（pin_locked）一律當場報錯——這兩類
+        錯誤越早浮出越好，不能流進 solver 變成難懂的 UNSAT。效果由呼叫端落實：
+        併入 must_gpio（候選域剔除）＋ _inject_official 讓出官方列。"""
+        toks = []
+        for p in intent.get("reserve_gpio") or []:
+            tok = str(p).strip().upper()
+            if tok and tok not in toks:
+                toks.append(tok)
+        if not toks:
+            intent.pop("reserve_gpio", None)
+            return set()
+        # 兩種寫法：實際腳位（PB4）或 instance 名（I2C2＝該週邊的官方腳整組）。
+        # instance 展開走官方對照表（資料驅動）——parse 端不必知道官方腳是哪幾支。
+        pins, unknown = [], []
+        for tok in toks:
+            if tok in b.af or tok in b.must_gpio:
+                if tok not in pins:
+                    pins.append(tok)
+                continue
+            official = [str(p).upper() for s, p in b.baseline.items()
+                        if s.split("_", 1)[0].upper() == tok]
+            if official:
+                pins.extend(x for x in official if x not in pins)
+                continue
+            unknown.append(tok)
+        if unknown:
+            raise ResolveError(
+                f"reserve_gpio 含此板不存在的腳位或週邊：{'、'.join(unknown)}"
+                "（請用 PXn 腳位名，或官方預設中存在的 instance 名）")
+        boot_hit = {p: b.pin_locked[p] for p in pins if p in b.pin_locked}
+        if boot_hit:
+            raise ResolveError(
+                "這些腳位是開機必要走線，無法保留為 GPIO："
+                + "、".join(f"{p}（{s}）" for p, s in boot_hit.items())
+                + "。開機介面要搬腳請改為明確要求該介面換腳。")
+        intent["reserve_gpio"] = pins
+        return set(pins)
+
     def _inject_official(self, intent: dict, b: _Board) -> dict:
         """bootable_default 與額外需求並存（「官方 plan 再加一組 SPI」）時，把官方
         預設週邊以「已綁官方腳的 signal item」*前置* 注入 intent。
@@ -236,11 +292,19 @@ class Pipeline:
                 claimed.add(str(it["instance"]).upper())
             elif lvl == "signal" and it.get("signal"):
                 claimed.add(str(it["signal"]).upper().split("_", 1)[0])
+        # reserve_gpio（腳位讓出）：官方列踩到保留腳的 instance 整組讓出——
+        # 一個介面的 signal 同進同出（半套介面沒有意義），並記 note 說明。
+        reserve = {str(p).upper() for p in (intent.get("reserve_gpio") or [])}
+        freed = {sig.split("_", 1)[0].upper()
+                 for sig, pin in b.baseline.items()
+                 if str(pin).upper() in reserve}
         injected = []
         for sig, pin in b.baseline.items():
+            inst = sig.split("_", 1)[0].upper()
             if (sig in b.boot_set or sig not in b.kb.sigma
                     or reserved_owner(sig, b.reserved_instances) is not None
-                    or sig.split("_", 1)[0].upper() in claimed):
+                    or inst in claimed
+                    or inst in freed):
                 continue
             injected.append({
                 "level": "signal", "family": sig.split("_", 1)[0],
@@ -266,6 +330,17 @@ class Pipeline:
             if fam:
                 by_key.setdefault(fam[2], set()).add(inst)
         credit_notes = intent.setdefault("official_credit", [])
+        # 腳位讓出說明（claimed 的 instance 由使用者 item 主導，錯誤/結果在
+        # 求解時浮現，不在此重複）。訊息判重＝冪等（clarify 重入不重複記）。
+        for inst in sorted(freed - claimed):
+            pins_txt = "、".join(sorted(
+                str(p).upper() for s, p in b.baseline.items()
+                if s.split("_", 1)[0].upper() == inst
+                and str(p).upper() in reserve))
+            msg = (f"官方預設 {inst} 使用的腳位 {pins_txt} 已依要求保留給其他用途"
+                   f"（GPIO）——{inst} 自官方基底讓出、不再出現在 plan。")
+            if msg not in credit_notes:
+                credit_notes.append(msg)
         adjusted = []
         for it in kept:
             lvl = (it.get("level") or "").lower()
@@ -298,15 +373,18 @@ class Pipeline:
 
     def _continue(self, intent: dict, b: _Board, board: str) -> dict:
         """有歧義就回一題待確認；否則注入開機需求後求解並回最終結果。"""
+        # reserve_gpio（腳位讓出）：先正規化＋驗證（未知腳/開機腳當場報錯）。
+        # 集合本身由各消費端從 intent 讀（clarify 來回原樣攜帶）。
+        reserve = self._reserve_pins(intent, b)
         # 無具體需求 / 要可開機 / 要預設版 -> 直接給官方 baseline，不注入、不反問、不求解。
-        # 官方預設「加上」額外需求（items 非空）-> 注入官方列後照常求解（官方腳鎖定）。
+        # 官方預設「加上」額外需求（items 非空）或有腳位讓出 -> 注入官方列後照常求解。
         if intent.get("bootable_default"):
-            if not (intent.get("items") or []):
+            if not (intent.get("items") or []) and not reserve:
                 return self._baseline_result(intent, b, board)
             intent = self._inject_official(intent, b)
         # 全鎖版：先以此偵測歧義（鎖腳的是已指定 signal+pin，不影響 clarify 判斷）。
         injected = self._inject_boot(intent, b.boot_required, b.pin_locked)
-        res = validate_clarify(injected, b.kb, must_gpio=b.must_gpio,
+        res = validate_clarify(injected, b.kb, must_gpio=b.must_gpio | reserve,
                                reserved_instances=b.reserved_instances)
         if isinstance(res, Clarify) and res.questions:
             q = res.questions[0]                       # 一次只問一題（折回最穩，無 index 漂移）
@@ -453,9 +531,26 @@ class Pipeline:
         raise base_exc
 
     def _solve_once(self, intent: dict, b: _Board, board: str) -> dict:
-        cp = plan(intent, b.kb, must_gpio=b.must_gpio,
+        # reserve_gpio 併入 must_gpio：候選域剔除交給 resolver/solver 既有機制
+        reserve = {str(p).upper() for p in (intent.get("reserve_gpio") or [])}
+        cp = plan(intent, b.kb, must_gpio=b.must_gpio | reserve,
                   reserved_instances=b.reserved_instances)
         spec = cp.spec
+        # 讓腳造成的「無腳可排」提前給人話診斷（否則要等 solver 以 empty-domain
+        # UNSAT 浮出，訊息不會點名是哪次讓腳造成的）
+        if reserve:
+            for sig in spec.required:
+                if sig in set(spec.must_bind.values()):
+                    continue                     # 已釘腳者由 must_bind/衝突檢查把關
+                dom = {p for p, sigs in b.af.items() if sig in sigs}
+                hit = dom & reserve
+                if hit and not (dom - spec.must_gpio - set(spec.must_bind)):
+                    inst = sig.split("_", 1)[0]
+                    raise ResolveError(
+                        f"{sig} 的合法腳位只有 {'、'.join(sorted(dom))}，其中 "
+                        f"{'、'.join(sorted(hit))} 已依要求保留給其他用途——"
+                        f"{inst} 無法佈線。此腳位讓出後 {inst} 必須放棄；"
+                        f"如仍需要此功能，請改用同 family 的其他 instance。")
         boot_in_spec = [s for s in spec.required if s in b.boot_set]
         if boot_in_spec:
             spec.notes.append("自動保留開機必要 signals（require.json）：" + ", ".join(boot_in_spec))
@@ -471,6 +566,60 @@ class Pipeline:
             spec.notes.append(note)
         required, result = solve_signals(
             b.af, spec.required, spec.must_gpio, spec.must_bind, af_map=b.kb.af_map)
+        # function 註記：使用者對介面的稱呼（RS232/RS485…）→ 掛到該 instance 的
+        # rows。純註記——不參與求解、不進 plan_fingerprint。來源兩路：
+        #   count item → cp.chosen 對齊的 label；peripheral/signal item → 直接對映。
+        # （standalone count（如 PCIE×1）帶 label 的極端情況不覆蓋：instance 在
+        # counts._lower_standalone_counts 內部才決定，該路徑不回傳對映。）
+        label_by_inst: dict[str, str] = {}
+        for c in (cp.chosen or []):
+            if c.get("label"):
+                for tok in c.get("instances") or []:
+                    label_by_inst.setdefault(str(tok).upper(), c["label"])
+        for it in intent.get("items") or []:
+            lb = (it.get("label") or "").strip()
+            if not lb:
+                continue
+            lvl = (it.get("level") or "").lower()
+            if lvl == "peripheral" and (it.get("instance") or "").strip():
+                label_by_inst.setdefault(it["instance"].strip().upper(), lb)
+            elif lvl == "signal" and it.get("signal"):
+                label_by_inst.setdefault(
+                    it["signal"].split("_", 1)[0].upper(), lb)
+        # boot 群組的角色短名墊底（SD-card boot / eMMC boot / console…）：
+        # 讓每份 sat plan 的 function 欄必然出現；使用者具名稱呼優先
+        for inst, role in b.boot_roles.items():
+            label_by_inst.setdefault(inst, role)
+        assignment_rows = [
+            {
+                "peripheral": sig.split("_", 1)[0],
+                "signal": sig,
+                "pin": result.assignment[sig],
+                "af": af_of(b.kb.af_map, result.assignment[sig], sig),
+                "boot_reserved": sig in b.boot_set,
+                "official_default": sig in off_sigs,
+                # G4 停用時不帶 ic 鍵：表格/匯出的 ic 欄都是資料驅動地消失
+                **({"ic": b.ic_of(sig)} if dataio.IC_BINDING_ENABLED else {}),
+                # 使用者稱呼（RS232/RS485…）：欄位資料驅動，無 label 不帶鍵
+                **({"function": label_by_inst[sig.split("_", 1)[0]]}
+                   if sig.split("_", 1)[0] in label_by_inst else {}),
+            }
+            for sig in required
+        ] if result.sat else []
+        if assignment_rows and label_by_inst:
+            # solve_signals 內的 write_plan 只寫固定四欄；有 function 註記時
+            # 以同一份 rows 重寫 plan.csv/xlsx，落地檔與 web 匯出欄位一致
+            dataio.write_plan_rows(assignment_rows)
+            # 診斷日誌：本輪 intent items 與 instance→function 對照（覆寫制）。
+            # 任何「function 沒出現」的回報都先看這個檔，不用翻伺服器終端。
+            try:
+                with open(os.path.join(dataio.PLAN_DIR, "last_intent.json"),
+                          "w", encoding="utf-8") as fh:
+                    json.dump({"items": intent.get("items") or [],
+                               "label_by_inst": label_by_inst},
+                              fh, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
         return {
             "status": "done",
             "board": board,
@@ -482,19 +631,7 @@ class Pipeline:
                 "notes": spec.notes,
             },
             "sat": result.sat,
-            "assignment": [
-                {
-                    "peripheral": sig.split("_", 1)[0],
-                    "signal": sig,
-                    "pin": result.assignment[sig],
-                    "af": af_of(b.kb.af_map, result.assignment[sig], sig),
-                    "boot_reserved": sig in b.boot_set,
-                    "official_default": sig in off_sigs,
-                    # G4 停用時不帶 ic 鍵：表格/匯出的 ic 欄都是資料驅動地消失
-                    **({"ic": b.ic_of(sig)} if dataio.IC_BINDING_ENABLED else {}),
-                }
-                for sig in required
-            ] if result.sat else [],
+            "assignment": assignment_rows,
             "reason": "" if result.sat else result.reason,
             "stats": {
                 "propagated": result.propagated,
@@ -513,7 +650,9 @@ class Pipeline:
             {"peripheral": sig.split("_", 1)[0], "signal": sig, "pin": pin,
              "af": af_of(b.kb.af_map, pin, sig), "boot_reserved": sig in b.boot_set,
              "official_default": sig not in b.boot_set,
-             **({"ic": b.ic_of(sig)} if dataio.IC_BINDING_ENABLED else {})}
+             **({"ic": b.ic_of(sig)} if dataio.IC_BINDING_ENABLED else {}),
+             **({"function": b.boot_roles[sig.split("_", 1)[0].upper()]}
+                if sig.split("_", 1)[0].upper() in b.boot_roles else {})}
             for sig, pin in b.baseline.items()
             if reserved_owner(sig, b.reserved_instances) is None
         ]

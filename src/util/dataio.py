@@ -435,12 +435,40 @@ def plan_csv_text(rows) -> str:
     buf = io.StringIO()
     writer = csv.writer(buf)
     has_ic = any(r.get("ic") for r in rows)
-    writer.writerow(["peripheral", "signal", "pin", "af"] + (["ic"] if has_ic else []))
+    # function 欄（使用者對介面的稱呼，如 RS232/RS485）同樣資料驅動；
+    # 一個周邊只在第一列標一次（區分同 family 多 instance 用，逐列重複是噪音）
+    has_fn = any(r.get("function") for r in rows)
+    writer.writerow(["peripheral", "signal", "pin", "af"]
+                    + (["ic"] if has_ic else []) + (["function"] if has_fn else []))
+    fn_done: set = set()
     for r in rows:
-        writer.writerow([r.get("peripheral", ""), r.get("signal", ""),
-                         r.get("pin", ""), r.get("af", "")]
-                        + ([r.get("ic", "")] if has_ic else []))
+        per = r.get("peripheral", "")
+        fn = ""
+        if has_fn and per not in fn_done:
+            fn = r.get("function", "") or ""
+            fn_done.add(per)
+        writer.writerow([per, r.get("signal", ""), r.get("pin", ""), r.get("af", "")]
+                        + ([r.get("ic", "")] if has_ic else [])
+                        + ([fn] if has_fn else []))
     return buf.getvalue()
+
+
+def write_plan_rows(rows, outdir=PLAN_DIR):
+    """帶註記的 rows（含 ic / function 等可選鍵）覆寫 output/plan/plan.csv＋xlsx。
+
+    write_plan（solver runner 的副作用）只認 (required, result)、固定四欄；
+    service 在 sat 解組完 rows 後呼叫本函式，讓落地檔與 web 匯出同一套欄位
+    （plan_csv_text 資料驅動：無註記時輸出與 write_plan 四欄一致）。"""
+    os.makedirs(outdir, exist_ok=True)
+    path = os.path.join(outdir, "plan.csv")
+    with open(path, "w", newline="", encoding="utf-8") as fh:
+        fh.write(plan_csv_text(rows))
+    try:
+        from util.csv2xlsx import csv_to_grouped_xlsx
+        csv_to_grouped_xlsx(path, os.path.join(outdir, "plan.xlsx"))
+    except Exception:
+        pass                       # openpyxl 缺席只略過 xlsx，CSV 已寫
+    return path
 
 
 def plan_xlsx_bytes(rows) -> bytes:

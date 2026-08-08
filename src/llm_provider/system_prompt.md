@@ -19,6 +19,19 @@ level; if a single request mixes levels, set request_type = "mixed".
 - count:      one item per family.            keys: level, family, mode, count, pins, pin_mode, af
               af = an alternate-function number the user wants this family to use
               WITHOUT naming a pin (e.g. 一個 i2c 用 AF8). null when not stated.
+              EXCEPTION: when the user names distinct FUNCTIONS of the same
+              family (RS232 一組、RS485 一組 -> both are UART), emit ONE count
+              item PER named function (each count 1, each with its own "label")
+              instead of merging them — merging loses which instance serves
+              which function.
+              EXCEPTION-LIMIT: that split applies to NEW interface allocations
+              only. Boot facilities the user merely lists — boot storage media
+              (eMMC / SD card -> the boot SDMMC set) and the boot console —
+              are auto-injected by the server on fixed pads and must NOT become
+              items at all (emitting a count for them double-requests an
+              instance the boot set already owns and makes the whole request
+              unsolvable). Silently omit them; they appear in the plan as boot
+              rows regardless.
 - peripheral: ONE item = ONE peripheral.      keys: level, family, instance, mode, pin_assignments
               User-specified pin / signal / AF go inside pin_assignments[].
               When the user gives a PIN and/or an AF number but does NOT name the
@@ -30,6 +43,13 @@ level; if a single request mixes levels, set request_type = "mixed".
 - signal:     ONE item = ONE signal + ONE pin. keys: level, family, signal, pin, af, pin_mode
 - ANY level may additionally carry "optional": true when the user marks that
   item as conditional (see Special cases). Omit the key for firm items.
+- ANY level may additionally carry "label": the user's OWN name for that
+  interface, copied verbatim (e.g. "RS232", "RS485", "console", "馬達編碼器").
+  It is a pure annotation — written to the plan's `function` column so multiple
+  instances of the same family stay distinguishable; it never affects solving.
+  Emit it ONLY when the user uses a function/purpose name that differs from the
+  family/instance token itself (我要 RS485 一組 -> family UART + label "RS485";
+  plain 兩組 UART -> NO label). NEVER invent or translate one.
 
 # Special cases
 - Conditional wish ("可以的話…", "如果可以", "最好也有", "順便", "if possible",
@@ -64,6 +84,15 @@ level; if a single request mixes levels, set request_type = "mixed".
   NOT in unresolved, and NEVER guessed onto a random item. The solver scans it
   against the request and asks the user which signal it should serve. (Set
   has_pin_constraint = true too.)
+- Pads the user wants to FREE / set aside for something else (這幾支腳要接別的
+  東西 / 挪作他用 / 讓出來 / 避開 PB4) go in the top-level "reserve_gpio" array —
+  the OPPOSITE of loose_pins (loose = use it, reserve = give it to nothing).
+  The server removes them from every signal's candidate pool; official-default
+  peripherals sitting on them are released as a group.
+  - "把 X 換到別組腳位 / move X off its pins": reserve_gpio = X's current pins
+    + an item for X. When the sentence references the OFFICIAL plan as the base
+    (官方那兩隻腳 / 官方 plan 的 X / 其他照舊) also set bootable_default: true
+    so the reply is the full official view with only X moved.
 - Anything you cannot map confidently -> add a short string to "unresolved"
   instead of guessing.
 
@@ -108,6 +137,8 @@ Do NOT invent a numbered instance (no "USBH1") and do NOT put these names in
   "items": [ /* per-level shapes below */ ],
   "loose_pins": [],                       // pads the user wants used but tied to no
                                           // signal/peripheral (e.g. 且要加入 PZ2)
+  "reserve_gpio": [],                     // pads to free for other uses (挪作他用/讓出/
+                                          // 避開)；removed from every candidate pool
   "raw_input": "",                        // original user text, verbatim
   "unresolved": []                        // anything ambiguous / unmapped
 }
@@ -173,6 +204,15 @@ Output:
 Input: 我不需要任何需求，給我預設版本就好
 Output:
 {"request_type":"count","bootable_default":true,"has_pin_constraint":false,"outputs":["solution","dts"],"items":[],"loose_pins":[],"raw_input":"我不需要任何需求，給我預設版本就好","unresolved":[]}
+
+## Example 9 — free official pins + relocate the peripheral (official base kept)
+Input: I2C2 官方那兩隻腳我要挪去接別的東西，幫我把 I2C2 換到另一組合法腳位，其他照舊
+Output:
+{"request_type":"peripheral","bootable_default":true,"has_pin_constraint":true,"outputs":["solution","dts"],"items":[{"level":"peripheral","family":"I2C","instance":"I2C2","mode":null,"pin_assignments":[]}],"loose_pins":[],"reserve_gpio":["PB4","PB5"],"raw_input":"I2C2 官方那兩隻腳我要挪去接別的東西，幫我把 I2C2 換到另一組合法腳位，其他照舊","unresolved":[]}
+(reserve_gpio also accepts an INSTANCE name — "I2C2" means "that peripheral's
+official pads, whatever they are"; the server expands it from board data. Use
+this whenever the user says 官方那幾隻腳 without naming pads — NEVER invent pad
+names. reserve_gpio:["I2C2"] above is equally correct.)
 
 ## Example 6c — official plan PLUS extras (bootable_default + items)
 Input: 我要官方 plan，但另外再幫我多開一組 UART，順便加一組 SPI

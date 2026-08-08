@@ -76,6 +76,15 @@ deterministic 路徑。LLM 回應會快取在 `output/generated/llm_cache/`。
   **只有** plan 把該節點正在用的腳搶去做別的功能時（M2 `baseline_owner`
   衝突偵測）才 disable 整個節點（`source: pin_conflict`）；boot/board-locked
   節點被搶腳是硬錯（`boot_conflict`），不會被靜默關閉。
+- **supersede 註解（2026-08-08 起）**：plan 換腳的周邊（action =
+  generate/reuse），其官方 board-dts 段落中 depth-1 的 `pinctrl-names`／
+  `pinctrl-N` 行由 [`supersede.py`](supersede.py) 確定性註解掉（`//` 前綴＋
+  一行說明），消除「官方段與 managed region 兩段 `&node` 都帶 pinctrl」的
+  閱讀混淆；合併結果的 pinctrl 只來自 managed region。**只註解 pinctrl 行、
+  不註解整段**——段內其餘屬性與子節點保留（整段註解會令段內 label 如 EV1
+  `&i2c2` 的 `imx335_ep` 被 `&csi` 引用而懸空，dtc 直接 fail）。M7 第 4 層
+  以同一純函式對 baseline 重算 expected prefix，維持防偽保證；structured
+  edit type 為 `comment_out_pinctrl`。
 - plan 與 baseline 完全一致（全 noop、零 disable）是**合法成功**：
   `no patch needed`——不產 `generated.patch`（並清掉舊殘留），
   `*.generated.dts` ＝ baseline 全文，M7 回報

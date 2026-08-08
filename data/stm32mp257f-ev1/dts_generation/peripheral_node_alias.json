@@ -26,6 +26,18 @@
       "csv_pins": 15,
       "pins_matched_in_baseline": 15
     },
+    "ETH3": {
+      "node_label": "switch0",
+      "target_node": "&switch0",
+      "resolved_by": "manual",
+      "note": "MP25 的第三個乙太網路埠是 TSN switch（stm32mp257.dtsi: switch0: ttt-sw@4c000000）；kernel DTS 沒有 eth3 label，ETH3 腳位由 eth3_rgmii_pins_a 供給 &switch0",
+      "enabled_in_baseline": false,
+      "pinctrl_groups": [
+        "eth3_rgmii_pins_a"
+      ],
+      "csv_pins": 12,
+      "pins_matched_in_baseline": 12
+    },
     "FDCAN1": {
       "node_label": "m_can1",
       "target_node": "&m_can1",

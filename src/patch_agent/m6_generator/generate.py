@@ -24,6 +24,7 @@ from .. import config
 from ..m1_dts_parser import build_index
 from ..m4_patch_generation.generate import MARK_BEGIN, MARK_END
 from ..pinmux_style import get_style, assemble_group_sections
+from ..supersede import apply as supersede_apply
 from .schema import EMIT_TOOL, TOOL_NAME, PROMPT_VERSION
 from .prompt import SYSTEM_PROMPT, build_user_prompt, build_retry_prompt
 
@@ -463,7 +464,12 @@ def generate(diff_plan, provider=None, index=None, *, model=None,
     managed = "\n".join(body)
 
     baseline = open(config.BOARD_DTS).read()
-    generated = baseline.rstrip("\n") + "\n\n" + managed + "\n"
+    # 換腳周邊（generate/reuse）的官方 pinctrl 行註解掉（supersede 政策）；
+    # m7 layer-4 以同一 supersede.apply 對 baseline 重算 expected prefix。
+    sup_targets = [t["target_node"] for t in dp["to_enable_or_update"]
+                   if t["action"] in ("generate", "reuse")]
+    base_sup, sup_changed = supersede_apply(baseline, sup_targets)
+    generated = base_sup.rstrip("\n") + "\n\n" + managed + "\n"
     art.managed_region = managed
     art.generated_dts = generated
     art.patch = "".join(difflib.unified_diff(
@@ -472,6 +478,11 @@ def generate(diff_plan, provider=None, index=None, *, model=None,
     edits_out.insert(0, {"type": "append_managed_region",
                          "file": config.BOARD_DTS.name,
                          "region_id": "stm-agent", "content": managed})
+    for lb in sup_changed:
+        edits_out.append({"type": "comment_out_pinctrl", "target": f"&{lb}",
+                          "source": "deterministic:supersede",
+                          "reason": "official pinctrl superseded by the managed "
+                                    "region (pins changed by plan)"})
     art.structured_edits = edits_out
     return art
 

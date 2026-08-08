@@ -564,7 +564,8 @@
  },
  "NMIN": {
   "0": "NMIn",
-  "6": "PRG2_PWM1_TZ_IN"
+  "6": "PRG2_PWM1_TZ_IN",
+  "7": "PRG2_PWM1_TZ_IN"
  },
  "PMIC_POWER_EN0": {
   "0": "PMIC_POWER_EN0"

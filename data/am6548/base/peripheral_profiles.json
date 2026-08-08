@@ -6,42 +6,37 @@
   "CAN": "MCU_MCAN",
   "MCAN": "MCU_MCAN",
   "FDCAN": "MCU_MCAN",
+  "SD": "MMC",
   "SDMMC": "MMC",
   "SDHC": "MMC",
-  "SD": "MMC1",
   "EMMC": "MMC0",
+  "MMCSD": "MMC",
   "MCSPI": "SPI",
-  "MCU_MCSPI": "MCU_SPI",
-  "QSPI": "MCU_OSPI0",
+  "QSPI": "MCU_OSPI",
   "OSPI": "MCU_OSPI",
-  "HYPERBUS": "MCU_HYPERBUS0",
+  "I2S": "MCASP",
+  "SERIAL": "UART",
   "PWM": "EHRPWM",
-  "EPWM": "EHRPWM",
   "QEP": "EQEP",
-  "CAP": "ECAP0",
   "ETH": "MCU_RGMII1",
   "ETHERNET": "MCU_RGMII1",
-  "CPSW": "MCU_RGMII1",
   "RGMII": "MCU_RGMII1",
   "RMII": "MCU_RMII1",
   "MDIO": "MCU_MDIO0",
-  "I2S": "MCASP",
-  "AUDIO": "MCASP",
-  "DSS": "VOUT1",
-  "LCD": "VOUT1",
-  "DPI": "VOUT1",
   "CAMERA": "VIN0",
   "CSI": "VIN0",
-  "PRU": "PRG0",
-  "ICSSG": "PRG0",
+  "DISPLAY": "VOUT1",
+  "LCD": "VOUT1",
+  "DPI": "VOUT1",
   "NAND": "GPMC0",
   "NOR": "GPMC0",
-  "GPMC": "GPMC0",
-  "SERIAL": "UART",
-  "TIMER0": "TIMER"
+  "HYPERBUS": "MCU_HYPERBUS0",
+  "PRU": "PRG0",
+  "PRUSS": "PRG0",
+  "ICSSG": "PRG0"
  },
  "dts_label_aliases": {},
- "system_policy": "JTAG/debug (TCK, TMS, TDI, TDO, TRSTn, EMU0/1), trace (TRC_*), reset and status pins (PORz, MCU_PORz, RESETz, RESETSTATz, PORz_OUT, NMIn), safety error outputs (SOC_SAFETY_ERRORn, MCU_SAFETY_ERRORn) and clock observation/output pins (OBSCLK0, SYSCLKOUT0, MCU_OBSCLK0, MCU_SYSCLKOUT0, MCU_CLKOUT0, EXT_REFCLK1, MCU_EXT_REFCLK0) are never auto-enabled unless the user explicitly names them.",
+ "system_policy": "JTAG/debug (TCK, TMS, TDI, TDO, TRSTn, EMU0/1), trace (TRC_*), reset and power-control pins (PORz, MCU_PORz, RESETz, RESETSTATz, PMIC_POWER_EN*, SOC_SAFETY_ERRORn, MCU_SAFETY_ERRORn), boot-mode pins and clock in/out functions (OBSCLK0, SYSCLKOUT0, MCU_CLKOUT0, MCU_OBSCLK0, MCU_SYSCLKOUT0, EXT_REFCLK1, MCU_EXT_REFCLK0) are never auto-enabled unless the user explicitly names them.",
  "families": {
   "i2c": {
    "default": "std",
@@ -53,20 +48,27 @@
    }
   },
   "spi": {
-   "default": "4wire",
+   "default": "master_1cs",
    "modes": {
-    "3wire": [
+    "master_no_cs": [
      "CLK",
      "D0",
      "D1"
     ],
-    "4wire": [
+    "master_1cs": [
      "CLK",
      "D0",
      "D1",
      "CS0"
     ],
-    "4wire_multics": [
+    "master_2cs": [
+     "CLK",
+     "D0",
+     "D1",
+     "CS0",
+     "CS1"
+    ],
+    "master_4cs": [
      "CLK",
      "D0",
      "D1",
@@ -78,23 +80,23 @@
    }
   },
   "uart": {
-   "default": "2wire",
+   "default": "rx_tx",
    "modes": {
-    "2wire": [
+    "rx_tx": [
      "RXD",
      "TXD"
     ],
-    "4wire": [
+    "rts_cts": [
      "RXD",
      "TXD",
-     "CTSn",
-     "RTSn"
+     "RTSn",
+     "CTSn"
     ],
     "modem": [
      "RXD",
      "TXD",
-     "CTSn",
      "RTSn",
+     "CTSn",
      "DTRn",
      "DSRn",
      "DCDn",
@@ -103,14 +105,14 @@
    }
   },
   "mmc": {
-   "default": "4bit",
+   "default": "sd_4bit",
    "modes": {
-    "1bit": [
+    "sd_1bit": [
      "CLK",
      "CMD",
      "DAT0"
     ],
-    "4bit": [
+    "sd_4bit": [
      "CLK",
      "CMD",
      "DAT0",
@@ -118,22 +120,9 @@
      "DAT2",
      "DAT3"
     ],
-    "8bit": [
+    "emmc_8bit": [
      "CLK",
      "CMD",
-     "DAT0",
-     "DAT1",
-     "DAT2",
-     "DAT3",
-     "DAT4",
-     "DAT5",
-     "DAT6",
-     "DAT7"
-    ],
-    "8bit_hs400": [
-     "CLK",
-     "CMD",
-     "DS",
      "DAT0",
      "DAT1",
      "DAT2",
@@ -154,58 +143,6 @@
     ]
    }
   },
-  "mdio": {
-   "default": "std",
-   "modes": {
-    "std": [
-     "MDC",
-     "MDIO"
-    ]
-   }
-  },
-  "rgmii": {
-   "default": "std",
-   "modes": {
-    "std": [
-     "TD0",
-     "TD1",
-     "TD2",
-     "TD3",
-     "TXC",
-     "TX_CTL",
-     "RD0",
-     "RD1",
-     "RD2",
-     "RD3",
-     "RXC",
-     "RX_CTL"
-    ]
-   }
-  },
-  "rmii": {
-   "default": "std",
-   "modes": {
-    "std": [
-     "TXD0",
-     "TXD1",
-     "TX_EN",
-     "RXD0",
-     "RXD1",
-     "CRS_DV",
-     "REF_CLK"
-    ],
-    "with_rx_er": [
-     "TXD0",
-     "TXD1",
-     "TX_EN",
-     "RXD0",
-     "RXD1",
-     "CRS_DV",
-     "REF_CLK",
-     "RX_ER"
-    ]
-   }
-  },
   "mcasp": {
    "default": "i2s_tx",
    "modes": {
@@ -214,20 +151,20 @@
      "AFSX",
      "AXR0"
     ],
-    "i2s_duplex": [
+    "i2s_tx_rx": [
      "ACLKX",
      "AFSX",
      "AXR0",
      "AXR1"
     ],
-    "i2s_master": [
+    "i2s_tx_rx_ext_clk": [
      "AHCLKX",
      "ACLKX",
      "AFSX",
      "AXR0",
      "AXR1"
     ],
-    "i2s_split_clk": [
+    "full_duplex_separate_clocks": [
      "ACLKX",
      "AFSX",
      "ACLKR",
@@ -237,32 +174,110 @@
     ]
    }
   },
-  "ehrpwm": {
-   "default": "ab",
+  "ospi": {
+   "default": "quad",
    "modes": {
-    "a_only": [
+    "single": [
+     "CLK",
+     "D0",
+     "D1",
+     "CSn0"
+    ],
+    "quad": [
+     "CLK",
+     "D0",
+     "D1",
+     "D2",
+     "D3",
+     "CSn0"
+    ],
+    "octal": [
+     "CLK",
+     "D0",
+     "D1",
+     "D2",
+     "D3",
+     "D4",
+     "D5",
+     "D6",
+     "D7",
+     "CSn0",
+     "DQS"
+    ]
+   }
+  },
+  "rgmii": {
+   "default": "std",
+   "modes": {
+    "std": [
+     "TXC",
+     "TX_CTL",
+     "TD0",
+     "TD1",
+     "TD2",
+     "TD3",
+     "RXC",
+     "RX_CTL",
+     "RD0",
+     "RD1",
+     "RD2",
+     "RD3"
+    ]
+   }
+  },
+  "rmii": {
+   "default": "std",
+   "modes": {
+    "std": [
+     "REF_CLK",
+     "CRS_DV",
+     "RXD0",
+     "RXD1",
+     "TX_EN",
+     "TXD0",
+     "TXD1"
+    ],
+    "with_rx_er": [
+     "REF_CLK",
+     "CRS_DV",
+     "RXD0",
+     "RXD1",
+     "RX_ER",
+     "TX_EN",
+     "TXD0",
+     "TXD1"
+    ]
+   }
+  },
+  "mdio": {
+   "default": "std",
+   "modes": {
+    "std": [
+     "MDC",
+     "MDIO"
+    ]
+   }
+  },
+  "ehrpwm": {
+   "default": "single",
+   "modes": {
+    "single": [
      "A"
     ],
-    "ab": [
+    "complementary": [
      "A",
      "B"
-    ],
-    "ab_sync": [
-     "A",
-     "B",
-     "SYNCI",
-     "SYNCO"
     ]
    }
   },
   "eqep": {
-   "default": "ab_index",
+   "default": "quadrature",
    "modes": {
-    "ab": [
+    "quadrature": [
      "A",
      "B"
     ],
-    "ab_index": [
+    "with_index": [
      "A",
      "B",
      "I"
@@ -275,35 +290,23 @@
     ]
    }
   },
-  "ospi": {
-   "default": "quad",
+  "cpts": {
+   "default": "ts_only",
    "modes": {
-    "single": [
-     "CLK",
-     "CSn0",
-     "D0",
-     "D1"
+    "ts_only": [
+     "RFT_CLK"
     ],
-    "quad": [
-     "CLK",
-     "CSn0",
-     "D0",
-     "D1",
-     "D2",
-     "D3"
+    "sync": [
+     "RFT_CLK",
+     "TS_SYNC",
+     "TS_COMP"
     ],
-    "octal": [
-     "CLK",
-     "CSn0",
-     "DQS",
-     "D0",
-     "D1",
-     "D2",
-     "D3",
-     "D4",
-     "D5",
-     "D6",
-     "D7"
+    "full": [
+     "RFT_CLK",
+     "TS_SYNC",
+     "TS_COMP",
+     "HW1TSPUSH",
+     "HW2TSPUSH"
     ]
    }
   },
@@ -313,8 +316,6 @@
     "std": [
      "CK",
      "CKn",
-     "CSn0",
-     "RWDS",
      "DQ0",
      "DQ1",
      "DQ2",
@@ -322,7 +323,9 @@
      "DQ4",
      "DQ5",
      "DQ6",
-     "DQ7"
+     "DQ7",
+     "RWDS",
+     "CSn0"
     ]
    }
   },
@@ -338,24 +341,26 @@
  "peripherals": {
   "CPTS0": {
    "profile_status": "needs_confirmation",
-   "mode": "timesync",
-   "default_required_signals": [],
+   "mode": "ts_only",
+   "default_required_signals": [
+    "CPTS0_RFT_CLK"
+   ],
    "optional_signals": [
-    "CPTS0_RFT_CLK",
-    "CPTS0_TS_COMP",
     "CPTS0_TS_SYNC",
+    "CPTS0_TS_COMP",
     "CPTS0_HW1TSPUSH",
     "CPTS0_HW2TSPUSH"
    ]
   },
   "MCU_CPTS0": {
    "profile_status": "needs_confirmation",
-   "mode": "timesync",
-   "default_required_signals": [],
+   "mode": "ts_only",
+   "default_required_signals": [
+    "MCU_CPTS0_RFT_CLK"
+   ],
    "optional_signals": [
-    "MCU_CPTS0_RFT_CLK",
-    "MCU_CPTS0_TS_COMP",
     "MCU_CPTS0_TS_SYNC",
+    "MCU_CPTS0_TS_COMP",
     "MCU_CPTS0_HW1TSPUSH",
     "MCU_CPTS0_HW2TSPUSH"
    ]
@@ -370,7 +375,7 @@
   },
   "EHRPWM": {
    "profile_status": "needs_confirmation",
-   "mode": "shared trip-zone / SOC lines",
+   "mode": "shared trip-zone / SOC signals",
    "default_required_signals": [],
    "optional_signals": [
     "EHRPWM_SOCA",
@@ -385,129 +390,125 @@
   },
   "EHRPWM0": {
    "profile_status": "needs_confirmation",
-   "mode": "ab",
+   "mode": "single",
    "default_required_signals": [
-    "EHRPWM0_A",
-    "EHRPWM0_B"
+    "EHRPWM0_A"
    ],
    "optional_signals": [
+    "EHRPWM0_B",
     "EHRPWM0_SYNCI",
     "EHRPWM0_SYNCO"
    ]
   },
   "EHRPWM1": {
    "profile_status": "needs_confirmation",
-   "mode": "ab",
+   "mode": "single",
    "default_required_signals": [
-    "EHRPWM1_A",
-    "EHRPWM1_B"
+    "EHRPWM1_A"
    ],
-   "optional_signals": []
+   "optional_signals": [
+    "EHRPWM1_B"
+   ]
   },
   "EHRPWM2": {
    "profile_status": "needs_confirmation",
-   "mode": "ab",
+   "mode": "single",
    "default_required_signals": [
-    "EHRPWM2_A",
-    "EHRPWM2_B"
+    "EHRPWM2_A"
    ],
-   "optional_signals": []
+   "optional_signals": [
+    "EHRPWM2_B"
+   ]
   },
   "EHRPWM3": {
    "profile_status": "needs_confirmation",
-   "mode": "ab",
+   "mode": "single",
    "default_required_signals": [
-    "EHRPWM3_A",
-    "EHRPWM3_B"
+    "EHRPWM3_A"
    ],
    "optional_signals": [
+    "EHRPWM3_B",
     "EHRPWM3_SYNCI",
     "EHRPWM3_SYNCO"
    ]
   },
   "EHRPWM4": {
    "profile_status": "needs_confirmation",
-   "mode": "ab",
+   "mode": "single",
    "default_required_signals": [
-    "EHRPWM4_A",
-    "EHRPWM4_B"
+    "EHRPWM4_A"
    ],
-   "optional_signals": []
+   "optional_signals": [
+    "EHRPWM4_B"
+   ]
   },
   "EHRPWM5": {
    "profile_status": "needs_confirmation",
-   "mode": "ab",
+   "mode": "single",
    "default_required_signals": [
-    "EHRPWM5_A",
-    "EHRPWM5_B"
+    "EHRPWM5_A"
    ],
-   "optional_signals": []
+   "optional_signals": [
+    "EHRPWM5_B"
+   ]
   },
   "EQEP0": {
    "profile_status": "needs_confirmation",
-   "mode": "ab_index",
+   "mode": "quadrature",
    "default_required_signals": [
     "EQEP0_A",
-    "EQEP0_B",
-    "EQEP0_I"
+    "EQEP0_B"
    ],
    "optional_signals": [
+    "EQEP0_I",
     "EQEP0_S"
    ]
   },
   "EQEP1": {
    "profile_status": "needs_confirmation",
-   "mode": "ab_index",
+   "mode": "quadrature",
    "default_required_signals": [
     "EQEP1_A",
-    "EQEP1_B",
-    "EQEP1_I"
+    "EQEP1_B"
    ],
    "optional_signals": [
+    "EQEP1_I",
     "EQEP1_S"
    ]
   },
   "EQEP2": {
    "profile_status": "needs_confirmation",
-   "mode": "ab_index",
+   "mode": "quadrature",
    "default_required_signals": [
     "EQEP2_A",
-    "EQEP2_B",
-    "EQEP2_I"
+    "EQEP2_B"
    ],
    "optional_signals": [
+    "EQEP2_I",
     "EQEP2_S"
-   ]
-  },
-  "EXT": {
-   "profile_status": "needs_confirmation",
-   "mode": "external MAIN-domain reference clock input",
-   "default_required_signals": [],
-   "optional_signals": [
-    "EXT_REFCLK1"
    ]
   },
   "GPIO0": {
    "profile_status": "needs_confirmation",
-   "mode": "per-pin",
+   "mode": "pin-level (user names individual pins)",
    "default_required_signals": [],
    "optional_signals": []
   },
   "GPIO1": {
    "profile_status": "needs_confirmation",
-   "mode": "per-pin",
+   "mode": "pin-level (user names individual pins)",
    "default_required_signals": [],
    "optional_signals": []
   },
   "WKUP_GPIO0": {
    "profile_status": "needs_confirmation",
-   "mode": "per-pin",
+   "mode": "pin-level (user names individual pins)",
    "default_required_signals": [],
    "optional_signals": []
   },
   "GPMC0": {
    "profile_status": "needs_confirmation",
-   "mode": "parallel NOR/NAND - confirm bus width and mode",
+   "mode": "parallel NOR/NAND - bus width and CS must be confirmed",
    "default_required_signals": [],
    "optional_signals": []
   },
@@ -643,8 +644,6 @@
    "default_required_signals": [
     "MCU_HYPERBUS0_CK",
     "MCU_HYPERBUS0_CKn",
-    "MCU_HYPERBUS0_CSn0",
-    "MCU_HYPERBUS0_RWDS",
     "MCU_HYPERBUS0_DQ0",
     "MCU_HYPERBUS0_DQ1",
     "MCU_HYPERBUS0_DQ2",
@@ -652,7 +651,9 @@
     "MCU_HYPERBUS0_DQ4",
     "MCU_HYPERBUS0_DQ5",
     "MCU_HYPERBUS0_DQ6",
-    "MCU_HYPERBUS0_DQ7"
+    "MCU_HYPERBUS0_DQ7",
+    "MCU_HYPERBUS0_RWDS",
+    "MCU_HYPERBUS0_CSn0"
    ],
    "optional_signals": [
     "MCU_HYPERBUS0_CSn1",
@@ -694,11 +695,11 @@
    "mode": "quad",
    "default_required_signals": [
     "MCU_OSPI0_CLK",
-    "MCU_OSPI0_CSn0",
     "MCU_OSPI0_D0",
     "MCU_OSPI0_D1",
     "MCU_OSPI0_D2",
-    "MCU_OSPI0_D3"
+    "MCU_OSPI0_D3",
+    "MCU_OSPI0_CSn0"
    ],
    "optional_signals": [
     "MCU_OSPI0_D4",
@@ -706,10 +707,10 @@
     "MCU_OSPI0_D6",
     "MCU_OSPI0_D7",
     "MCU_OSPI0_DQS",
-    "MCU_OSPI0_LBCLKO",
     "MCU_OSPI0_CSn1",
     "MCU_OSPI0_CSn2",
-    "MCU_OSPI0_CSn3"
+    "MCU_OSPI0_CSn3",
+    "MCU_OSPI0_LBCLKO"
    ]
   },
   "MCU_OSPI1": {
@@ -717,56 +718,61 @@
    "mode": "quad",
    "default_required_signals": [
     "MCU_OSPI1_CLK",
-    "MCU_OSPI1_CSn0",
     "MCU_OSPI1_D0",
     "MCU_OSPI1_D1",
     "MCU_OSPI1_D2",
-    "MCU_OSPI1_D3"
+    "MCU_OSPI1_D3",
+    "MCU_OSPI1_CSn0"
    ],
    "optional_signals": [
     "MCU_OSPI1_DQS",
-    "MCU_OSPI1_LBCLKO",
-    "MCU_OSPI1_CSn1"
+    "MCU_OSPI1_CSn1",
+    "MCU_OSPI1_LBCLKO"
    ]
   },
   "MCU_RGMII1": {
    "profile_status": "needs_confirmation",
    "mode": "std",
    "default_required_signals": [
+    "MCU_RGMII1_TXC",
+    "MCU_RGMII1_TX_CTL",
     "MCU_RGMII1_TD0",
     "MCU_RGMII1_TD1",
     "MCU_RGMII1_TD2",
     "MCU_RGMII1_TD3",
-    "MCU_RGMII1_TXC",
-    "MCU_RGMII1_TX_CTL",
+    "MCU_RGMII1_RXC",
+    "MCU_RGMII1_RX_CTL",
     "MCU_RGMII1_RD0",
     "MCU_RGMII1_RD1",
     "MCU_RGMII1_RD2",
-    "MCU_RGMII1_RD3",
-    "MCU_RGMII1_RXC",
-    "MCU_RGMII1_RX_CTL"
+    "MCU_RGMII1_RD3"
    ],
-   "optional_signals": []
+   "optional_signals": [
+    "MCU_MDIO0_MDC",
+    "MCU_MDIO0_MDIO"
+   ]
   },
   "MCU_RMII1": {
    "profile_status": "needs_confirmation",
    "mode": "std",
    "default_required_signals": [
-    "MCU_RMII1_TXD0",
-    "MCU_RMII1_TXD1",
-    "MCU_RMII1_TX_EN",
+    "MCU_RMII1_REF_CLK",
+    "MCU_RMII1_CRS_DV",
     "MCU_RMII1_RXD0",
     "MCU_RMII1_RXD1",
-    "MCU_RMII1_CRS_DV",
-    "MCU_RMII1_REF_CLK"
+    "MCU_RMII1_TX_EN",
+    "MCU_RMII1_TXD0",
+    "MCU_RMII1_TXD1"
    ],
    "optional_signals": [
-    "MCU_RMII1_RX_ER"
+    "MCU_RMII1_RX_ER",
+    "MCU_MDIO0_MDC",
+    "MCU_MDIO0_MDIO"
    ]
   },
   "MCU_SPI0": {
    "profile_status": "needs_confirmation",
-   "mode": "4wire",
+   "mode": "master_1cs",
    "default_required_signals": [
     "MCU_SPI0_CLK",
     "MCU_SPI0_D0",
@@ -781,7 +787,7 @@
   },
   "MCU_SPI1": {
    "profile_status": "needs_confirmation",
-   "mode": "4wire",
+   "mode": "master_1cs",
    "default_required_signals": [
     "MCU_SPI1_CLK",
     "MCU_SPI1_D0",
@@ -794,133 +800,33 @@
     "MCU_SPI1_CS3"
    ]
   },
-  "SPI0": {
-   "profile_status": "needs_confirmation",
-   "mode": "4wire",
-   "default_required_signals": [
-    "SPI0_CLK",
-    "SPI0_D0",
-    "SPI0_D1",
-    "SPI0_CS0"
-   ],
-   "optional_signals": [
-    "SPI0_CS1",
-    "SPI0_CS2",
-    "SPI0_CS3"
-   ]
-  },
-  "SPI1": {
-   "profile_status": "needs_confirmation",
-   "mode": "4wire",
-   "default_required_signals": [
-    "SPI1_CLK",
-    "SPI1_D0",
-    "SPI1_D1",
-    "SPI1_CS0"
-   ],
-   "optional_signals": [
-    "SPI1_CS1",
-    "SPI1_CS2",
-    "SPI1_CS3"
-   ]
-  },
-  "SPI2": {
-   "profile_status": "needs_confirmation",
-   "mode": "4wire",
-   "default_required_signals": [
-    "SPI2_CLK",
-    "SPI2_D0",
-    "SPI2_D1",
-    "SPI2_CS0"
-   ],
-   "optional_signals": [
-    "SPI2_CS1",
-    "SPI2_CS2",
-    "SPI2_CS3"
-   ]
-  },
-  "SPI3": {
-   "profile_status": "needs_confirmation",
-   "mode": "4wire",
-   "default_required_signals": [
-    "SPI3_CLK",
-    "SPI3_D0",
-    "SPI3_D1",
-    "SPI3_CS0"
-   ],
-   "optional_signals": [
-    "SPI3_CS1",
-    "SPI3_CS2",
-    "SPI3_CS3"
-   ]
-  },
   "MCU_UART0": {
    "profile_status": "needs_confirmation",
-   "mode": "2wire",
+   "mode": "rx_tx",
    "default_required_signals": [
     "MCU_UART0_RXD",
     "MCU_UART0_TXD"
    ],
    "optional_signals": [
-    "MCU_UART0_CTSn",
-    "MCU_UART0_RTSn"
+    "MCU_UART0_RTSn",
+    "MCU_UART0_CTSn"
    ]
   },
   "WKUP_UART0": {
    "profile_status": "needs_confirmation",
-   "mode": "2wire",
+   "mode": "rx_tx",
    "default_required_signals": [
     "WKUP_UART0_RXD",
     "WKUP_UART0_TXD"
    ],
    "optional_signals": [
-    "WKUP_UART0_CTSn",
-    "WKUP_UART0_RTSn"
-   ]
-  },
-  "UART0": {
-   "profile_status": "needs_confirmation",
-   "mode": "2wire",
-   "default_required_signals": [
-    "UART0_RXD",
-    "UART0_TXD"
-   ],
-   "optional_signals": [
-    "UART0_CTSn",
-    "UART0_RTSn",
-    "UART0_DTRn",
-    "UART0_DSRn",
-    "UART0_DCDn",
-    "UART0_RIN"
-   ]
-  },
-  "UART1": {
-   "profile_status": "needs_confirmation",
-   "mode": "2wire",
-   "default_required_signals": [
-    "UART1_RXD",
-    "UART1_TXD"
-   ],
-   "optional_signals": [
-    "UART1_CTSn",
-    "UART1_RTSn"
-   ]
-  },
-  "UART2": {
-   "profile_status": "needs_confirmation",
-   "mode": "2wire",
-   "default_required_signals": [
-    "UART2_RXD",
-    "UART2_TXD"
-   ],
-   "optional_signals": [
-    "UART2_CTSn",
-    "UART2_RTSn"
+    "WKUP_UART0_RTSn",
+    "WKUP_UART0_CTSn"
    ]
   },
   "MMC0": {
    "profile_status": "needs_confirmation",
-   "mode": "8bit (eMMC)",
+   "mode": "emmc_8bit",
    "default_required_signals": [
     "MMC0_CLK",
     "MMC0_CMD",
@@ -941,7 +847,7 @@
   },
   "MMC1": {
    "profile_status": "needs_confirmation",
-   "mode": "4bit (SD)",
+   "mode": "sd_4bit",
    "default_required_signals": [
     "MMC1_CLK",
     "MMC1_CMD",
@@ -955,32 +861,83 @@
     "MMC1_SDWP"
    ]
   },
-  "PMIC": {
-   "profile_status": "needs_confirmation",
-   "mode": "power enable outputs",
-   "default_required_signals": [],
-   "optional_signals": [
-    "PMIC_POWER_EN0",
-    "PMIC_POWER_EN1"
-   ]
-  },
   "PRG0": {
    "profile_status": "needs_confirmation",
-   "mode": "PRU-ICSSG0 - specify function (RGMII/PRU GPIO/UART/PWM/IEP)",
+   "mode": "ICSSG - function (RGMII/PRU GPIO/PWM/UART/IEP) must be confirmed",
    "default_required_signals": [],
    "optional_signals": []
   },
   "PRG1": {
    "profile_status": "needs_confirmation",
-   "mode": "PRU-ICSSG1 - specify function (RGMII/PRU GPIO/UART/PWM/IEP)",
+   "mode": "ICSSG - function (RGMII/PRU GPIO/PWM/UART/IEP) must be confirmed",
    "default_required_signals": [],
    "optional_signals": []
   },
   "PRG2": {
    "profile_status": "needs_confirmation",
-   "mode": "PRU-ICSSG2 - specify function (RGMII/PRU GPIO/UART/PWM/IEP)",
+   "mode": "ICSSG - function (RGMII/PRU GPIO/PWM/UART/IEP) must be confirmed",
    "default_required_signals": [],
    "optional_signals": []
+  },
+  "SPI0": {
+   "profile_status": "needs_confirmation",
+   "mode": "master_1cs",
+   "default_required_signals": [
+    "SPI0_CLK",
+    "SPI0_D0",
+    "SPI0_D1",
+    "SPI0_CS0"
+   ],
+   "optional_signals": [
+    "SPI0_CS1",
+    "SPI0_CS2",
+    "SPI0_CS3"
+   ]
+  },
+  "SPI1": {
+   "profile_status": "needs_confirmation",
+   "mode": "master_1cs",
+   "default_required_signals": [
+    "SPI1_CLK",
+    "SPI1_D0",
+    "SPI1_D1",
+    "SPI1_CS0"
+   ],
+   "optional_signals": [
+    "SPI1_CS1",
+    "SPI1_CS2",
+    "SPI1_CS3"
+   ]
+  },
+  "SPI2": {
+   "profile_status": "needs_confirmation",
+   "mode": "master_1cs",
+   "default_required_signals": [
+    "SPI2_CLK",
+    "SPI2_D0",
+    "SPI2_D1",
+    "SPI2_CS0"
+   ],
+   "optional_signals": [
+    "SPI2_CS1",
+    "SPI2_CS2",
+    "SPI2_CS3"
+   ]
+  },
+  "SPI3": {
+   "profile_status": "needs_confirmation",
+   "mode": "master_1cs",
+   "default_required_signals": [
+    "SPI3_CLK",
+    "SPI3_D0",
+    "SPI3_D1",
+    "SPI3_CS0"
+   ],
+   "optional_signals": [
+    "SPI3_CS1",
+    "SPI3_CS2",
+    "SPI3_CS3"
+   ]
   },
   "SYNC0": {
    "profile_status": "needs_confirmation",
@@ -1016,17 +973,48 @@
   },
   "TIMER": {
    "profile_status": "needs_confirmation",
-   "mode": "per-channel timer IO",
+   "mode": "pin-level (user names individual TIMER_IOn)",
    "default_required_signals": [],
+   "optional_signals": []
+  },
+  "UART0": {
+   "profile_status": "needs_confirmation",
+   "mode": "rx_tx (full modem signals available)",
+   "default_required_signals": [
+    "UART0_RXD",
+    "UART0_TXD"
+   ],
    "optional_signals": [
-    "TIMER_IO0",
-    "TIMER_IO1",
-    "TIMER_IO2",
-    "TIMER_IO3",
-    "TIMER_IO4",
-    "TIMER_IO5",
-    "TIMER_IO6",
-    "TIMER_IO7"
+    "UART0_RTSn",
+    "UART0_CTSn",
+    "UART0_DTRn",
+    "UART0_DSRn",
+    "UART0_DCDn",
+    "UART0_RIN"
+   ]
+  },
+  "UART1": {
+   "profile_status": "needs_confirmation",
+   "mode": "rx_tx",
+   "default_required_signals": [
+    "UART1_RXD",
+    "UART1_TXD"
+   ],
+   "optional_signals": [
+    "UART1_RTSn",
+    "UART1_CTSn"
+   ]
+  },
+  "UART2": {
+   "profile_status": "needs_confirmation",
+   "mode": "rx_tx",
+   "default_required_signals": [
+    "UART2_RXD",
+    "UART2_TXD"
+   ],
+   "optional_signals": [
+    "UART2_RTSn",
+    "UART2_CTSn"
    ]
   },
   "USB0": {
@@ -1047,67 +1035,15 @@
   },
   "VIN0": {
    "profile_status": "needs_confirmation",
-   "mode": "8-bit parallel capture (confirm width)",
-   "default_required_signals": [
-    "VIN0_PCLK",
-    "VIN0_HD",
-    "VIN0_VD",
-    "VIN0_DATA0",
-    "VIN0_DATA1",
-    "VIN0_DATA2",
-    "VIN0_DATA3",
-    "VIN0_DATA4",
-    "VIN0_DATA5",
-    "VIN0_DATA6",
-    "VIN0_DATA7"
-   ],
-   "optional_signals": [
-    "VIN0_DATA8",
-    "VIN0_DATA9",
-    "VIN0_DATA10",
-    "VIN0_DATA11",
-    "VIN0_DATA12",
-    "VIN0_DATA13",
-    "VIN0_DATA14",
-    "VIN0_DATA15"
-   ]
+   "mode": "parallel capture - data width must be confirmed",
+   "default_required_signals": [],
+   "optional_signals": []
   },
   "VOUT1": {
    "profile_status": "needs_confirmation",
-   "mode": "DPI RGB888 (confirm width)",
-   "default_required_signals": [
-    "VOUT1_PCLK",
-    "VOUT1_DE",
-    "VOUT1_HSYNC",
-    "VOUT1_VSYNC",
-    "VOUT1_DATA0",
-    "VOUT1_DATA1",
-    "VOUT1_DATA2",
-    "VOUT1_DATA3",
-    "VOUT1_DATA4",
-    "VOUT1_DATA5",
-    "VOUT1_DATA6",
-    "VOUT1_DATA7",
-    "VOUT1_DATA8",
-    "VOUT1_DATA9",
-    "VOUT1_DATA10",
-    "VOUT1_DATA11",
-    "VOUT1_DATA12",
-    "VOUT1_DATA13",
-    "VOUT1_DATA14",
-    "VOUT1_DATA15",
-    "VOUT1_DATA16",
-    "VOUT1_DATA17",
-    "VOUT1_DATA18",
-    "VOUT1_DATA19",
-    "VOUT1_DATA20",
-    "VOUT1_DATA21",
-    "VOUT1_DATA22",
-    "VOUT1_DATA23"
-   ],
-   "optional_signals": [
-    "VOUT1_EXTPCLKIN"
-   ]
+   "mode": "DPI - data width (16/18/24-bit) must be confirmed",
+   "default_required_signals": [],
+   "optional_signals": []
   }
  }
 }

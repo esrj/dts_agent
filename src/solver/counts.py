@@ -293,6 +293,7 @@ def _lower_standalone_counts(intent: dict, kb: Knowledge) -> dict:
             "instance": name, "mode": it.get("mode"),
             "pin_assignments": [{"signal": None, "pin": p, "af": it.get("af")}
                                 for p in (it.get("pins") or []) if p],
+            **({"label": it["label"]} if it.get("label") else {}),
         })
         changed = True
     if not changed:
@@ -367,6 +368,9 @@ def plan(intent: dict, kb: Knowledge | None = None, *, must_gpio=None,
             "instances": new,             # every instance satisfying the request
             "reused_boot": [],            # boot instances are reserved, never reused
             "new": new,                   # newly allocated by the solver
+            # 使用者對此需求的稱呼（RS232/RS485…）：service 據此把 function
+            # 註記掛到選中 instance 的輸出 rows 上（純註記，不影響選擇）
+            **({"label": item["label"]} if item.get("label") else {}),
         })
     spec.notes.append("count 自動選擇 — " + "；".join(
         _summarize_choice(c) for c in chosen))

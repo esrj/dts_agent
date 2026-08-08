@@ -99,6 +99,7 @@
       "default": "rgmii",
       "modes": {
         "rgmii": ["RGMII_TXD0", "RGMII_TXD1", "RGMII_TXD2", "RGMII_TXD3", "RGMII_TX_CTL", "RGMII_CLK125", "RGMII_GTX_CLK", "RGMII_RXD0", "RGMII_RXD1", "RGMII_RXD2", "RGMII_RXD3", "RGMII_RX_CTL", "RGMII_RX_CLK", "MDC", "MDIO"],
+        "rgmii_switch": ["RGMII_TXD0", "RGMII_TXD1", "RGMII_TXD2", "RGMII_TXD3", "RGMII_TX_CTL", "RGMII_GTX_CLK", "RGMII_RXD0", "RGMII_RXD1", "RGMII_RXD2", "RGMII_RXD3", "RGMII_RX_CTL", "RGMII_RX_CLK"],
         "rmii": ["RMII_TXD0", "RMII_TXD1", "RMII_TX_EN", "RMII_RXD0", "RMII_RXD1", "RMII_CRS_DV", "RMII_REF_CLK", "MDC", "MDIO"]
       }
     }

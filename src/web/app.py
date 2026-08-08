@@ -35,6 +35,10 @@ from validator import expected_pin_map, plan_fingerprint
 import board_create
 
 app = Flask(__name__, static_folder="static", static_url_path="")
+# 靜態檔（index.html / app.js）一律要求瀏覽器重新驗證：內部工具流量小，
+# 換來「改前端不再被瀏覽器快取咬住」（歷史事故：HTML 快取住舊的 app.js
+# 引用，功能徽章永遠載不到）。
+app.send_file_max_age_default = 0
 app.config["MAX_CONTENT_LENGTH"] = 220 * 1024 * 1024   # 上傳（PDF＋DTS 樹）上限
 app.register_blueprint(board_create.bp)                # 上傳新增板子（M3）
 pipeline = Pipeline()        # 啟動時載入一次（provider / system_prompt；各板資料延後載入並快取）
@@ -431,7 +435,7 @@ def _dts_worker(board: str, fp: str, snapshot_csv: str):
         used_llm = (any(p.get("lm_used") for p in result["peripherals"])
                     or bool(res.repair_usage))
         if not used_llm:
-            time.sleep(30)
+            time.sleep(3)
     except Exception as exc:                          # pipeline 例外（缺 key、壞資料…）
         result = {"passed": False, "stop_reason": "exception", "error": str(exc),
                   "ask_user": [], "repair_rounds": 0, "compiled": False,
