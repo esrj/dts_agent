@@ -514,6 +514,79 @@
       margin: .7rem 0 0;
     }
 
+    /* ---- 設定頁（板子選擇＋上傳＋開機/PMIC 腳位覆寫） ---- */
+    /* header 的設定入口：沿用 board-picker 的 pill 造型，顯示目前板子 */
+    .settings-btn {
+      display: inline-flex; align-items: center; gap: .45rem;
+      margin-left: 10px;
+      font: inherit; font-size: .92rem; font-weight: 600;
+      color: var(--text); background: var(--bg-soft);
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: .42rem 1rem; cursor: pointer; line-height: 1.2;
+      transition: background-color .15s, border-color .15s, box-shadow .15s;
+    }
+    .settings-btn:hover { background: var(--bubble-user); border-color: var(--accent); }
+    .settings-btn:focus-visible {
+      outline: none; border-color: var(--accent); box-shadow: var(--shadow);
+    }
+    .settings-btn .gear { font-weight: 400; font-size: 1rem; }
+    /* 設定彈窗要壓在 bc 上傳彈窗（z-index:50）之下，讓上傳流程可疊在設定頁上 */
+    .set-overlay { z-index: 40; }
+    .set-section { padding: 1.05rem 0; border-bottom: 1px solid var(--border); }
+    .set-section h3 { margin: 0 0 .35rem; font-size: .95rem; }
+    .set-section > .note { font-size: .8rem; color: var(--text-soft);
+                           margin: 0 0 .7rem; line-height: 1.55; }
+    .set-btn {
+      padding: .55rem 1.1rem; border-radius: 10px; border: none;
+      background: var(--bg-soft); color: var(--text); cursor: pointer;
+      font: inherit; font-size: .88rem; transition: background-color .15s;
+    }
+    .set-btn:hover { background: var(--bubble-user); }
+
+    /* 覆寫表：軟化風格（同 bc-review），腳位欄 monospace */
+    .ov-status { margin: .2rem 0 .4rem; }
+    .ov-status.demo { color: var(--warn); }
+    .ov-table { width: 100%; border-collapse: collapse; font-size: .84rem;
+                margin: .4rem 0 .2rem; }
+    .ov-table th, .ov-table td {
+      border: none; border-bottom: 1px solid var(--border);
+      padding: .5rem .5rem .5rem 0; text-align: left; vertical-align: middle;
+    }
+    .ov-table th { font-size: .76rem; font-weight: 600; color: var(--text-soft); }
+    .ov-table td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .ov-table td.ov-role b { font-weight: 600; }
+    /* 行內編輯格：平常長得像一般文字，滑過提示可編輯、點進去才變輸入框 */
+    .ov-table input.ov-edit {
+      font: inherit; font-size: .84rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text); background: transparent;
+      border: none; border-radius: 8px;
+      padding: .2rem .35rem; margin-left: -.35rem;
+      transition: background-color .12s, box-shadow .12s;
+    }
+    .ov-table input.ov-edit:hover { background: var(--bg-soft); cursor: text; }
+    .ov-table input.ov-edit:focus {
+      outline: none; background: var(--bg-soft);
+      box-shadow: 0 0 0 1px var(--accent) inset;
+    }
+    .ov-table input.ov-edit.w-group  { width: 7.5rem; }
+    .ov-table input.ov-edit.w-signal { width: 11rem; }
+    .ov-table input.ov-edit.w-pin    { width: 6rem; }
+    /* 有未儲存修改 / 格式不合法：以文字色示意（非表單框） */
+    .ov-table input.ov-edit.dirty   { color: var(--warn); font-weight: 600; }
+    .ov-table input.ov-edit.invalid { color: var(--err); font-weight: 600;
+                                      box-shadow: 0 0 0 1px var(--err) inset; }
+    /* 腳位被覆寫（≠官方值）時，在輸入格下顯示官方腳位供對照 */
+    .ov-official { display: block; font-size: .72rem; color: var(--text-soft); }
+    .ov-clear {
+      border: none; background: none; color: var(--text-soft);
+      font-size: .78rem; cursor: pointer; padding: .2rem .35rem;
+    }
+    .ov-clear:hover { color: var(--text); }
+    .ov-error { color: var(--err); font-size: .82rem; white-space: pre-wrap;
+                margin: .3rem 0 0; }
+    .ov-saved { color: var(--ok); }
+
     /* ---- 修改建議卡片（G6）：驗證過的替代方案，一鍵採納 ---- */
     .sugg-cards { display: flex; flex-direction: column; gap: .5rem; margin-top: .85rem; }
     .sugg-head { margin: 0 0 .1rem; font-size: .8rem; font-weight: 600;
@@ -590,12 +663,65 @@
   <header>
     <span class="dot">P</span>
     <span>DTS Agent</span>
-    <label class="board-picker" title="目標板子（切換後套用該板資料）">
-      <select id="board-select" aria-label="選擇目標板子"></select>
-    </label>
+    <!-- 設定入口：顯示目前板子；點開設定頁（板子選擇／上傳／腳位覆寫都在裡面） -->
+    <button id="settings-btn" class="settings-btn"
+            title="設定（選擇板子・上傳新板子・開機/PMIC 腳位覆寫）">
+      <span class="gear">⚙</span><span id="header-board">…</span>
+    </button>
     <span id="validator-badge" class="v-badge err" hidden
           title="STM32CubeMX 環境異常（找不到或損壞的執行檔）——驗證功能暫不可用">CubeMX 離線</span>
   </header>
+
+  <!-- 設定頁彈窗：①目標板子 ②上傳新板子 ③開機/PMIC 腳位覆寫（app.js 控制顯示）
+       腳位覆寫的定位：客製板與官方板同 SoC，但開機/PMIC 腳位可能被改；此處
+       的修改存成 overlay 檔疊加在知識庫上，永不直接改 data/<板>/ 的真實知識庫。
+       後端端點（GET/PUT /api/boards/<板>/pin-overrides）尚未實作——先出前端。 -->
+  <div id="set-overlay" class="bc-overlay set-overlay" hidden>
+    <div class="bc-modal" role="dialog" aria-label="設定">
+      <h2>設定</h2>
+
+      <div class="set-section">
+        <h3>目標板子</h3>
+        <p class="note">切換後套用該板知識庫；對話會重新開始。</p>
+        <label class="board-picker">
+          <select id="board-select" aria-label="選擇目標板子"></select>
+        </label>
+      </div>
+
+      <div class="set-section" id="set-upload-section" hidden>
+        <h3>新增板子</h3>
+        <p class="note">上傳手冊 PDF 與 kernel DTS，自動生成該板知識庫。</p>
+        <button id="set-upload-btn" class="set-btn">＋ 上傳新板子…</button>
+      </div>
+
+      <div class="set-section">
+        <h3>開機 / PMIC 腳位覆寫</h3>
+        <p class="note">
+          客製板可能與官方板同 SoC 但改了開機或 PMIC 腳位。點表格文字即可
+          編輯（介面／訊號／腳位都可改）；與官方不同的值會存成
+          <b>覆寫檔（overlay）</b>，疊加在知識庫之上，不會動到真實知識庫；
+          按「還原」即回到官方值。
+        </p>
+        <div id="ov-status" class="note ov-status"></div>
+        <table class="ov-table" id="ov-table">
+          <thead><tr>
+            <th>角色</th><th>介面</th><th>訊號</th>
+            <th>目前腳位</th><th></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="ov-error" id="ov-error"></div>
+        <div class="bc-actions">
+          <button id="ov-revert">還原未儲存修改</button>
+          <button id="ov-save" class="primary">儲存覆寫</button>
+        </div>
+      </div>
+
+      <div class="bc-actions">
+        <button id="set-close">關閉</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 上傳新板子彈窗（M4；app.js 控制顯示） -->
   <div id="bc-overlay" class="bc-overlay" hidden>
@@ -699,6 +825,6 @@
     </div>
   </footer>
 
-  <script src="app.js?v=20260808b"></script>
+  <script src="app.js?v=20260809b"></script>
 </body>
 </html>

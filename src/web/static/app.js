@@ -9,7 +9,6 @@ let chatSessionId = null;
 // --------------------------------------------------------------------------- //
 // 板子選擇 — 啟動時向 /api/boards 取得 data/boards/ 下自動偵測到的板子清單
 // --------------------------------------------------------------------------- //
-const BC_CREATE_VALUE = "__create__";     // 下拉選單「上傳新板子」哨兵值
 let boardNames = {};                      // slug -> display name（board.yaml）
 
 async function loadBoards(selectSlug) {
@@ -30,30 +29,31 @@ async function loadBoards(selectSlug) {
       if (b === currentBoard) opt.selected = true;
       sel.appendChild(opt);
     });
-    if (d.can_create) {                         // 「＋ 上傳新板子…」固定在最底
-      const opt = document.createElement("option");
-      opt.value = BC_CREATE_VALUE;
-      opt.textContent = "＋ 上傳新板子…";
-      sel.appendChild(opt);
-    }
+    // 上傳功能移入設定頁：can_create 控制設定頁「新增板子」區塊的顯示
+    const up = $("set-upload-section");
+    if (up) up.hidden = !d.can_create;
     if (!sel._bcBound) {                        // 重載時避免重複掛 listener
       sel.addEventListener("change", onBoardChange);
       sel._bcBound = true;
     }
     updateIntroBoard();
+    ovLoad();                                   // 設定頁開著時同步覆寫表（隱藏時 no-op）
   } catch (e) {
     // 取不到清單（舊後端 / 失敗）-> 隱藏選單，沿用後端預設板
     sel.style.display = "none";
+    updateIntroBoard();
   }
 }
 
-// 開場的目前板子提示：顯示現在對話針對哪塊板（display name，缺 manifest
-// 退回 slug）。板子清單載入與每次換板都會更新。
+// 開場的目前板子提示＋header 設定鈕上的板名：顯示現在對話針對哪塊板
+//（display name，缺 manifest 退回 slug）。板子清單載入與每次換板都會更新。
 function updateIntroBoard() {
+  const name = currentBoard ? (boardNames[currentBoard] || currentBoard) : "";
+  const head = $("header-board");
+  if (head) head.textContent = name || "設定";
   const hint = $("intro-board");
   if (!hint) return;
   if (!currentBoard) { hint.hidden = true; return; }
-  const name = boardNames[currentBoard] || currentBoard;
   hint.innerHTML = "目前板子：<b>" + escapeHtml(name) + "</b>";
   hint.hidden = false;
 }
@@ -70,11 +70,6 @@ function clearChat() {
 }
 
 function onBoardChange(e) {
-  if (e.target.value === BC_CREATE_VALUE) {
-    e.target.value = currentBoard;              // 選單還原，改開彈窗
-    bcOpen();
-    return;
-  }
   currentBoard = e.target.value;
   // 換板等於開新話題：丟掉 Agent 對話 session，避免拿新板的 Σ/DTS
   // 去回答舊板的問題（後端 session 綁定某塊板的對話歷史）；
@@ -83,6 +78,7 @@ function onBoardChange(e) {
   clearChat();
   updateIntroBoard();
   initDts();                                  // DTS 生成可用性依板而定
+  ovLoad();                                   // 設定頁開著：換板重載該板的覆寫表
 }
 
 // --------------------------------------------------------------------------- //
@@ -308,6 +304,244 @@ function initBoardCreate() {
   $("bc-abort").addEventListener("click", bcAbort);
   $("bc-artifacts").addEventListener("click", () => {
     window.location.href = "/api/boards/create/artifacts";
+  });
+}
+
+// --------------------------------------------------------------------------- //
+// 設定頁 —— ①目標板子（board-select 移入此頁）②上傳新板子 ③開機/PMIC 腳位覆寫
+//
+// 腳位覆寫（規劃）：客製板可能與官方板同 SoC，但開機/PMIC 腳位被改（例：PMIC
+// 的 I2C7_SCL 從 PD15 挪到別腳）。使用者在此維護「角色:介面:訊號 → 腳位」的
+// 覆寫值；儲存後由後端寫成 overlay 檔（規劃：data/<板>/base/
+// require.overrides.json）疊加在 require.json 之上——真實知識庫永不直接修改
+//（紅線 2 的延伸），清空覆寫值即回到官方腳位。
+//
+// 後端契約（尚未實作；接上前本區以示意資料呈現、儲存會明確回報未生效）：
+//   GET /api/boards/<board>/pin-overrides
+//     -> { entries: [ { role, group, signal, default_pin, af,
+//                       override_group, override_signal, override_pin } ] }
+//        role = 群組角色（require.json groups[].role）、group = 介面（I2C7…）、
+//        override_* = null 表示未覆寫（介面/訊號/腳位三者都可被客製板改名/改腳）
+//   PUT /api/boards/<board>/pin-overrides
+//     body: { entries: [ { group, signal, pin } ] }   送整張表的目前值；
+//     -> { ok: true }   後端與 require.json 逐項比對，僅差異落入 overlay 檔，
+//        與官方相同＝無覆寫。腳位存在性／衝突由後端驗證。
+// --------------------------------------------------------------------------- //
+let ovEntries = [];        // 目前板的覆寫表（GET 結果或示意資料）
+let ovDemo = false;        // true = 後端端點不存在，畫面資料僅供預覽
+
+// 後端沒接上時的示意資料——取 stm32mp257f-ev1 require.json 的真實內容，
+// 讓畫面與未來後端回傳的形狀一致（僅預覽用，儲存不會生效）
+const OV_DEMO_ENTRIES = [
+  { role: "PMIC STPMIC25 控制匯流排", group: "I2C7",
+    signal: "I2C7_SCL", default_pin: "PD15", af: 10, override_pin: null },
+  { role: "PMIC STPMIC25 控制匯流排", group: "I2C7",
+    signal: "I2C7_SDA", default_pin: "PD14", af: 10, override_pin: null },
+  { role: "SD-card boot", group: "SDMMC1",
+    signal: "SDMMC1_CK", default_pin: "PE3", af: 10, override_pin: null },
+  { role: "SD-card boot", group: "SDMMC1",
+    signal: "SDMMC1_CMD", default_pin: "PE2", af: 10, override_pin: null },
+  { role: "SD-card boot", group: "SDMMC1",
+    signal: "SDMMC1_D0", default_pin: "PE4", af: 10, override_pin: null },
+  { role: "console + ROM UART boot", group: "USART2",
+    signal: "USART2_TX", default_pin: "PA4", af: 6, override_pin: null },
+  { role: "console + ROM UART boot", group: "USART2",
+    signal: "USART2_RX", default_pin: "PA8", af: 8, override_pin: null },
+];
+
+function setOpen() {
+  $("set-overlay").hidden = false;
+  ovLoad();
+}
+function setClose() { $("set-overlay").hidden = true; }
+
+// 載入目前板的覆寫表；設定頁沒開就不打（換板時被 onBoardChange 呼叫）
+async function ovLoad() {
+  const overlay = $("set-overlay");
+  if (!overlay || overlay.hidden) return;
+  const status = $("ov-status");
+  status.className = "note ov-status";
+  status.textContent = "載入中…";
+  ovDemo = false;
+  try {
+    const r = await fetch("/api/boards/" + encodeURIComponent(currentBoard || "")
+                          + "/pin-overrides");
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    ovEntries = d.entries || [];
+    status.textContent = "";
+  } catch (e) {
+    // 端點尚未實作（規劃中）→ 用示意資料把畫面撐起來，並明確標示不會儲存
+    ovEntries = OV_DEMO_ENTRIES.map((x) => ({ ...x }));
+    ovDemo = true;
+    status.className = "note ov-status demo";
+    status.textContent = "⚠ 後端端點尚未接上——以下為示意資料，儲存不會生效。";
+  }
+  // 三層值：official=官方（對照用）、loaded=載入時（dirty 基準）、cur=編輯中
+  ovEntries.forEach((en) => {
+    en.official = { group: en.group, signal: en.signal, pin: en.default_pin };
+    en.loaded = {
+      group: en.override_group || en.group,
+      signal: en.override_signal || en.signal,
+      pin: en.override_pin || en.default_pin,
+    };
+    en.cur = { ...en.loaded };
+  });
+  ovRender();
+}
+
+// 欄位格式（合法性只做格式層；「腳位/訊號是否存在於此板、是否撞到其他訊號」
+// 由後端儲存時驗證）
+const OV_FIELD_RE = {
+  group: /^[A-Z0-9_]{2,}$/,               // I2C7 / SDMMC1 …
+  signal: /^[A-Z0-9_\/]{2,}$/,            // I2C7_SCL …
+  pin: /^P[A-Z]\d{1,2}$/,                 // PA0 / PD15 / PZ4 …
+};
+
+// 行內編輯格：平常長得像一般文字（無框），點擊聚焦才浮出輸入框樣式。
+// 值即時寫回 en.cur；dirty=與載入值不同、invalid=格式不合。
+function ovMakeCell(en, i, field, widthCls) {
+  const input = document.createElement("input");
+  input.className = "ov-edit " + widthCls;
+  input.value = en.cur[field];
+  input.dataset.idx = String(i);
+  input.dataset.field = field;
+  input.addEventListener("input", ovInputChanged);
+  return input;
+}
+
+// 依 group 合併「角色／介面」欄（rowspan）；介面格編輯會同步整組（改介面名
+// ＝這條匯流排整個換 instance，例：PMIC 從 I2C7 移到 I2C6）
+function ovRender() {
+  const tbody = $("ov-table").querySelector("tbody");
+  tbody.innerHTML = "";
+  $("ov-error").textContent = "";
+  const spans = {};                       // 官方 group -> 列數（rowspan 基準）
+  ovEntries.forEach((en) => {
+    spans[en.official.group] = (spans[en.official.group] || 0) + 1;
+  });
+  const seen = new Set();
+  ovEntries.forEach((en, i) => {
+    const tr = document.createElement("tr");
+    if (!seen.has(en.official.group)) {
+      seen.add(en.official.group);
+      tr.appendChild(el("td", "ov-role", "<b>" + escapeHtml(en.role || "") + "</b>"));
+      tr.lastChild.rowSpan = spans[en.official.group];
+      const tdG = document.createElement("td");
+      tdG.rowSpan = spans[en.official.group];
+      tdG.appendChild(ovMakeCell(en, i, "group", "w-group"));
+      tr.appendChild(tdG);
+    }
+    const tdS = document.createElement("td");
+    tdS.appendChild(ovMakeCell(en, i, "signal", "w-signal"));
+    tr.appendChild(tdS);
+    const tdP = document.createElement("td");
+    tdP.appendChild(ovMakeCell(en, i, "pin", "w-pin"));
+    const note = el("span", "ov-official", "");
+    note.hidden = true;
+    tdP.appendChild(note);
+    tr.appendChild(tdP);
+    const tdClr = document.createElement("td");
+    const clr = document.createElement("button");
+    clr.className = "ov-clear";
+    clr.textContent = "還原";
+    clr.title = "此列回到官方值（介面/訊號/腳位）";
+    clr.addEventListener("click", () => {
+      en.cur = { ...en.official };
+      ovEntries.filter((x) => x.official.group === en.official.group)
+        .forEach((x) => { x.cur.group = en.official.group; });  // 介面名整組同步
+      ovRender();
+    });
+    tdClr.appendChild(clr);
+    tr.appendChild(tdClr);
+    tbody.appendChild(tr);
+    ovRefreshRowState(tr, en, i);
+  });
+}
+
+function ovInputChanged(e) {
+  const input = e.target;
+  const i = Number(input.dataset.idx);
+  const field = input.dataset.field;
+  const en = ovEntries[i];
+  const val = input.value.trim().toUpperCase();
+  en.cur[field] = val;
+  if (field === "group") {                // 介面格是整組共用的（rowspan）
+    ovEntries.filter((x) => x.official.group === en.official.group)
+      .forEach((x) => { x.cur.group = val; });
+  }
+  ovRefreshRowState(input.closest("tr"), en, i);
+}
+
+// 重算一列的 dirty/invalid 標記與「官方值」對照小字
+function ovRefreshRowState(tr, en, i) {
+  tr.querySelectorAll("input.ov-edit").forEach((input) => {
+    const f = input.dataset.field;
+    const x = ovEntries[Number(input.dataset.idx)];
+    const val = x.cur[f];
+    input.classList.toggle("dirty", val !== x.loaded[f]);
+    input.classList.toggle("invalid", !OV_FIELD_RE[f].test(val));
+  });
+  const note = tr.querySelector(".ov-official");
+  if (note) {
+    const diffs = [];
+    if (en.cur.pin !== en.official.pin) diffs.push("官方 " + en.official.pin);
+    note.textContent = diffs.join("・");
+    note.hidden = !diffs.length;
+  }
+}
+
+async function ovSave() {
+  const err = $("ov-error");
+  err.textContent = "";
+  const bad = ovEntries.filter((en) =>
+    !OV_FIELD_RE.group.test(en.cur.group) ||
+    !OV_FIELD_RE.signal.test(en.cur.signal) ||
+    !OV_FIELD_RE.pin.test(en.cur.pin));
+  if (bad.length) {
+    err.textContent = "格式不正確（介面例：I2C7；訊號例：I2C7_SCL；腳位例：PD15）：" +
+      bad.map((en) => en.official.signal).join("、");
+    return;
+  }
+  if (ovDemo) {
+    err.textContent = "後端端點尚未實作——本次修改僅在畫面上，未儲存。";
+    return;
+  }
+  const btn = $("ov-save");
+  btn.disabled = true;
+  try {
+    const r = await fetch("/api/boards/" + encodeURIComponent(currentBoard || "")
+                          + "/pin-overrides", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entries: ovEntries.map((en) => ({ ...en.cur })) }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || ("HTTP " + r.status));
+    await ovLoad();                            // 以後端落地結果為準重新渲染
+    const status = $("ov-status");
+    status.className = "note ov-status ov-saved";
+    status.textContent = "✓ 已儲存為覆寫檔（不影響真實知識庫）";
+  } catch (e2) {
+    err.textContent = "儲存失敗：" + (e2 && e2.message ? e2.message : e2);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function initSettings() {
+  if (!$("set-overlay")) return;
+  $("settings-btn").addEventListener("click", setOpen);
+  $("set-close").addEventListener("click", setClose);
+  $("set-upload-btn").addEventListener("click", bcOpen);
+  $("ov-save").addEventListener("click", ovSave);
+  $("ov-revert").addEventListener("click", () => {      // 丟掉未儲存修改
+    ovEntries.forEach((en) => { en.cur = { ...en.loaded }; });
+    ovRender();
+  });
+  // 點背景關閉（點到內容不關）；上傳彈窗疊在上層，互不影響
+  $("set-overlay").addEventListener("click", (e) => {
+    if (e.target === $("set-overlay")) setClose();
   });
 }
 
@@ -1405,3 +1639,4 @@ $("q").addEventListener("input", function () {
 loadBoards().then(initDts);
 initValidatorBadge();
 initBoardCreate();
+initSettings();
