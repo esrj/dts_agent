@@ -7,17 +7,27 @@ instances.  This layer searches the instance space:
 
   slots      : a count of N for family F becomes N "slots", each to be filled
                with a distinct concrete instance of F (I2C2, I2C3, ...).
-  domain     : a slot's domain is every instance of F that exists in Σ and can
-               be fully realised in the requested mode (no missing signals).
-  ordering   : instances are tried official-DTS-first, then by index ascending
-               (so 2×FDCAN tries {FDCAN1, FDCAN3} — the board defaults — first).
-               This is a *soft* preference: if the official combination can't be
-               routed, DFS backtracks to non-official instances and still solves.
-  search     : DFS over the slots; after every pick the accumulated signal union
-               is run through the real CSP solver.  Because UNSAT is monotone
-               (adding required signals never makes an infeasible set feasible),
-               an UNSAT partial prunes the whole subtree.  The first full-depth
-               SAT combination wins.
+  domain     : a slot's domain is every instance of F that has at least one
+               realisable signal in the requested mode.  Each candidate carries
+               a DEFICIT — how many of the mode's profile signals the instance
+               cannot realise (0 = fully capable).  The deficit is derived
+               purely from profiles × Σ, never hard-coded.
+  ordering   : instances are tried deficit-first (fully-capable before partial),
+               then official-DTS-first, then by index ascending.  This is a
+               *soft* preference: if the preferred combination can't be routed,
+               DFS backtracks and still solves.
+  search     : branch-and-bound DFS over the slots; after every pick the
+               accumulated signal union is run through the real CSP solver.
+               Because UNSAT is monotone (adding required signals never makes an
+               infeasible set feasible), an UNSAT partial prunes the subtree.
+               Among all routable combinations the one with the SMALLEST TOTAL
+               DEFICIT wins (ties: first found, i.e. official/index preference)
+               — so a mode-capable instance is never wasted on a group that
+               doesn't need it while another group degrades (e.g. RGMII must
+               not land on an instance that can only do RMII when a full-RGMII
+               instance is still free).  When every candidate is fully capable
+               the first routable combination is already optimal and the search
+               exits immediately — identical cost to the old first-SAT DFS.
 
 Already-specified peripheral/signal items (a "mixed" request) become the fixed
 prefix: they are resolved once, proven routable, and every count combination is
@@ -48,10 +58,12 @@ class _Slot:
     """One instance to be chosen for a family."""
     group: int                       # which count item this slot belongs to
     family_key: str                  # profiles family key (e.g. "i2c")
-    domain: list[str]                # ordered instance tokens (official-first)
+    domain: list[str]                # ordered instance tokens (deficit-first)
     sigs: dict[str, list[str]]       # instance token -> its expanded signals
-    rank: dict[str, tuple]           # instance token -> sort key (tier, index)
-    pred: int | None                 # earlier slot of the same family (symmetry)
+    rank: dict[str, tuple]           # instance token -> (deficit, tier, index)
+    deficit: dict[str, int]          # instance token -> missing-signal count
+    missing: dict[str, list[str]]    # instance token -> the missing signal names
+    pred: int | None                 # earlier slot of the same GROUP (symmetry)
 
 
 @dataclass
@@ -154,7 +166,7 @@ def _build_slots(count_items: list[dict], used: set, kb: Knowledge,
     profiles = kb.profiles
     boot_provided = boot_provided or {}
     slots: list[_Slot] = []
-    last_of_family: dict[str, int] = {}
+    last_of_group: dict[tuple[int, str], int] = {}
 
     for gi, item in enumerate(count_items):
         family = item.get("family") or ""
@@ -171,9 +183,12 @@ def _build_slots(count_items: list[dict], used: set, kb: Knowledge,
         # (which signals to turn on), NOT a gate: keep the mode's signals that
         # actually exist in Σ and drop only the few an instance lacks (e.g. ETH3 has
         # no MDC/MDIO/RGMII_CLK125). Skip an instance only when it has NO realisable
-        # signal in this mode at all — so a partial instance still counts.
+        # signal in this mode at all — a partial instance still counts, but its
+        # DEFICIT (how many mode signals it lacks) ranks it after fully-capable
+        # ones and feeds the min-total-deficit search below, so it is only picked
+        # when no complete alternative can be routed.
         official = _official_instances(key, kb.dts_index, profiles)
-        domain, sigs_map, rank = [], {}, {}
+        domain, sigs_map, rank, deficit, missing = [], {}, {}, {}, {}
         for tok in _instances_in_sigma(key, kb.sigma, profiles):
             if tok in used or tok in reserved:
                 continue
@@ -184,8 +199,11 @@ def _build_slots(count_items: list[dict], used: set, kb: Knowledge,
                 continue                       # nothing realisable in this mode — skip
             domain.append(tok)
             sigs_map[tok] = valid              # use what exists (profile ≠ gate)
-            rank[tok] = (0 if tok in official else 1, _index_of(tok, profiles))
-        domain.sort(key=lambda t: rank[t])     # official-first, then index
+            missing[tok] = [s for s in sigs if s not in kb.sigma]
+            deficit[tok] = len(missing[tok])
+            rank[tok] = (deficit[tok], 0 if tok in official else 1,
+                         _index_of(tok, profiles))
+        domain.sort(key=lambda t: rank[t])     # deficit-first, official, index
 
         if count > len(domain):
             blocked = sorted(
@@ -199,11 +217,19 @@ def _build_slots(count_items: list[dict], used: set, kb: Knowledge,
                 f"無法滿足要求的 {count} 個。"
             )
 
+        # Symmetry break chains slots of the SAME group only: slots in one group
+        # are interchangeable (same family, same mode), so forcing strictly
+        # increasing rank removes duplicate permutations. Slots of DIFFERENT
+        # groups are NOT interchangeable (different modes) — chaining them would
+        # lock instance choice to intent-item order (an LLM artefact), which is
+        # exactly the ETH2/ETH3 RGMII/RMII swap bug. Cross-group duplicates are
+        # prevented by the `taken` set in the search instead.
         for _ in range(count):
-            pred = last_of_family.get(key)
+            pred = last_of_group.get((gi, key))
             slots.append(_Slot(group=gi, family_key=key, domain=domain,
-                               sigs=sigs_map, rank=rank, pred=pred))
-            last_of_family[key] = len(slots) - 1
+                               sigs=sigs_map, rank=rank, deficit=deficit,
+                               missing=missing, pred=pred))
+            last_of_group[(gi, key)] = len(slots) - 1
     return slots
 
 
@@ -217,31 +243,56 @@ def _solve(required: list[str], base: SolveSpec, kb: Knowledge):
 
 
 def _search(slots: list[_Slot], base: SolveSpec, kb: Knowledge) -> list[str] | None:
-    """Return chosen instance tokens (aligned to slots), or None if infeasible."""
-    chosen: list[str | None] = [None] * len(slots)
+    """Return chosen instance tokens (aligned to slots), or None if infeasible.
 
-    def rec(i: int, acc: list[str]) -> list[str] | None:
+    Branch-and-bound on TOTAL DEFICIT: among all routable combinations, prefer
+    the one whose instances collectively miss the fewest mode signals — so a
+    fully-capable instance is reserved for the group that needs it (RGMII goes
+    to a full-RGMII instance while a partial one takes the mode it CAN do).
+    When every candidate has deficit 0 (the common case) the first routable
+    combination equals the lower bound and the search stops right there —
+    exactly the old first-SAT behaviour and cost.  Ties on total deficit keep
+    the first combination found, preserving the official-first/index-ascending
+    preference encoded in the domain order.
+    """
+    if not slots:
+        return []
+    chosen: list[str | None] = [None] * len(slots)
+    # lb[i] = best conceivable deficit from slot i onward (per-slot minima).
+    lb = [0] * (len(slots) + 1)
+    for i in range(len(slots) - 1, -1, -1):
+        lb[i] = lb[i + 1] + min(slots[i].deficit[t] for t in slots[i].domain)
+    best: tuple[int, list[str]] | None = None      # (total deficit, tokens)
+
+    def rec(i: int, acc: list[str], acc_def: int) -> bool:
+        """DFS; returns True when a provably-optimal solution was found."""
+        nonlocal best
         if i == len(slots):
-            return []
+            best = (acc_def, [t for t in chosen])   # all set at full depth
+            return acc_def == lb[0]                 # matches lower bound -> stop
         slot = slots[i]
         floor = slot.rank[chosen[slot.pred]] if slot.pred is not None else None
         taken = {c for c in chosen if c is not None}
-        for tok in slot.domain:                       # already official-first sorted
+        for tok in slot.domain:                     # deficit/official/index order
             if floor is not None and slot.rank[tok] <= floor:
-                continue                              # symmetry break: strictly after pred
+                continue                            # symmetry break: strictly after pred
             if tok in taken:
                 continue
+            d = acc_def + slot.deficit[tok]
+            if best is not None and d + lb[i + 1] >= best[0]:
+                continue                            # bound: cannot beat incumbent
             merged = list(dict.fromkeys(acc + slot.sigs[tok]))
-            if not _solve(merged, base, kb).sat:      # monotone UNSAT -> prune subtree
+            if not _solve(merged, base, kb).sat:    # monotone UNSAT -> prune subtree
                 continue
             chosen[i] = tok
-            sub = rec(i + 1, merged)
-            if sub is not None:
-                return [tok] + sub
+            done = rec(i + 1, merged, d)
             chosen[i] = None
-        return None
+            if done:
+                return True
+        return False
 
-    return rec(0, list(base.required))
+    rec(0, list(base.required), 0)
+    return best[1] if best is not None else None
 
 
 # --------------------------------------------------------------------------- #
@@ -250,7 +301,8 @@ def _search(slots: list[_Slot], base: SolveSpec, kb: Knowledge) -> list[str] | N
 def _summarize_choice(c: dict) -> str:
     """One '×N → …' note line; when the boot set covered part of the request,
     spell out which instances were reused vs newly allocated."""
-    head = f"{c['family']}×{c['count']} → {', '.join(c['instances']) or '—'}"
+    fam = c["family"] + (f":{c['mode']}" if c.get("mode") else "")
+    head = f"{fam}×{c['count']} → {', '.join(c['instances']) or '—'}"
     if not c["reused_boot"]:
         return head                       # nothing reused — the head says it all
     bits = [f"沿用開機必備 {', '.join(c['reused_boot'])}"]
@@ -374,6 +426,17 @@ def plan(intent: dict, kb: Knowledge | None = None, *, must_gpio=None,
         })
     spec.notes.append("count 自動選擇 — " + "；".join(
         _summarize_choice(c) for c in chosen))
+
+    # Partial picks (deficit > 0) mean the search had no fully-capable
+    # alternative left — surface exactly what is missing for manual review.
+    for slot, tok in zip(slots, tokens):
+        if slot.deficit.get(tok):
+            mode = count_items[slot.group].get("mode")
+            mode_txt = f" {mode} 模式" if mode else "預設模式"
+            spec.notes.append(
+                f"⚠ {tok} 僅部分支援{mode_txt}，"
+                f"缺 {', '.join(slot.missing[tok])}（此板無此腳位）——"
+                f"已無完整支援的替代 instance，請人工確認此配置可用")
     return CountPlan(spec=spec, chosen=chosen)
 
 
