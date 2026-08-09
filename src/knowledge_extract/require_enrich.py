@@ -77,6 +77,32 @@ def _boot_candidates(result: dict) -> dict[str, str]:
     return cands
 
 
+# 補群組 role 的人話主標題對照（generation-time 啟發式，與下方 mmc/sdhci
+# compatible 判定同性質；runtime 零依賴——role 是純顯示文字，半形括號前的
+# 字會直接成為 plan 的 function 欄，所以要給一般人看得懂的詞）。
+_ROLE_PREFIX_TITLES = (
+    (("UART", "USART", "LPUART", "SCIF"), "Debug 主控台"),
+    (("SDMMC", "SDHCI", "MMC", "EMMC", "SD"), "SD/eMMC 開機"),
+    (("QSPI", "OSPI", "OCTOSPI", "FSS", "SPI"), "SPI Flash 開機"),
+    (("NAND",), "NAND Flash 開機"),
+    (("USB",), "USB 開機"),
+)
+
+
+def _role_title(inst: str, basis: str) -> str:
+    """DTS 補群組的 role 主標題：判定依據（console/開機媒體）優先，
+    instance 名前綴次之，最後退回「開機必備」。"""
+    if "console" in basis:
+        return "Debug 主控台"
+    if "開機媒體" in basis:
+        return "SD/eMMC 開機"
+    up = (inst or "").upper()
+    for prefixes, title in _ROLE_PREFIX_TITLES:
+        if any(up.startswith(p) for p in prefixes):
+            return title
+    return "開機必備"
+
+
 def _dts_pin_map(ref: str, result: dict) -> list[list]:
     """周邊在 baseline DTS 的官方腳位 → [[signal, pin, af], …]。"""
     rows = []
@@ -233,7 +259,7 @@ def enrich(
                 "跳過(訊號未進 af_table?)")
             continue
         groups[inst] = {
-            "role": f"開機必備節點(&{ref})",
+            "role": f"{_role_title(inst, basis)} (&{ref})",
             "in_kernel_dt": True,
             "solver_action": "emit_fixed_assignment",
             "profile_status": "needs_confirmation",

@@ -31,8 +31,9 @@ import os
 
 from util import dataio                      # 模組引用：功能旗標於呼叫時讀取
 from util.dataio import (
-    DEFAULT_BOARD, af_of, board_paths, load_board_components, load_gpio_pins,
-    load_pin_locked, load_require_signals, load_reserved, load_signal_to_pin,
+    DEFAULT_BOARD, af_of, board_paths, effective_require, load_board_components,
+    load_gpio_pins, load_pin_locked, load_require_signals, load_reserved,
+    load_signal_to_pin,
 )
 from solver.runner import solve_signals
 from solver.resolver import ResolveError, load_knowledge, reserved_owner
@@ -62,18 +63,23 @@ class _Board:
                     過濾掉 reserve_only 訊號）
     """
 
-    def __init__(self, board: str):
+    def __init__(self, board: str, require_data: dict | None = None):
         paths = board_paths(board)
         self.kb = load_knowledge(
             af_path=paths["af"], profiles_path=paths["profiles"], dts_path=paths["dts"])
         self.af = self.kb.af
-        self.gpio_pins = load_gpio_pins(paths["require"], af_keys=set(self.kb.af.keys()))
-        self.boot_required = load_require_signals(paths["require"], self.kb.sigma)
+        # require 來源單一化（USER_SYSTEM_PLAN III.3）：官方 require.json 或
+        # 「官方 ⊕ user 覆寫」的 effective dict（呼叫端經 effective_require 算好
+        # 傳入）。五個消費者（gpio / require_signals / pin_locked / reserved /
+        # boot_roles）全部吃同一份——覆寫不可能只影響一半。
+        req = require_data if require_data is not None else effective_require(board)
+        self.gpio_pins = load_gpio_pins(req, af_keys=set(self.kb.af.keys()))
+        self.boot_required = load_require_signals(req, self.kb.sigma)
         # 開機固定腳（emit 群組 pin_map）-> must_bind（{pin: signal}）；
         # 帶 Σ 過濾（壞列剔除＋警告，不流進 resolver 炸 unknown-signal）
-        self.pin_locked = load_pin_locked(paths["require"], sigma=self.kb.sigma)
+        self.pin_locked = load_pin_locked(req, sigma=self.kb.sigma)
         # secure/bootloader 保留（reserve_only 群組）：pin 移出候選域 + instance 封鎖
-        self.reserved_pins, self.reserved_instances = load_reserved(paths["require"])
+        self.reserved_pins, self.reserved_instances = load_reserved(req)
         self.must_gpio = self.gpio_pins | self.reserved_pins
         self.boot_set = set(self.boot_required) | set(self.pin_locked.values())
         self.baseline = load_signal_to_pin(paths["signals"])
@@ -83,8 +89,7 @@ class _Board:
         # 欄預設值——資料驅動（隨板），使用者的具名稱呼（label）優先於它
         self.boot_roles = {}
         try:
-            with open(paths["require"], encoding="utf-8") as fh:
-                _groups = json.load(fh).get("boot_pin_locked", {}).get("groups", {})
+            _groups = (req.get("boot_pin_locked") or {}).get("groups") or {}
             for g, d in _groups.items():
                 if d.get("solver_action") == "emit_fixed_assignment":
                     role = (d.get("role") or "").split("(")[0].strip()
@@ -110,20 +115,38 @@ class Pipeline:
         )
         self.system_prompt = open(system_prompt_path, encoding="utf-8").read()
         self.provider = get_provider(module="parse")   # 讀 llm_modules.ini[parse] 選 provider/model
-        self._cache: dict[str, _Board] = {}
+        self._cache: dict[tuple, _Board] = {}
 
     # ----- board cache ---------------------------------------------------- #
-    def _load_board(self, board: str | None) -> _Board:
+    def _load_board(self, board: str | None,
+                    override: dict | None = None) -> _Board:
+        """override＝web 依登入 user 解析出的覆寫組
+        {set_id, version, name?, user?, data}（data＝store/overrides.
+        load_set_data 形狀）或 None。快取 key (board, set_id, version)：
+        儲存覆寫 version++ → 舊快取自然失效；無覆寫（含空 set）key
+        (board, None, 0) → 與 CLI／未帶 override 的呼叫共用同一份，
+        行為 byte 級不變。"""
         board = board or DEFAULT_BOARD
-        if board not in self._cache:
-            self._cache[board] = _Board(board)
-        return self._cache[board]
+        key = (board,
+               override.get("set_id") if override else None,
+               override.get("version") if override else 0)
+        if key in self._cache:
+            self._cache[key] = self._cache.pop(key)     # LRU touch
+            return self._cache[key]
+        req = effective_require(board, override.get("data") if override else None)
+        self._cache[key] = _Board(board, require_data=req)
+        # 上限（LRU 淘汰）：覆寫每存一次 version++ 就是一個新 key，不設限
+        # 會隨編輯次數無限累積 _Board（每個都抱著整套 af/profiles 資料）。
+        while len(self._cache) > 16:
+            self._cache.pop(next(iter(self._cache)))
+        return self._cache[key]
 
     # ----- 公開入口 ------------------------------------------------------- #
-    def start(self, user_text: str, board: str | None = None) -> dict:
+    def start(self, user_text: str, board: str | None = None,
+              override: dict | None = None) -> dict:
         """第一輪：自然語言 -> intent -> 偵測/求解（套用所選板子的資料）。"""
         board = board or DEFAULT_BOARD
-        b = self._load_board(board)
+        b = self._load_board(board, override)
         resp = self.provider.complete(
             [
                 Message(role=Role.SYSTEM, content=self.system_prompt),
@@ -138,10 +161,11 @@ class Pipeline:
         print(json.dumps(intent, indent=2, ensure_ascii=False))
         return self._continue(intent, b, board)
 
-    def answer(self, payload: dict, board: str | None = None) -> dict:
+    def answer(self, payload: dict, board: str | None = None,
+               override: dict | None = None) -> dict:
         """後續輪：把使用者選的候選折回 intent，再續解。"""
         board = board or DEFAULT_BOARD
-        b = self._load_board(board)
+        b = self._load_board(board, override)
         intent = payload.get("intent") or {}
         qd = payload.get("question") or {}
         od = payload.get("option") or {}

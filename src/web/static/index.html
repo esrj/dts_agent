@@ -433,7 +433,7 @@
     .bc-modal {
       background: var(--bg, #fff); color: var(--text);
       border: none; border-radius: 16px;
-      width: min(800px, 92vw); max-height: 86vh; overflow-y: auto;
+      width: min(991px, 92vw); max-height: 86vh; overflow-y: auto;
       padding: 1.8rem 2rem 1.4rem; box-shadow: 0 12px 40px rgba(0,0,0,.35);
     }
     .bc-modal h2 {
@@ -447,12 +447,15 @@
     }
     .bc-field label { display: block; font-size: .9rem; font-weight: 600;
                       margin-bottom: .55rem; }
-    .bc-field input[type="text"] {
+    .bc-field input[type="text"], .bc-field input[type="password"] {
       width: 100%; padding: .8rem .9rem; border: 0;
       border-radius: 10px; font-size: .9rem; background: var(--bg-soft);
       color: var(--text); box-sizing: border-box;
     }
-    .bc-field input[type="text"]:focus-visible { outline: 1px solid var(--border); }
+    .bc-field input[type="text"]:focus-visible,
+    .bc-field input[type="password"]:focus-visible {
+      outline: 1px solid var(--border);
+    }
     .bc-field .note { font-size: .78rem; color: var(--text-soft);
                       margin-top: .45rem; line-height: 1.55; }
     /* 檔案選擇鈕：無邊框軟底 pill（與「取消／上傳」同款） */
@@ -470,6 +473,26 @@
       font: inherit; font-size: .88rem; color: var(--text);
       background: var(--bg-soft); border: none; border-radius: 10px;
       padding: .55rem .9rem; max-width: 100%; cursor: pointer;
+    }
+    /* 安全保留群組（上傳表單選填區）：小卡片＋列輸入 */
+    .bc-rg-group {
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: .6rem .7rem; margin: .5rem 0 0;
+      display: flex; flex-direction: column; gap: .4rem;
+    }
+    .bc-rg-head, .bc-rg-row { display: flex; gap: .4rem; align-items: center; }
+    .bc-rg-group input {
+      flex: 1 1 6rem; min-width: 5rem;
+      border: 0; border-radius: 8px; background: var(--bg-soft);
+      color: var(--text); font: inherit; font-size: .84rem;
+      padding: .45rem .6rem; box-sizing: border-box;
+    }
+    .bc-rg-group input:focus-visible { outline: 1px solid var(--border); }
+    .bc-rg-row input {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .bc-rg-group input.invalid {
+      color: var(--err); box-shadow: 0 0 0 1px var(--err) inset;
     }
     .bc-check { display: flex; gap: .7rem; align-items: flex-start;
                 font-size: .9rem; line-height: 1.55; }
@@ -514,25 +537,69 @@
       margin: .7rem 0 0;
     }
 
-    /* ---- 設定頁（板子選擇＋上傳＋開機/PMIC 腳位覆寫） ---- */
-    /* header 的設定入口：沿用 board-picker 的 pill 造型，顯示目前板子 */
+    /* ---- 設定頁（帳號／板子／腳位覆寫／使用者管理） ---- */
+    /* header 右側：設定齒輪固定右上角（唯一入口） */
+    .header-right {
+      margin-left: auto;
+      display: inline-flex; align-items: center; gap: .6rem;
+    }
     .settings-btn {
-      display: inline-flex; align-items: center; gap: .45rem;
-      margin-left: 10px;
-      font: inherit; font-size: .92rem; font-weight: 600;
-      color: var(--text); background: var(--bg-soft);
-      border: 1px solid var(--border); border-radius: 999px;
-      padding: .42rem 1rem; cursor: pointer; line-height: 1.2;
-      transition: background-color .15s, border-color .15s, box-shadow .15s;
+      width: 34px; 
+      display: grid; place-items: center;
+      font-size: 1.8rem; color: var(--text);
+      background: none; border: none; border-radius: 50%;
+      cursor: pointer; transition: background-color .15s;
     }
-    .settings-btn:hover { background: var(--bubble-user); border-color: var(--accent); }
+    .settings-btn:hover { background: var(--bg-soft); }
     .settings-btn:focus-visible {
-      outline: none; border-color: var(--accent); box-shadow: var(--shadow);
+      outline: none; background: var(--bg-soft); box-shadow: var(--shadow);
     }
-    .settings-btn .gear { font-weight: 400; font-size: 1rem; }
     /* 設定彈窗要壓在 bc 上傳彈窗（z-index:50）之下，讓上傳流程可疊在設定頁上 */
     .set-overlay { z-index: 40; }
-    .set-section { padding: 1.05rem 0; border-bottom: 1px solid var(--border); }
+    /* Claude 式版型：左欄導覽＋右內容（固定高度，內容區自己捲動） */
+    .set-modal {
+      display: flex; position: relative;
+      width: min(1296px, 94vw); height: min(900px, 88vh);
+      padding: 0; overflow: hidden;
+    }
+    .set-nav {
+      flex: 0 0 220px;
+      background: var(--bg-soft); border-right: 1px solid var(--border);
+      padding: 1.1rem .65rem;
+      display: flex; flex-direction: column; gap: .2rem;
+    }
+    .set-nav h2 { margin: .1rem .55rem 1rem; padding: 0; border: none;
+                  font-size: 1.05rem; }
+    .set-nav-item {
+      text-align: left; border: none; background: none; color: var(--text);color: #b1b1b1;
+      font: inherit; font-size: .9rem; padding: .5rem .7rem;
+      border-radius: 9px; cursor: pointer; transition: background-color .12s;
+    }
+    .set-nav-item:hover { background: var(--bubble-user); }
+    .set-nav-item.active { background: var(--bubble-user); font-weight: 600; background: #4d4e4e}
+    .set-content { flex: 1 1 auto; overflow-y: auto;
+                   padding: 1.3rem 1.6rem 1.5rem; }
+    .set-pane > h3 { margin: .1rem 0 .45rem; font-size: 1rem; }
+    .set-pane > .note { font-size: .8rem; color: var(--text-soft);
+                        margin: 0 0 .8rem; line-height: 1.55; }
+    .set-x {
+      position: absolute; top: .7rem; right: .8rem; z-index: 1;
+      width: 30px; height: 30px; display: grid; place-items: center;
+      border: none; background: none; color: var(--text-soft);
+      font-size: .95rem; border-radius: 50%; cursor: pointer;
+    }
+    .set-x:hover { background: var(--bg-soft); color: var(--text); }
+    /* 帳號頁 */
+    .acct-row { display: flex; align-items: center; gap: .85rem;
+                margin: .7rem 0 1.2rem; }
+    .acct-avatar {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--bg-soft); display: grid; place-items: center;
+      font-size: 1.35rem;
+    }
+    /* pane 內的次分區（板子頁的「新增板子」）：上緣 hairline 分隔 */
+    .set-section { padding: 1.05rem 0 0; margin-top: 1.1rem;
+                   border-top: 1px solid var(--border); }
     .set-section h3 { margin: 0 0 .35rem; font-size: .95rem; }
     .set-section > .note { font-size: .8rem; color: var(--text-soft);
                            margin: 0 0 .7rem; line-height: 1.55; }
@@ -586,6 +653,27 @@
     .ov-error { color: var(--err); font-size: .82rem; white-space: pre-wrap;
                 margin: .3rem 0 0; }
     .ov-saved { color: var(--ok); }
+
+    /* ---- 登入畫面（Part I）：全版遮罩，壓過所有彈窗（bc:50 / set:40） ---- */
+    .login-overlay { z-index: 100; }
+    .login-modal { width: min(420px, 92vw); }
+    .login-modal .bc-field { padding: .55rem 0; }
+    .login-modal code {
+      font-size: .78rem; background: var(--bg-soft);
+      padding: .1rem .35rem; border-radius: 6px;
+    }
+    /* 使用者管理（Part II）：建立列＋表內小動作鈕 */
+    .um-create { display: flex; gap: .5rem; margin-top: .7rem; flex-wrap: wrap; }
+    .um-create input {
+      flex: 1 1 8rem; min-width: 7rem;
+      border: 0; border-radius: 10px; background: var(--bg-soft);
+      color: var(--text); font: inherit; font-size: .85rem;
+      padding: .55rem .8rem; box-sizing: border-box;
+    }
+    .um-create input:focus-visible { outline: 1px solid var(--border); }
+    .um-inactive { color: var(--text-soft); }
+    .um-inactive td { opacity: .55; }
+    .um-actions { white-space: nowrap; }
 
     /* ---- 修改建議卡片（G6）：驗證過的替代方案，一鍵採納 ---- */
     .sugg-cards { display: flex; flex-direction: column; gap: .5rem; margin-top: .85rem; }
@@ -663,62 +751,133 @@
   <header>
     <span class="dot">P</span>
     <span>DTS Agent</span>
-    <!-- 設定入口：顯示目前板子；點開設定頁（板子選擇／上傳／腳位覆寫都在裡面） -->
-    <button id="settings-btn" class="settings-btn"
-            title="設定（選擇板子・上傳新板子・開機/PMIC 腳位覆寫）">
-      <span class="gear">⚙</span><span id="header-board">…</span>
-    </button>
-    <span id="validator-badge" class="v-badge err" hidden
-          title="STM32CubeMX 環境異常（找不到或損壞的執行檔）——驗證功能暫不可用">CubeMX 離線</span>
+    <!-- 右上角只留一個設定入口；帳號/板子/腳位覆寫/使用者管理都在設定頁的左欄 -->
+    <span class="header-right">
+      <span id="validator-badge" class="v-badge err" hidden
+            title="STM32CubeMX 環境異常（找不到或損壞的執行檔）——驗證功能暫不可用">CubeMX 離線</span>
+      <button id="settings-btn" class="settings-btn" title="設定">⚙</button>
+    </span>
   </header>
 
-  <!-- 設定頁彈窗：①目標板子 ②上傳新板子 ③開機/PMIC 腳位覆寫（app.js 控制顯示）
-       腳位覆寫的定位：客製板與官方板同 SoC，但開機/PMIC 腳位可能被改；此處
-       的修改存成 overlay 檔疊加在知識庫上，永不直接改 data/<板>/ 的真實知識庫。
-       後端端點（GET/PUT /api/boards/<板>/pin-overrides）尚未實作——先出前端。 -->
-  <div id="set-overlay" class="bc-overlay set-overlay" hidden>
-    <div class="bc-modal" role="dialog" aria-label="設定">
-      <h2>設定</h2>
-
-      <div class="set-section">
-        <h3>目標板子</h3>
-        <p class="note">切換後套用該板知識庫；對話會重新開始。</p>
-        <label class="board-picker">
-          <select id="board-select" aria-label="選擇目標板子"></select>
-        </label>
+  <!-- 登入畫面（Part I）：未登入時由 app.js 顯示；登入成功後整頁重載。
+       web 上沒有任何自助註冊——admin 只能在伺服器 CLI 建（store.create_admin），
+       一般 user 由 admin 在設定頁「使用者管理」建立。 -->
+  <div id="login-overlay" class="bc-overlay login-overlay" hidden>
+    <div class="bc-modal login-modal" role="dialog" aria-label="登入">
+      <h2>登入 DTS Agent</h2>
+      <div class="bc-field">
+        <label for="login-username">帳號</label>
+        <input type="text" id="login-username" autocomplete="username">
       </div>
-
-      <div class="set-section" id="set-upload-section" hidden>
-        <h3>新增板子</h3>
-        <p class="note">上傳手冊 PDF 與 kernel DTS，自動生成該板知識庫。</p>
-        <button id="set-upload-btn" class="set-btn">＋ 上傳新板子…</button>
+      <div class="bc-field">
+        <label for="login-password">密碼</label>
+        <input type="password" id="login-password" autocomplete="current-password">
       </div>
-
-      <div class="set-section">
-        <h3>開機 / PMIC 腳位覆寫</h3>
-        <p class="note">
-          客製板可能與官方板同 SoC 但改了開機或 PMIC 腳位。點表格文字即可
-          編輯（介面／訊號／腳位都可改）；與官方不同的值會存成
-          <b>覆寫檔（overlay）</b>，疊加在知識庫之上，不會動到真實知識庫；
-          按「還原」即回到官方值。
-        </p>
-        <div id="ov-status" class="note ov-status"></div>
-        <table class="ov-table" id="ov-table">
-          <thead><tr>
-            <th>角色</th><th>介面</th><th>訊號</th>
-            <th>目前腳位</th><th></th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-        <div class="ov-error" id="ov-error"></div>
-        <div class="bc-actions">
-          <button id="ov-revert">還原未儲存修改</button>
-          <button id="ov-save" class="primary">儲存覆寫</button>
-        </div>
+      <div class="bc-error" id="login-error"></div>
+      <div class="note" id="login-bootstrap" hidden>
+        尚未建立任何帳號——請先在伺服器上執行<br>
+        <code>PYTHONPATH=src venv/bin/python -m store.create_admin</code><br>
+        建立第一個 admin。
       </div>
-
       <div class="bc-actions">
-        <button id="set-close">關閉</button>
+        <button id="login-submit" class="primary">登入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 設定頁彈窗（Claude 式左欄導覽）：帳號／板子／腳位覆寫／使用者管理(admin)。
+       腳位覆寫的定位：客製板與官方板同 SoC，但開機/PMIC 腳位可能被改；此處
+       的修改存進資料庫（scope 到登入使用者）疊加在知識庫上，永不直接改
+       data/<板>/ 的真實知識庫。 -->
+  <div id="set-overlay" class="bc-overlay set-overlay" hidden>
+    <div class="bc-modal set-modal" role="dialog" aria-label="設定">
+      <button id="set-close" class="set-x" aria-label="關閉" title="關閉">✕</button>
+      <nav class="set-nav">
+        <h2>設定</h2>
+        <button class="set-nav-item active" data-pane="account">帳號</button>
+        <button class="set-nav-item" data-pane="board">板子</button>
+        <button class="set-nav-item" data-pane="pins">腳位覆寫</button>
+        <button class="set-nav-item" data-pane="users" id="set-nav-users"
+                hidden>使用者管理</button>
+      </nav>
+      <div class="set-content">
+
+        <section class="set-pane" id="set-pane-account">
+          <h3>帳號</h3>
+          <div class="acct-row">
+            <span class="acct-avatar">👤</span>
+            <div>
+              <b id="acct-name">…</b>
+              <div class="note" id="acct-detail"></div>
+            </div>
+          </div>
+          <button id="logout-btn" class="set-btn">登出</button>
+        </section>
+
+        <section class="set-pane" id="set-pane-board" hidden>
+          <h3>板子</h3>
+          <p class="note">切換後套用該板知識庫；對話會重新開始。</p>
+          <label class="board-picker">
+            <select id="board-select" aria-label="選擇目標板子"></select>
+          </label>
+          <div class="set-section" id="set-upload-section" hidden>
+            <h3>新增板子</h3>
+            <p class="note">上傳手冊 PDF 與 kernel DTS，自動生成該板知識庫
+              （僅 admin——知識庫是所有使用者共用的）。</p>
+            <button id="set-upload-btn" class="set-btn">＋ 上傳新板子…</button>
+          </div>
+        </section>
+
+        <section class="set-pane" id="set-pane-pins" hidden>
+          <h3>開機 / PMIC 腳位覆寫</h3>
+          <p class="note">
+            客製板可能與官方板同 SoC 但改了開機或 PMIC 腳位。點表格文字即可
+            編輯（介面／訊號／腳位都可改）；與官方不同的值會存成
+            <b>你個人的覆寫</b>（每個使用者一組，互不影響），疊加在知識庫之上，
+            不會動到真實知識庫；按「還原」即回到官方值。
+          </p>
+          <div id="ov-status" class="note ov-status"></div>
+          <table class="ov-table" id="ov-table">
+            <thead><tr>
+              <th>角色</th><th>介面</th><th>訊號</th>
+              <th>目前腳位</th><th></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+          <div class="ov-error" id="ov-error"></div>
+          <div class="bc-actions">
+            <button id="ov-revert">還原未儲存修改</button>
+            <button id="ov-save" class="primary">儲存覆寫</button>
+          </div>
+        </section>
+
+        <!-- 使用者管理（Part II）：admin 才有左欄入口（app.js 依 /api/me role
+             控制；端點本身也有 403 把關）。web 只能建一般 user——admin 帳號
+             只能在伺服器 CLI 建立（store.create_admin）。 -->
+        <section class="set-pane" id="set-pane-users" hidden>
+          <h3>使用者管理</h3>
+          <p class="note">
+            建立一般使用者、重設密碼、停用/啟用（僅 admin 可見）。
+            admin 帳號只能在伺服器上以
+            <code>python -m store.create_admin</code> 建立。
+          </p>
+          <table class="ov-table" id="um-table">
+            <thead><tr>
+              <th>帳號</th><th>名稱</th><th>角色</th><th>狀態</th>
+              <th>最後登入</th><th></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+          <div class="um-create">
+            <input type="text" id="um-username" placeholder="帳號">
+            <input type="text" id="um-display" placeholder="顯示名稱（可空）">
+            <input type="password" id="um-password" placeholder="初始密碼（≥6 字元）"
+                   autocomplete="new-password">
+            <button id="um-create-btn" class="set-btn">＋ 建立</button>
+          </div>
+          <div class="ov-error" id="um-error"></div>
+        </section>
+
       </div>
     </div>
   </div>
@@ -746,6 +905,18 @@
         <div class="bc-field" id="bc-baseline-field" hidden>
           <label for="bc-baseline">baseline 板檔（偵測到多個 .dts，請選這塊板的板檔）</label>
           <select id="bc-baseline"></select>
+        </div>
+        <!-- 安全保留群組（選填）：PMIC 等 secure/bootloader 持有、kernel 不可碰
+             的匯流排。kernel DTS 看不見它們，只能人工提供；照原理圖填，抽取
+             完成後以該板 af_table 驗證並回填 AF，查不到的列會剔除並在完成頁
+             的 boot 判定表警告（落地後可編輯 require.json 補回）。 -->
+        <div class="bc-field" id="bc-rg-field">
+          <label>安全保留腳位群組（選填）</label>
+          <div class="note">板上由 secure/bootloader 持有、kernel 不可使用的
+            匯流排（例：PMIC 的 I2C）。kernel DTS 裡看不到它們，請照原理圖
+            填寫；群組名請用 instance 名（例：I2C7）。</div>
+          <div id="bc-rg-list"></div>
+          <button type="button" id="bc-rg-add" class="set-btn">＋ 加一組（例：PMIC）</button>
         </div>
         <div class="bc-check">
           <input type="checkbox" id="bc-validate">
@@ -825,6 +996,6 @@
     </div>
   </footer>
 
-  <script src="app.js?v=20260809b"></script>
+  <script src="app.js?v=20260810d"></script>
 </body>
 </html>

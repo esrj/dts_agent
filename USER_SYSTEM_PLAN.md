@@ -2,8 +2,15 @@
 
 （2026-08-09。整合原 PIN_OVERRIDE_DB_PLAN 而成的**大計劃**，分三個部分：
 Part I 登入/登出、Part II 註冊與使用者管理、Part III pin 覆寫資料庫化。
-共用同一個資料庫與同一套權限模型。前端設定頁的覆寫表格已完成
-（`src/web/static/app.js` 設定頁模組），後端全部尚未實作。）
+共用同一個資料庫與同一套權限模型。）
+
+> **實作進度（2026-08-09）：M1–M5 已完成落地**——`src/store/`（db/users/
+> overrides DAO＋create_admin CLI）、`src/web/auth.py`（登入/登出/使用者管理
+> ＋全站 before_request）、`src/web/overrides_api.py`（GET/PUT＋六道驗證）、
+> `dataio.effective_require()`＋`_Board(require_data)`＋`_load_board`
+> 快取 key `(board, set_id, version)`＋chat session 綁定與 user 命名空間＋
+> `output/generated/plan.used.meta.json` 溯源。M5 回歸驗收（counts self-test
+> ／patch_agent locate／無覆寫 byte 級不變）全綠。M6 未做（可選）。
 
 ---
 
@@ -322,3 +329,4 @@ web 以既有需求（test.md 測試 1–3）重跑並 diff plan.csv。
 | 覆寫後 UNSAT | 求解端既有人話診斷承接（III.4 決議） |
 | session 舊資料誤導 | 「新對話生效」策略＋儲存成功提示（III.3） |
 | CLI 與 web 連到不同 DB | 不可能 by design：兩者 import 同一個 `store/db.py` 路徑常數；DB 路徑不提供環境變數覆寫（避免分裂），要搬家改 store/db.py 一處 |
+| **plan／validator／DTS 產物是全程序共享**（已知限制，2026-08-09 審查確認） | `_last_plan`、`output/validator/`、`output/generated/`（含 plan.used.meta.json 的 user/set 溯源欄）沿用單一槽位＋覆寫制設計——任何登入使用者都讀得到「最近一次」求解/驗證/DTS 的內容，覆寫算出的腳位與 set 溯源因此對其他登入者可見。單機少人內部工具接受此模型；要升級成多人隔離需把這三處 per-user 化（output/<user>/ 分目錄＋狀態按 user 分槽），屆時再做 |

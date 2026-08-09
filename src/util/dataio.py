@@ -9,6 +9,7 @@ Merges what used to be three tiny modules (paths + loaders + report):
 Deliberately imports nothing from solver/, so it stays a leaf utility module
 (no import cycles).
 """
+import copy
 import csv
 import json
 import os
@@ -152,23 +153,112 @@ SIGNALS = _DEFAULT_PATHS["signals"]
 REQUIRE = _DEFAULT_PATHS["require"]
 
 
-def load_gpio_pins(require_path: str, af_keys=None) -> set:
+def _require_data(source) -> dict:
+    """require 來源正規化：已載入的 dict（effective_require 結果）原樣返回；
+    str 視為路徑載檔。缺檔/壞檔回 {}（帶警告）——呼叫端全部降級為
+    「無 boot 約束」而非炸掉。所有 require.json 消費者一律經此入口，
+    覆寫（USER_SYSTEM_PLAN Part III）才不可能只影響一半 loaders。"""
+    if isinstance(source, dict):
+        return source
+    try:
+        with open(source, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError) as exc:
+        _warn(f"could not read require.json from {source}: {exc}")
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def effective_require(board: str | None = None, overrides: dict | None = None) -> dict:
+    """官方 require.json ⊕ user 覆寫差異（USER_SYSTEM_PLAN III.2）。
+
+    overrides＝store/overrides.load_set_data() 的形狀（{peripherals, gpio}）
+    或 None。None／空 → 官方內容原樣返回（現行為 byte 級不變）。有差異 →
+    deepcopy 後疊加：
+      - peripherals[official_group].group_name ≠ 官方 → 整組 rename（group key
+        換名；未覆寫列的訊號前綴同步換，pin/af 不動）
+      - .pins[official_signal] → 替換該 pin_map 列為 [signal, pin, af]
+      - gpio: add/remove 疊加到 gpio_must_pins.pins
+    其餘欄位（role / solver_action / in_kernel_dt / dt_pin_groups / owner…）
+    不可覆寫——覆寫只動「腳位在哪」，不動「這組是什麼、歸誰管」。
+    對不上錨點的孤兒覆寫直接忽略（web GET 端點會標 stale 提示使用者）。
+    """
+    data = _require_data(board_paths(board or DEFAULT_BOARD)["require"])
+    periphs = (overrides or {}).get("peripherals") or {}
+    gpio_ov = (overrides or {}).get("gpio") or []
+    if not periphs and not gpio_ov:
+        return data
+    data = copy.deepcopy(data)
+    spec = data.get("boot_pin_locked")
+    groups = spec.get("groups") if isinstance(spec, dict) else None
+    if isinstance(groups, dict):
+        # rename 撞名防線：兩個群組的最終名相同會在 dict 合併時互相覆蓋——
+        # 一組 boot 常數被靜默吞掉。PUT 端點已擋；DB 被手改等旁路情況下，
+        # 這裡放棄**全部** rename（只套腳位覆寫），絕不丟群組。
+        finals = {g: (str(periphs[g].get("group_name") or g)
+                      if isinstance(periphs.get(g), dict) else g)
+                  for g in groups}
+        if len(set(finals.values())) != len(finals):
+            _warn("effective_require: 覆寫群組名互撞——忽略所有 rename，"
+                  "只套用腳位級覆寫")
+            finals = {g: g for g in groups}
+        new_groups = {}
+        for gname, block in groups.items():
+            ov = periphs.get(gname)
+            if not (isinstance(ov, dict) and isinstance(block, dict)):
+                new_groups[gname] = block
+                continue
+            new_name = finals[gname]
+            pins_ov = ov.get("pins") or {}
+            rows = block.get("pin_map")
+            if isinstance(rows, list):
+                new_rows = []
+                for row in rows:
+                    if not (isinstance(row, (list, tuple)) and len(row) >= 2):
+                        new_rows.append(row)
+                        continue
+                    sig = str(row[0])
+                    r = pins_ov.get(sig)
+                    if isinstance(r, dict):
+                        new_rows.append([r.get("signal") or sig,
+                                         r.get("pin") or row[1], r.get("af")])
+                    elif new_name != gname and sig.startswith(gname + "_"):
+                        new_rows.append([new_name + sig[len(gname):],
+                                         *list(row)[1:]])
+                    else:
+                        new_rows.append(row)
+                block["pin_map"] = new_rows
+            new_groups[new_name] = block
+        data["boot_pin_locked"]["groups"] = new_groups
+    if gpio_ov:
+        gm = data.setdefault("gpio_must_pins", {})
+        pins = [str(p).upper() for p in (gm.get("pins") or []) if p]
+        for r in gpio_ov:
+            p = str((r or {}).get("pin") or "").upper()
+            if not p:
+                continue
+            if r.get("action") == "add" and p not in pins:
+                pins.append(p)
+            elif r.get("action") == "remove" and p in pins:
+                pins.remove(p)
+        gm["pins"] = pins
+    return data
+
+
+def load_gpio_pins(require_path, af_keys=None) -> set:
     """require.json["gpio_must_pins"]["pins"] -> set(pin). These pads must stay
     plain GPIO and are fed to the solver as must_gpio so they are never
     auto-assigned to a peripheral. (GPIO reservation moved here from
     signal_to_pin.json's old "gpio_pins" key; the sibling "silicon_fixed" map is
     annotation only and is deliberately not parsed.)
 
+    require_path：路徑或已載入 dict（effective_require 結果）皆可。
     Defensive: returns set() if the key is missing/malformed. When af_keys is
     given, warns for any gpio pin not in the AF table (the solver would silently
     ignore such a lock, since it only ever filters pins it actually knows about).
     """
-    try:
-        with open(require_path, encoding="utf-8") as fh:
-            raw = (json.load(fh).get("gpio_must_pins") or {}).get("pins", [])
-    except (OSError, ValueError, AttributeError) as exc:
-        _warn(f"could not read gpio_must_pins from {require_path}: {exc}")
-        return set()
+    spec = _require_data(require_path).get("gpio_must_pins")
+    raw = spec.get("pins", []) if isinstance(spec, dict) else []
     if not isinstance(raw, list):
         _warn(f"gpio_must_pins.pins in {require_path} is not a list; ignoring")
         return set()
@@ -180,16 +270,11 @@ def load_gpio_pins(require_path: str, af_keys=None) -> set:
     return pins
 
 
-def _load_boot_groups(require_path: str) -> dict:
-    """require.json["boot_pin_locked"]["groups"] -> {name: block}. Defensive:
-    a missing/malformed file or section yields {} (with a warning), so callers
-    degrade to "no boot constraints" instead of crashing."""
-    try:
-        with open(require_path, encoding="utf-8") as fh:
-            data = json.load(fh)
-    except (OSError, ValueError) as exc:
-        _warn(f"could not read boot_pin_locked from {require_path}: {exc}")
-        return {}
+def _load_boot_groups(require_path) -> dict:
+    """require.json["boot_pin_locked"]["groups"] -> {name: block}. 路徑或已載入
+    dict 皆可。Defensive: a missing/malformed file or section yields {} (with a
+    warning), so callers degrade to "no boot constraints" instead of crashing."""
+    data = _require_data(require_path)
     spec = data.get("boot_pin_locked") if isinstance(data, dict) else None
     groups = spec.get("groups") if isinstance(spec, dict) else None
     return groups if isinstance(groups, dict) else {}

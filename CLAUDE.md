@@ -22,6 +22,8 @@ PYTHONPATH=src venv/bin/python -m patch_agent dry-run # 印 LLM prompt，不呼�
 PYTHONPATH=src venv/bin/python -m patch_agent run --board <id>   # 指定板（或 PATCH_BOARD 環境變數；
                                                       # 不帶＝stm32mp257f-ev1，行為同單板時期）
 venv/bin/python tools/kb_lint.py <board>              # 知識庫進場檢查（新板丟進 data/ 後先跑這個）
+PYTHONPATH=src venv/bin/python -m store.create_admin  # 建 admin 帳號（唯一途徑；web 全站需登入，
+                                                      # 一般 user 由 admin 在設定頁建立）
 PYTHONPATH=src venv/bin/python -m knowledge_extract   # 第 0 段 CLI（input/ 材料 → output/staging/；
                                                       # web 上傳流程見 src/web/board_create.py）
 ```
@@ -63,7 +65,9 @@ PYTHONPATH=src venv/bin/python -m knowledge_extract   # 第 0 段 CLI（input/ �
 | `src/validator/` | 板級驗證（引擎依 board.yaml 分派，`engines.py`）：CubeMX（script_gen → runner → report，csv diff 唯一真相，+ DT 生成）／Script（階段 B）／Null（回 skipped） |
 | `src/patch_agent/` | 第二段：m5 定位（無 LLM）→ m6 生成（LLM＋deterministic 渲染）→ m7 結構/編譯驗證 → m8 修復迴圈（≤3 輪）；路徑集中 `config.py` |
 | `src/llm_provider/` | 多 provider 抽象（`llm_modules.ini` 選型，兩段共用）；parse 的 IntentIR prompt |
-| `src/web/` | Flask + 前端（聊天、plan 表格、建議卡片、clarify 按鈕、下載、產生 DTS 行內反問（是/否）與輪詢） |
+| `src/web/` | Flask + 前端（聊天、plan 表格、建議卡片、clarify 按鈕、下載、產生 DTS 行內反問（是/否）與輪詢）；`auth.py`（登入/登出＋全站 before_request 保護＋使用者管理）、`overrides_api.py`（per-user pin 覆寫端點） |
+| `src/store/` | 使用者系統資料層（SQLite `var/dts_agent.db`，web 與 CLI 同一路徑常數）：users／overrides DAO、`create_admin` CLI；覆寫只存差異，求解時 `dataio.effective_require()` 疊加——真實知識庫永不被改（見 [USER_SYSTEM_PLAN.md](USER_SYSTEM_PLAN.md)） |
+| `var/` | 持久使用者資料（DB＋session secret；gitignore 但**不可拋棄**，性質與 output/ 相反） |
 | `data/<board>/` | 知識庫：`base/`（手工核心）、`dts/`（官方 DTS 解析）、`bindings/`（IC 知識）、`cache/`（可拋棄）、`baseline/`＋`dts_generation/`（第二段專用） |
 | `output/` | 執行期產物（覆寫制、gitignore 排除）：`plan/`（交棒點）、`validator/`、`generated/` |
 | `tools/` | 第二段 data/ 重建工具（平常不需執行） |

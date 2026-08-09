@@ -1,5 +1,95 @@
 const $ = (id) => document.getElementById(id);
 
+// --------------------------------------------------------------------------- //
+// 登入（USER_SYSTEM_PLAN Part I）
+// 全站需登入：開機先打 /api/me，401 → 只顯示登入遮罩、不啟動任何資料載入。
+// 共用 401 攔截：包住 window.fetch，任何 API 回 401（session 過期、被停用）
+// 一律回到登入畫面——既有 21 個 fetch 呼叫點零修改。登入成功後整頁重載＝
+// 乾淨重啟（對話、chatSessionId、輪詢全部歸零，沿用換板即重置的精神）。
+// --------------------------------------------------------------------------- //
+const AUTH = { user: null };              // /api/me 的結果（role 供 admin 區塊）
+
+const _rawFetch = window.fetch.bind(window);
+window.fetch = async (input, init) => {
+  const r = await _rawFetch(input, init);
+  const url = typeof input === "string" ? input : ((input && input.url) || "");
+  if (r.status === 401 && !url.startsWith("/api/login")) showLogin(r.clone());
+  return r;
+};
+
+async function showLogin(resp) {
+  const ov = $("login-overlay");
+  if (!ov || !ov.hidden) return;             // 已顯示就不重複觸發
+  ov.hidden = false;
+  const u = $("login-username");
+  if (u) u.focus();
+  // bootstrap（計劃 I.4）：全新安裝一個帳號都沒有 → 顯示 create_admin 引導
+  try {
+    const d = resp ? await resp.json() : null;
+    if (d && d.users_exist === false) $("login-bootstrap").hidden = false;
+  } catch (e) { /* 非 JSON 回應（極端情況）——引導區塊維持隱藏 */ }
+}
+
+async function doLogin() {
+  const btn = $("login-submit");
+  if (btn.disabled) return;                  // 進行中就不重送（Enter 連發/自動重複
+                                             // 會白白吃掉 5 次/60 秒的嘗試額度）
+  const u = ($("login-username").value || "").trim();
+  const p = $("login-password").value || "";
+  const err = $("login-error");
+  err.textContent = "";
+  if (!u || !p) { err.textContent = "請輸入帳號與密碼"; return; }
+  btn.disabled = true;
+  try {
+    const r = await _rawFetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: u, password: p }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) {                             // 401 帳密錯 / 429 鎖定中
+      err.textContent = d.error || ("登入失敗（HTTP " + r.status + "）");
+      return;
+    }
+    location.reload();
+  } catch (e) {
+    err.textContent = "無法連線伺服器，請稍後再試";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// 設定頁「帳號」pane 與 admin 左欄入口（/api/me 結果進來後渲染）
+function renderAccount() {
+  if (!AUTH.user) return;
+  const name = $("acct-name");
+  if (name) name.textContent = AUTH.user.display_name || AUTH.user.username;
+  const det = $("acct-detail");
+  if (det) det.textContent = AUTH.user.username +
+    (AUTH.user.role === "admin" ? "（admin）" : "（一般使用者）");
+  // admin-only 左欄入口（伺服器端另有 403 把關，這裡只是 UI 開關）。
+  // /api/me 可能比使用者打開設定頁晚——解鎖後補載一次（沒開著就 no-op）
+  const nav = $("set-nav-users");
+  if (nav) nav.hidden = AUTH.user.role !== "admin";
+  umLoad();
+}
+
+function initLogin() {
+  const sub = $("login-submit");
+  if (sub) sub.addEventListener("click", doLogin);
+  ["login-username", "login-password"].forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.isComposing) doLogin();
+    });
+  });
+  const lo = $("logout-btn");                 // 登出鈕在設定頁「帳號」pane
+  if (lo) lo.addEventListener("click", async () => {
+    try { await fetch("/api/logout", { method: "POST" }); } catch (e) { /* 連線失敗也照樣重載回登入頁 */ }
+    location.reload();
+  });
+}
+
 // 目前選定的目標板子；每個請求都會帶上它（無狀態後端依此載入對應 /data）
 let currentBoard = null;
 
@@ -49,8 +139,6 @@ async function loadBoards(selectSlug) {
 //（display name，缺 manifest 退回 slug）。板子清單載入與每次換板都會更新。
 function updateIntroBoard() {
   const name = currentBoard ? (boardNames[currentBoard] || currentBoard) : "";
-  const head = $("header-board");
-  if (head) head.textContent = name || "設定";
   const hint = $("intro-board");
   if (!hint) return;
   if (!currentBoard) { hint.hidden = true; return; }
@@ -143,6 +231,91 @@ function bcDetectBaseline() {
   }
 }
 
+// --------------------------------------------------------------------------- //
+// 上傳表單：安全保留腳位群組（選填）——PMIC 等 secure/bootloader 持有匯流排。
+// 上傳當下該板 af_table 尚未誕生（抽取的產物），所以這裡只做格式 sanity；
+// 「腳位存在／訊號可達→AF 回填」由 knowledge_extract.reserved_groups 在
+// 抽取後期驗證，查不到的列剔除並在完成頁 boot 判定表警告。
+// --------------------------------------------------------------------------- //
+function bcRgAddGroup() {
+  const wrap = document.createElement("div");
+  wrap.className = "bc-rg-group";
+  const head = document.createElement("div");
+  head.className = "bc-rg-head";
+  head.innerHTML =
+    '<input class="rg-name" placeholder="群組名＝instance 名，例：I2C7" maxlength="32">' +
+    '<input class="rg-role" placeholder="標題，例：電源管理 PMIC (STPMIC25)" maxlength="120">' +
+    '<input class="rg-owner" placeholder="持有者，例：TF-A/OP-TEE (secure)" maxlength="120">';
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "ov-clear";
+  del.textContent = "移除";
+  del.addEventListener("click", () => wrap.remove());
+  head.appendChild(del);
+  wrap.appendChild(head);
+  const rows = document.createElement("div");
+  rows.className = "bc-rg-rows";
+  wrap.appendChild(rows);
+  const addRow = () => {
+    const row = document.createElement("div");
+    row.className = "bc-rg-row";
+    row.innerHTML =
+      '<input class="rg-sig" placeholder="訊號，例：I2C7_SCL" maxlength="48">' +
+      '<input class="rg-pin" placeholder="腳位，例：PD15" maxlength="16">';
+    const rdel = document.createElement("button");
+    rdel.type = "button";
+    rdel.className = "ov-clear";
+    rdel.textContent = "刪";
+    rdel.addEventListener("click", () => row.remove());
+    row.appendChild(rdel);
+    rows.appendChild(row);
+  };
+  addRow(); addRow();                       // 預設兩列（SCL/SDA 的常見形狀）
+  const more = document.createElement("button");
+  more.type = "button";
+  more.className = "ov-clear";
+  more.textContent = "＋ 腳位";
+  more.addEventListener("click", addRow);
+  wrap.appendChild(more);
+  $("bc-rg-list").appendChild(wrap);
+}
+
+// 收集＋格式檢查（寬鬆 sanity，同覆寫表；存在性由後端 af_table 驗證）。
+// 回 {list} 或 {error}；全空的組／列自動忽略。
+function bcRgCollect() {
+  const RE = {
+    name: /^[A-Za-z0-9_]{2,32}$/,
+    sig: /^[A-Za-z0-9_\/]{2,48}$/,
+    pin: /^[A-Za-z0-9_.]{2,16}$/,
+  };
+  const list = [];
+  for (const gEl of document.querySelectorAll("#bc-rg-list .bc-rg-group")) {
+    const val = (cls) => {
+      const el = gEl.querySelector("input." + cls);
+      return el ? el.value.trim() : "";
+    };
+    const name = val("rg-name");
+    const rows = [];
+    let bad = null;
+    gEl.querySelectorAll(".bc-rg-row").forEach((r) => {
+      const sig = r.querySelector(".rg-sig").value.trim();
+      const pin = r.querySelector(".rg-pin").value.trim();
+      if (!sig && !pin) return;             // 空列忽略
+      if (!RE.sig.test(sig)) bad = bad || ("訊號格式不正確（" + (sig || "空") + "）");
+      if (!RE.pin.test(pin)) bad = bad || ("腳位格式不正確（" + (pin || "空") + "）");
+      rows.push({ signal: sig, pin: pin });
+    });
+    if (!name && !rows.length) continue;    // 整組全空：忽略
+    if (!RE.name.test(name)) {
+      return { error: "保留群組的群組名格式不正確（例：I2C7）" };
+    }
+    if (bad) return { error: "保留群組 " + name + "：" + bad };
+    list.push({ name: name, role: val("rg-role"), owner: val("rg-owner"),
+                pins: rows });
+  }
+  return { list: list };
+}
+
 async function bcSubmit() {
   const name = $("bc-name").value.trim();
   const pdf = $("bc-pdf").files[0];
@@ -155,11 +328,16 @@ async function bcSubmit() {
     err.textContent = "偵測到多個 .dts——請選擇這塊板的 baseline 板檔";
     return;
   }
+  const rg = bcRgCollect();                 // 安全保留群組（選填）
+  if (rg.error) { err.textContent = rg.error; return; }
   const fd = new FormData();
   fd.append("name", name);
   fd.append("validate", $("bc-validate").checked ? "1" : "0");
   if (!$("bc-baseline-field").hidden) {
     fd.append("baseline", $("bc-baseline").value);
+  }
+  if (rg.list.length) {
+    fd.append("reserved_groups", JSON.stringify(rg.list));
   }
   fd.append("pdf", pdf, pdf.name);
   for (const f of dts) {
@@ -305,55 +483,161 @@ function initBoardCreate() {
   $("bc-artifacts").addEventListener("click", () => {
     window.location.href = "/api/boards/create/artifacts";
   });
+  const rgAdd = $("bc-rg-add");
+  if (rgAdd) rgAdd.addEventListener("click", bcRgAddGroup);
 }
 
 // --------------------------------------------------------------------------- //
 // 設定頁 —— ①目標板子（board-select 移入此頁）②上傳新板子 ③開機/PMIC 腳位覆寫
 //
-// 腳位覆寫（規劃）：客製板可能與官方板同 SoC，但開機/PMIC 腳位被改（例：PMIC
-// 的 I2C7_SCL 從 PD15 挪到別腳）。使用者在此維護「角色:介面:訊號 → 腳位」的
-// 覆寫值；儲存後由後端寫成 overlay 檔（規劃：data/<板>/base/
-// require.overrides.json）疊加在 require.json 之上——真實知識庫永不直接修改
-//（紅線 2 的延伸），清空覆寫值即回到官方腳位。
+// 腳位覆寫（USER_SYSTEM_PLAN Part III）：客製板可能與官方板同 SoC，但開機/
+// PMIC 腳位被改（例：PMIC 的 I2C7_SCL 從 PD15 挪到別腳）。修改存進資料庫、
+// scope 到登入使用者（每人一組，互不影響）；真實知識庫永不被修改，求解時
+// 由後端把差異疊加在 require.json 之上。
 //
-// 後端契約（尚未實作；接上前本區以示意資料呈現、儲存會明確回報未生效）：
+// 後端契約（src/web/overrides_api.py）：
 //   GET /api/boards/<board>/pin-overrides
 //     -> { entries: [ { role, group, signal, default_pin, af,
-//                       override_group, override_signal, override_pin } ] }
-//        role = 群組角色（require.json groups[].role）、group = 介面（I2C7…）、
-//        override_* = null 表示未覆寫（介面/訊號/腳位三者都可被客製板改名/改腳）
+//                       override_group, override_signal, override_pin } ],
+//          set: {id,name,version}|null, base_version, source: "db"|"official",
+//          stale: [對不上官方表的孤兒覆寫] }
+//        group/signal＝官方名（對齊錨點）；override_*＝null 表示未覆寫。
 //   PUT /api/boards/<board>/pin-overrides
-//     body: { entries: [ { group, signal, pin } ] }   送整張表的目前值；
-//     -> { ok: true }   後端與 require.json 逐項比對，僅差異落入 overlay 檔，
-//        與官方相同＝無覆寫。腳位存在性／衝突由後端驗證。
+//     body: { base_version, entries: [ { official_group, official_signal,
+//             group, signal, pin } ] }   送整張表的目前值；後端與 require.json
+//     逐欄比對只存差異，並依序驗證（格式／腳位存在／訊號可達／instance
+//     rename／撞腳／樂觀鎖）。400＝驗證未過（details 逐列）；409＝版本衝突。
 // --------------------------------------------------------------------------- //
-let ovEntries = [];        // 目前板的覆寫表（GET 結果或示意資料）
-let ovDemo = false;        // true = 後端端點不存在，畫面資料僅供預覽
+let ovEntries = [];        // 目前板的覆寫表（GET 結果）
+let ovBaseVersion = 0;     // 樂觀鎖：PUT 帶回，後端不符回 409
 
-// 後端沒接上時的示意資料——取 stm32mp257f-ev1 require.json 的真實內容，
-// 讓畫面與未來後端回傳的形狀一致（僅預覽用，儲存不會生效）
-const OV_DEMO_ENTRIES = [
-  { role: "PMIC STPMIC25 控制匯流排", group: "I2C7",
-    signal: "I2C7_SCL", default_pin: "PD15", af: 10, override_pin: null },
-  { role: "PMIC STPMIC25 控制匯流排", group: "I2C7",
-    signal: "I2C7_SDA", default_pin: "PD14", af: 10, override_pin: null },
-  { role: "SD-card boot", group: "SDMMC1",
-    signal: "SDMMC1_CK", default_pin: "PE3", af: 10, override_pin: null },
-  { role: "SD-card boot", group: "SDMMC1",
-    signal: "SDMMC1_CMD", default_pin: "PE2", af: 10, override_pin: null },
-  { role: "SD-card boot", group: "SDMMC1",
-    signal: "SDMMC1_D0", default_pin: "PE4", af: 10, override_pin: null },
-  { role: "console + ROM UART boot", group: "USART2",
-    signal: "USART2_TX", default_pin: "PA4", af: 6, override_pin: null },
-  { role: "console + ROM UART boot", group: "USART2",
-    signal: "USART2_RX", default_pin: "PA8", af: 8, override_pin: null },
-];
-
+// 左欄導覽切頁：腳位覆寫/使用者管理是資料頁，切到才載入（懶載入）
+const SET_PANES = ["account", "board", "pins", "users"];
+function setShowPane(pane) {
+  document.querySelectorAll(".set-nav-item").forEach((b) => {
+    b.classList.toggle("active", b.dataset.pane === pane);
+  });
+  SET_PANES.forEach((p) => {
+    const el = $("set-pane-" + p);
+    if (el) el.hidden = p !== pane;
+  });
+  if (pane === "pins") ovLoad();
+  if (pane === "users") umLoad();
+}
 function setOpen() {
   $("set-overlay").hidden = false;
-  ovLoad();
+  setShowPane("account");
 }
 function setClose() { $("set-overlay").hidden = true; }
+
+// --------------------------------------------------------------------------- //
+// 使用者管理（Part II；admin-only）：清單＋建立一般 user＋重設密碼＋停用/啟用。
+// admin 帳號在表中唯讀（web 不能管 admin——只能 CLI）。
+// --------------------------------------------------------------------------- //
+async function umLoad() {
+  const overlay = $("set-overlay");
+  if (!overlay || overlay.hidden) return;     // 設定頁沒開就不載（同 ovLoad）
+  if (!AUTH.user || AUTH.user.role !== "admin") return;   // 非 admin 不打端點
+  const err = $("um-error");
+  err.textContent = "";
+  try {
+    const r = await fetch("/api/users");
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || ("HTTP " + r.status));
+    umRender(d.users || []);
+  } catch (e) {
+    err.textContent = "載入使用者清單失敗：" + (e && e.message ? e.message : e);
+  }
+}
+
+function umRender(users) {
+  const tbody = $("um-table").querySelector("tbody");
+  tbody.innerHTML = "";
+  users.forEach((u) => {
+    const tr = document.createElement("tr");
+    if (!u.is_active) tr.className = "um-inactive";
+    tr.appendChild(el("td", "mono", escapeHtml(u.username)));
+    tr.appendChild(el("td", "", escapeHtml(u.display_name || "")));
+    tr.appendChild(el("td", "", u.role === "admin" ? "<b>admin</b>" : "user"));
+    tr.appendChild(el("td", "", u.is_active ? "啟用" : "已停用"));
+    tr.appendChild(el("td", "", escapeHtml((u.last_login_at || "—").replace("T", " "))));
+    const tdA = el("td", "um-actions", "");
+    if (u.role === "admin") {
+      tdA.appendChild(el("span", "note", "CLI 管理"));
+    } else {
+      const reset = document.createElement("button");
+      reset.className = "ov-clear";
+      reset.textContent = "重設密碼";
+      reset.addEventListener("click", async () => {
+        const pw = prompt("輸入「" + u.username + "」的新密碼（至少 6 字元）：");
+        if (pw === null) return;
+        if (pw.length < 6) {                  // 後端也會擋；這裡先給清楚訊息
+          $("um-error").textContent = "密碼至少 6 個字元——未變更。";
+          return;
+        }
+        await umPatch(u.id, { password: pw });
+      });
+      tdA.appendChild(reset);
+      const tog = document.createElement("button");
+      tog.className = "ov-clear";
+      tog.textContent = u.is_active ? "停用" : "啟用";
+      tog.addEventListener("click", async () => {
+        if (u.is_active &&
+            !confirm("停用「" + u.username + "」？其下一個請求即登出。")) return;
+        await umPatch(u.id, { is_active: !u.is_active });
+      });
+      tdA.appendChild(tog);
+    }
+    tr.appendChild(tdA);
+    tbody.appendChild(tr);
+  });
+}
+
+async function umPatch(uid, body) {
+  const err = $("um-error");
+  err.textContent = "";
+  try {
+    const r = await fetch("/api/users/" + uid, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || ("HTTP " + r.status));
+    umLoad();
+  } catch (e) {
+    err.textContent = "更新失敗：" + (e && e.message ? e.message : e);
+  }
+}
+
+async function umCreate() {
+  const err = $("um-error");
+  err.textContent = "";
+  const username = ($("um-username").value || "").trim();
+  const display = ($("um-display").value || "").trim();
+  const password = $("um-password").value || "";
+  if (!username) { err.textContent = "請填帳號"; return; }
+  if (password.length < 6) { err.textContent = "初始密碼至少 6 個字元"; return; }
+  const btn = $("um-create-btn");
+  btn.disabled = true;
+  try {
+    const r = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, display_name: display, password }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || ("HTTP " + r.status));
+    $("um-username").value = "";
+    $("um-display").value = "";
+    $("um-password").value = "";
+    umLoad();
+  } catch (e) {
+    err.textContent = "建立失敗：" + (e && e.message ? e.message : e);
+  } finally {
+    btn.disabled = false;
+  }
+}
 
 // 載入目前板的覆寫表；設定頁沒開就不打（換板時被 onBoardChange 呼叫）
 async function ovLoad() {
@@ -362,20 +646,33 @@ async function ovLoad() {
   const status = $("ov-status");
   status.className = "note ov-status";
   status.textContent = "載入中…";
-  ovDemo = false;
   try {
     const r = await fetch("/api/boards/" + encodeURIComponent(currentBoard || "")
                           + "/pin-overrides");
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const d = await r.json();
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || ("HTTP " + r.status));
     ovEntries = d.entries || [];
-    status.textContent = "";
+    ovBaseVersion = d.base_version || 0;
+    let txt = "";
+    if (!ovEntries.length) {
+      txt = "此板沒有開機/PMIC 腳位資料。";
+    } else if (d.source === "db") {
+      txt = "✓ 已套用你的個人覆寫（第 " + ovBaseVersion +
+            " 版）——只影響你自己的求解，不動真實知識庫。";
+    } else {
+      txt = "目前全部為官方值；修改後儲存即成為你的個人覆寫。";
+    }
+    if (d.stale && d.stale.length) {
+      status.className = "note ov-status demo";
+      txt += "⚠ 有 " + d.stale.length +
+             " 筆舊覆寫對不上目前知識庫（已忽略）：" + d.stale.join("、");
+    }
+    status.textContent = txt;
   } catch (e) {
-    // 端點尚未實作（規劃中）→ 用示意資料把畫面撐起來，並明確標示不會儲存
-    ovEntries = OV_DEMO_ENTRIES.map((x) => ({ ...x }));
-    ovDemo = true;
+    ovEntries = [];
+    ovBaseVersion = 0;
     status.className = "note ov-status demo";
-    status.textContent = "⚠ 後端端點尚未接上——以下為示意資料，儲存不會生效。";
+    status.textContent = "⚠ 覆寫表載入失敗：" + (e && e.message ? e.message : e);
   }
   // 三層值：official=官方（對照用）、loaded=載入時（dirty 基準）、cur=編輯中
   ovEntries.forEach((en) => {
@@ -390,12 +687,13 @@ async function ovLoad() {
   ovRender();
 }
 
-// 欄位格式（合法性只做格式層；「腳位/訊號是否存在於此板、是否撞到其他訊號」
-// 由後端儲存時驗證）
+// 欄位格式：只做寬鬆 sanity——命名慣例不寫死（TI 板訊號含小寫、pad 命名
+// 各家不同）；「腳位/訊號是否存在於此板、是否撞腳」由後端以該板 af_table
+// 驗證（那才是真正的守門，這裡只是 UX 提示）
 const OV_FIELD_RE = {
-  group: /^[A-Z0-9_]{2,}$/,               // I2C7 / SDMMC1 …
-  signal: /^[A-Z0-9_\/]{2,}$/,            // I2C7_SCL …
-  pin: /^P[A-Z]\d{1,2}$/,                 // PA0 / PD15 / PZ4 …
+  group: /^[A-Za-z0-9_]{2,}$/,            // I2C7 / SDMMC1 …
+  signal: /^[A-Za-z0-9_\/]{2,}$/,         // I2C7_SCL / UART0_CTSn …
+  pin: /^[A-Za-z0-9_.]{2,}$/,             // PA0 / PD15 …（各板 pad 命名不同）
 };
 
 // 行內編輯格：平常長得像一般文字（無框），點擊聚焦才浮出輸入框樣式。
@@ -464,7 +762,11 @@ function ovInputChanged(e) {
   const i = Number(input.dataset.idx);
   const field = input.dataset.field;
   const en = ovEntries[i];
-  const val = input.value.trim().toUpperCase();
+  // 大小寫跟隨官方值的慣例：官方全大寫（ST）才自動轉大寫；含小寫的板
+  //（TI 的 UART0_CTSn…）保留原樣，硬大寫會對不上該板 Σ
+  let val = input.value.trim();
+  const official = String(en.official[field] || "");
+  if (official && official === official.toUpperCase()) val = val.toUpperCase();
   en.cur[field] = val;
   if (field === "group") {                // 介面格是整組共用的（rowspan）
     ovEntries.filter((x) => x.official.group === en.official.group)
@@ -503,10 +805,6 @@ async function ovSave() {
       bad.map((en) => en.official.signal).join("、");
     return;
   }
-  if (ovDemo) {
-    err.textContent = "後端端點尚未實作——本次修改僅在畫面上，未儲存。";
-    return;
-  }
   const btn = $("ov-save");
   btn.disabled = true;
   try {
@@ -514,14 +812,33 @@ async function ovSave() {
                           + "/pin-overrides", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ entries: ovEntries.map((en) => ({ ...en.cur })) }),
+      body: JSON.stringify({
+        base_version: ovBaseVersion,           // 樂觀鎖：與伺服器不符回 409
+        entries: ovEntries.map((en) => ({
+          official_group: en.official.group,   // 對齊錨點（改名/改腳都靠它定位）
+          official_signal: en.official.signal,
+          group: en.cur.group,
+          signal: en.cur.signal,
+          pin: en.cur.pin,
+        })),
+      }),
     });
-    const d = await r.json();
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 400 && d.details) {       // 逐列驗證錯誤（後端資料驅動檢查）
+      err.textContent = d.error + "\n" + d.details.join("\n");
+      return;
+    }
     if (!r.ok || !d.ok) throw new Error(d.error || ("HTTP " + r.status));
     await ovLoad();                            // 以後端落地結果為準重新渲染
+    // 覆寫改變了這塊板的求解常數——進行中的對話綁的是舊 _Board 推理歷史，
+    // 沿用「換板即重置」模式自動開新話題，下一則訊息即用新覆寫（III.3）。
+    chatSessionId = null;
+    clearChat();
     const status = $("ov-status");
     status.className = "note ov-status ov-saved";
-    status.textContent = "✓ 已儲存為覆寫檔（不影響真實知識庫）";
+    status.textContent = (d.source === "db")
+      ? "✓ 已儲存（第 " + d.version + " 版）——已開新話題，下一次求解即生效。"
+      : "✓ 已儲存：與官方相同，無覆寫（回到官方值）。已開新話題。";
   } catch (e2) {
     err.textContent = "儲存失敗：" + (e2 && e2.message ? e2.message : e2);
   } finally {
@@ -533,7 +850,12 @@ function initSettings() {
   if (!$("set-overlay")) return;
   $("settings-btn").addEventListener("click", setOpen);
   $("set-close").addEventListener("click", setClose);
+  document.querySelectorAll(".set-nav-item").forEach((b) => {
+    b.addEventListener("click", () => setShowPane(b.dataset.pane));
+  });
   $("set-upload-btn").addEventListener("click", bcOpen);
+  const umBtn = $("um-create-btn");
+  if (umBtn) umBtn.addEventListener("click", umCreate);
   $("ov-save").addEventListener("click", ovSave);
   $("ov-revert").addEventListener("click", () => {      // 丟掉未儲存修改
     ovEntries.forEach((en) => { en.cur = { ...en.loaded }; });
@@ -1634,9 +1956,31 @@ $("q").addEventListener("input", function () {
   this.style.height = Math.min(this.scrollHeight, 180) + "px";
 });
 
-// 啟動：載入可選板子清單 + 以伺服器最近一次驗證結果初始化 CubeMX 徽章
-// + 查詢 DTS 生成可用性（板子清單載完才知道 currentBoard）
-loadBoards().then(initDts);
-initValidatorBadge();
+// 啟動：先過登入閘（/api/me），401 由 fetch 攔截顯示登入畫面且不載入任何
+// 資料；通過後才載板子清單、CubeMX 徽章、DTS 可用性。
+async function boot() {
+  try {
+    const r = await fetch("/api/me");
+    if (!r.ok) {
+      if (r.status !== 401) {             // 401 → showLogin 已被攔截觸發；
+        showLogin(null);                  // 其他錯誤（DB 損毀 5xx…）也不能
+        const err = $("login-error");     // 留白畫面——停在登入頁並說明原因
+        if (err) err.textContent = "伺服器異常（HTTP " + r.status +
+                                   "），請稍後重新整理再試。";
+      }
+      return;
+    }
+    AUTH.user = await r.json();
+  } catch (e) {
+    showLogin(null);                      // 連不上伺服器：也停在登入畫面
+    return;
+  }
+  renderAccount();
+  loadBoards().then(initDts);
+  initValidatorBadge();
+}
+
 initBoardCreate();
 initSettings();
+initLogin();
+boot();

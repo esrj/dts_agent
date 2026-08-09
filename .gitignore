@@ -3,6 +3,10 @@
 venv/
 env/
 
+# 使用者系統持久資料（SQLite DB + session secret；不入庫但「不可拋棄」，
+# 與 output/ 的覆寫制產物性質不同——備份請帶走整個 var/）
+var/
+
 # Byproducts（執行期自動產生，不入庫）
 __pycache__/
 *.pyc

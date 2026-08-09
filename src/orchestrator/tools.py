@@ -84,7 +84,8 @@ class SolverTools:
     # ----------------------------------------------------------------------- #
     # CORE: the LLM may call this as many times as it wants                    #
     # ----------------------------------------------------------------------- #
-    def solve_pinmux(self, intent: dict, board: str | None = None) -> dict:
+    def solve_pinmux(self, intent: dict, board: str | None = None,
+                     override: dict | None = None) -> dict:
         """Run one structured request through the deterministic core.
 
         `intent` is an IntentIR dict (same schema the parser emits — see the
@@ -100,7 +101,7 @@ class SolverTools:
         """
         board = board or DEFAULT_BOARD
         try:
-            b = self._pipeline._load_board(board)
+            b = self._pipeline._load_board(board, override)
         except Exception as exc:                       # bad board id / data
             return {"status": "error", "board": board,
                     "message": f"無法載入板子 {board}：{exc}"}
@@ -175,7 +176,8 @@ class SolverTools:
     # READ-ONLY: let the model construct valid intents / reason about limits   #
     # ----------------------------------------------------------------------- #
     def get_capabilities(self, board: str | None = None,
-                         instance: str | None = None) -> dict:
+                         instance: str | None = None,
+                         override: dict | None = None) -> dict:
         """What this board can do: families & their instances present in Σ, each
         family's modes, the boot-essential set already provided (deductible from
         a count), and how many pins are GPIO-locked. The model uses this to build
@@ -185,7 +187,7 @@ class SolverTools:
         「換腳/讓腳」需求先看這個：usable 只剩一支＝無法換腳，直接回答不可行。"""
         board = board or DEFAULT_BOARD
         try:
-            b = self._pipeline._load_board(board)
+            b = self._pipeline._load_board(board, override)
         except Exception as exc:
             return {"status": "error", "board": board,
                     "message": f"無法載入板子 {board}：{exc}"}
@@ -310,7 +312,8 @@ class SolverTools:
             pass                                   # 快取寫不進去不影響查詢結果
 
     def lookup_binding(self, peripheral: str | None = None,
-                       board: str | None = None) -> dict:
+                       board: str | None = None,
+                       override: dict | None = None) -> dict:
         """板上外部 IC 的 Device Tree binding 查詢（兩段式，全部可溯源）：
 
           1. KB：data/<board>/bindings/board_components.json（instance ↔ IC ↔ compatible
@@ -326,7 +329,7 @@ class SolverTools:
         LLM 只能引用這裡回傳的內容；查無就是查無。"""
         board = board or DEFAULT_BOARD
         try:
-            b = self._pipeline._load_board(board)
+            b = self._pipeline._load_board(board, override)
         except Exception as exc:
             return {"status": "error", "board": board,
                     "message": f"無法載入板子 {board}：{exc}"}
@@ -390,7 +393,8 @@ class SolverTools:
     # VERIFY-THEN-PROPOSE: suggestion cards (G6) — 先驗證再提案的機械閘門      #
     # ----------------------------------------------------------------------- #
     def propose_suggestion(self, summary: str | None, intent: dict | None,
-                           board: str | None = None) -> dict:
+                           board: str | None = None,
+                           override: dict | None = None) -> dict:
         """把「修改建議」提交成前端可一鍵採納的卡片——**伺服器先重解驗證**，
         只有真的 SAT 的 intent 才會被接受（先驗證再提案不再只是 prompt 規範，
         而是機械強制）。回 ok 時由 agent dispatch 存進 session.suggestions。"""
@@ -398,7 +402,7 @@ class SolverTools:
         if not summary or not isinstance(intent, dict) or not intent.get("items"):
             return {"status": "rejected",
                     "reason": "需要 summary（一句人話）與含 items 的完整 intent。"}
-        out = self.solve_pinmux(intent, board)
+        out = self.solve_pinmux(intent, board, override)
         if out.get("status") != "sat":
             return {"status": "rejected",
                     "reason": (f"此建議未通過驗證（{out.get('status')}）："
@@ -416,7 +420,8 @@ class SolverTools:
     # DETERMINISTIC (green): official板級驗證（G5；引擎依 board.yaml 分派）      #
     # ----------------------------------------------------------------------- #
     def run_validator(self, assignment: list | None,
-                      board: str | None = None) -> dict:
+                      board: str | None = None,
+                      override: dict | None = None) -> dict:
         """把一份已 SAT 的 assignment 交給該板 manifest 指定的驗證引擎
         （data/<board>/board.yaml validation：cubemx / script / none——見
         validator/engines.py）。產物與 result.json 覆寫至 output/validator/。
@@ -435,13 +440,16 @@ class SolverTools:
             return {"status": "error",
                     "artifacts_dir": os.path.join(OUTPUT, "validator"),
                     "message": "沒有可驗證的分配（assignment 為空）——請先成功求解。"}
-        return engine_for(board).validate(rows, board, self._pipeline._load_board)
+        # loader callback 綁定本次的覆寫組：引擎內 load_board(board) 拿到的
+        # _Board 與求解當下一致（無覆寫時 override=None，行為不變）
+        return engine_for(board).validate(
+            rows, board, lambda b, _ov=override: self._pipeline._load_board(b, _ov))
 
     # ----------------------------------------------------------------------- #
     # SIDE EFFECT: persist a confirmed plan to disk                            #
     # ----------------------------------------------------------------------- #
     def emit_plan(self, assignment: list | None, board: str | None = None,
-                  fmt: str = "csv") -> dict:
+                  fmt: str = "csv", override: dict | None = None) -> dict:
         """Write an assignment ([{peripheral, signal, pin, af}]) to
         output/plan/plan.csv (+ plan.xlsx when fmt='xlsx'), reusing the same
         styling as the web export. Returns the paths written.
@@ -456,7 +464,7 @@ class SolverTools:
         if not rows:
             return {"status": "error", "message": "沒有可輸出的分配（assignment 為空）"}
         try:
-            b = self._pipeline._load_board(board)
+            b = self._pipeline._load_board(board, override)
         except Exception as exc:
             return {"status": "error", "message": f"無法載入板子 {board}：{exc}"}
 

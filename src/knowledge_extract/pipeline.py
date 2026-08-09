@@ -178,6 +178,15 @@ def run_manual(
                 )
                 report["files"]["require.json"] = _write_json(req_path, draft, force)
 
+    # 增項 B：上傳時人工填寫的安全保留群組（PMIC 等）——require 草稿就緒、
+    # af_table 已誕生後併入（驗證＋AF 回填見 reserved_groups.py）。require
+    # 被 skipped（增量重跑）也要跑：CLI 使用者可事後補 reserved_groups.json。
+    if "require" in steps and os.path.exists(req_path):
+        from . import reserved_groups
+        report["warnings"] += reserved_groups.merge(
+            board, input_dir=(input_dir or INPUT_DIR),
+            req_path=req_path, af_path=af_path, log=log)
+
     if "dts" in steps:
         if not has_dts_input():
             report["warnings"].append("input/ 下沒有 .dts 檔,跳過 DTS 抽取")

@@ -70,7 +70,7 @@ Reply with ONLY a JSON object of this exact shape:
     "pin_map_columns": ["signal", "pin", "af"],
     "groups": {
       "<PERIPHERAL INSTANCE or BOOT GROUP>": {
-        "role": "<why it is boot-locked, from the datasheet>",
+        "role": "<短中文標題> (<why it is boot-locked, from the datasheet>)",
         "in_kernel_dt": false,
         "solver_action": "reserve_only",
         "profile_status": "needs_confirmation",
@@ -92,6 +92,12 @@ Rules:
   a group with "pin_map": [] and the pin names listed in "role".
 - Every group gets profile_status "needs_confirmation" and solver_action
   "reserve_only" in this draft.
+- role format: START with a short layman-friendly Traditional-Chinese title
+  (2-8 chars, e.g. 開機模式設定腳 / SD 卡開機 / SPI Flash 開機 / NAND Flash 開機 /
+  Debug 主控台 / 電源管理 PMIC), then ONE half-width " (" holding the concise
+  technical basis from the datasheet (original wording, English OK). The text
+  BEFORE the first half-width "(" is shown verbatim to end users as a label —
+  keep it plain, no register/bit names there.
 """
 
 

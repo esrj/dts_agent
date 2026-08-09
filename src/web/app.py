@@ -25,14 +25,16 @@ import zipfile
 # 所以把 src 加進 sys.path 讓 service / 底層模組可被 import。
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, request, jsonify, send_from_directory, Response
+from flask import Flask, g, request, jsonify, send_from_directory, Response
 
 from service import Pipeline
 from util.dataio import (DEFAULT_BOARD, OUTPUT, list_boards,
                          load_board_manifest, plan_csv_text, plan_xlsx_bytes)
 from orchestrator import Orchestrator, SessionStore, SolverTools
 from validator import expected_pin_map, plan_fingerprint
+import auth
 import board_create
+import overrides_api
 
 app = Flask(__name__, static_folder="static", static_url_path="")
 # 靜態檔（index.html / app.js）一律要求瀏覽器重新驗證：內部工具流量小，
@@ -40,7 +42,9 @@ app = Flask(__name__, static_folder="static", static_url_path="")
 # 引用，功能徽章永遠載不到）。
 app.send_file_max_age_default = 0
 app.config["MAX_CONTENT_LENGTH"] = 220 * 1024 * 1024   # 上傳（PDF＋DTS 樹）上限
+auth.init_app(app)                       # 登入/登出＋全站 before_request 保護
 app.register_blueprint(board_create.bp)                # 上傳新增板子（M3）
+app.register_blueprint(overrides_api.bp)               # 腳位覆寫（per-user）
 pipeline = Pipeline()        # 啟動時載入一次（provider / system_prompt；各板資料延後載入並快取）
 
 # 聊天式 orchestrator（agentic tool-use loop）。延後初始化：第一個 /api/chat 請求才
@@ -59,6 +63,23 @@ _vtools._pipeline = pipeline                 # 不另建 LLM provider
 _auto = {"lock": threading.Lock(), "running": False, "pending": None}
 
 
+def _user_override(board: str) -> dict | None:
+    """登入 user 在該板的 active pin 覆寫組（USER_SYSTEM_PLAN Part III）：
+    {set_id, version, name, user, data}；無覆寫（含空 set）→ None——
+    _load_board 快取 key 落在 (board, None, 0)，與無覆寫路徑 byte 級一致。
+    必須在請求執行緒內呼叫（讀 g.user）。load_active＝單一交易快照，
+    version 與 data 保證一致（否則並發儲存會污染 _Board 快取）。"""
+    from store import overrides as ov_store
+    active = ov_store.load_active(g.user["id"], board)
+    if not active:
+        return None
+    st, data = active["set"], active["data"]
+    if not (data["peripherals"] or data["gpio"]):
+        return None
+    return {"set_id": st["id"], "version": st["version"], "name": st["name"],
+            "user": g.user["username"], "data": data}
+
+
 def _auto_worker():
     while True:
         with _auto["lock"]:
@@ -66,19 +87,20 @@ def _auto_worker():
             if job is None:
                 _auto["running"] = False
                 return
-        rows, board = job
+        rows, board, override = job
         try:
-            _vtools.run_validator(rows, board)     # 產物+result.json 覆寫落地
-        except Exception:
+            _vtools.run_validator(rows, board, override=override)
+        except Exception:                          # 產物+result.json 覆寫落地
             pass                                   # 背景驗證失敗不影響對話路徑
 
 
-def _kick_validation(rows, board):
-    """排入一份 plan 的背景驗證（latest-wins）。"""
+def _kick_validation(rows, board, override=None):
+    """排入一份 plan 的背景驗證（latest-wins）。override＝該 plan 求解當下的
+    覆寫組（worker 執行緒外先解析好——它沒有 request context）。"""
     if not rows:
         return
     with _auto["lock"]:
-        _auto["pending"] = (copy.deepcopy(rows), board)
+        _auto["pending"] = (copy.deepcopy(rows), board, override)
         if _auto["running"]:
             return                                 # 現役 worker 跑完會接手 pending
         _auto["running"] = True
@@ -90,13 +112,14 @@ def _validating() -> bool:
         return _auto["running"] or _auto["pending"] is not None
 
 
-def _with_auto_validation(out, board):
+def _with_auto_validation(out, board, override=None):
     """/api/solve 的出口掛鉤：SAT 且有 assignment → 附 plan_fingerprint 並排入
-    背景驗證（含 baseline——它也是一份 plan）。"""
+    背景驗證（含 baseline——它也是一份 plan）。override 一路帶到 _remember_plan
+    （DTS 溯源）與背景驗證（同一份 effective 板資料）。"""
     if isinstance(out, dict) and out.get("sat") and out.get("assignment"):
         out["plan_fingerprint"] = plan_fingerprint(expected_pin_map(out["assignment"]))
-        _remember_plan(out["assignment"], board, out["plan_fingerprint"])
-        _kick_validation(out["assignment"], board)
+        _remember_plan(out["assignment"], board, out["plan_fingerprint"], override)
+        _kick_validation(out["assignment"], board, override)
     return out
 
 
@@ -116,7 +139,8 @@ def index():
 def boards():
     """前端下拉選單用：自動偵測 data/ 下有哪些板子。
     names＝board.yaml 的 display name（缺 manifest 退回板子 id）；
-    can_create＝「上傳新增板子」功能旗標（M3/M4）。"""
+    can_create＝「上傳新增板子」：功能旗標＋admin 角色（知識庫共用，
+    變動入口收斂到 admin；伺服器端 _gate 同步把關，此欄只是前端顯示）。"""
     available = list_boards()
     default = DEFAULT_BOARD if DEFAULT_BOARD in available else (
         available[0] if available else DEFAULT_BOARD)
@@ -127,24 +151,26 @@ def boards():
         except Exception:
             names[b] = b
     return jsonify(boards=available, default=default, names=names,
-                   can_create=board_create.FEATURE_ON)
+                   can_create=(board_create.FEATURE_ON
+                               and g.user["role"] == "admin"))
 
 
 @app.post("/api/solve")
 def solve():
     data = request.get_json(silent=True) or {}
     board = data.get("board") or DEFAULT_BOARD   # 無狀態：board 每輪都帶進來
+    ov = _user_override(board)                   # 登入 user 的 active 覆寫組
     try:
         if "intent" in data:                 # 反問的後續輪：折回使用者選的候選
             return jsonify(_with_auto_validation(
-                pipeline.answer(data, board=board), board))
+                pipeline.answer(data, board=board, override=ov), board, ov))
 
         # 第一輪：自然語言
         text = (data.get("text") or "").strip()
         if not text:
             return jsonify(error="empty input"), 400
         return jsonify(_with_auto_validation(
-            pipeline.start(text, board=board), board))
+            pipeline.start(text, board=board, override=ov), board, ov))
     except Exception as exc:      # ResolveError / LLM / JSON 解析失敗
         return jsonify(error=str(exc)), 422
 
@@ -195,7 +221,10 @@ def chat():
     if not message:
         return jsonify(error="empty message"), 400
     board = data.get("board") or DEFAULT_BOARD
-    sess = _sessions.get_or_create(data.get("session_id"), board)
+    # session 以登入 user 為命名空間：session_id 是 client 自報的，不隔離的話
+    # 任何人可用別人的 id 接手其對話（多使用者後的隱私洞）。
+    sess = _sessions.get_or_create(data.get("session_id"), board,
+                                   ns=f"u{g.user['id']}")
     if data.get("board") and data["board"] != sess.board:
         # 中途切板：對話歷史是針對舊板算的（Σ/DTS/腳位都不同），不能與新板的 system
         # prompt 並存，否則模型會拿舊板結論套到新板。直接重置這個 session 的對話。
@@ -203,6 +232,10 @@ def chat():
         sess.messages = []
         sess.trace = []
         sess.last_plan = None
+    if not sess.messages:
+        # 新對話（含換板重置後）綁定「當下」的覆寫組；進行中的對話沿用開始時
+        # 的版本——儲存新覆寫不改寫既有推理歷史，開新話題才生效（III.3）。
+        sess.override = _user_override(sess.board)
     turn_start = len(sess.trace)                 # 本輪 trace 的起點（見 validator）
     try:
         reply = _get_orchestrator().step(sess, message)
@@ -219,9 +252,9 @@ def chat():
     fp = None
     if reply.plan:
         fp = plan_fingerprint(expected_pin_map(reply.plan))
-        _remember_plan(reply.plan, sess.board, fp)
+        _remember_plan(reply.plan, sess.board, fp, sess.override)
         if turn_validator is None:
-            _kick_validation(reply.plan, sess.board)
+            _kick_validation(reply.plan, sess.board, sess.override)
     return jsonify(
         session_id=sess.session_id,
         board=sess.board,
@@ -329,7 +362,8 @@ def export():
 # 回 409），結果存 _dts["result"] 供 /api/dts/status 輪詢；產物全部落在
 # output/generated/（patch_agent 既有的覆寫制目錄）。
 # --------------------------------------------------------------------------- #
-_last_plan = {"lock": threading.Lock(), "rows": None, "board": None, "fp": None}
+_last_plan = {"lock": threading.Lock(), "rows": None, "board": None, "fp": None,
+              "override": None}    # override＝該 plan 求解當下的覆寫組（溯源）
 _dts = {"lock": threading.Lock(), "running": False, "result": None,
         "started_fp": None, "started_at": None, "tokens": 0}
 
@@ -357,12 +391,17 @@ class _DtsTokenTracker:
         return attr
 
 
-def _remember_plan(rows, board, fp):
-    """伺服器端保存「最新一份 SAT plan」——/api/dts/generate 的唯一 plan 來源。"""
+def _remember_plan(rows, board, fp, override=None):
+    """伺服器端保存「最新一份 SAT plan」——/api/dts/generate 的唯一 plan 來源。
+    override 同步快照：DTS 生成時寫進 plan.used.meta.json（溯源「這份 DTS
+    是用哪組覆寫算的」）。"""
     with _last_plan["lock"]:
         _last_plan["rows"] = copy.deepcopy(rows)
         _last_plan["board"] = board
         _last_plan["fp"] = fp
+        _last_plan["override"] = (
+            {k: override[k] for k in ("set_id", "version", "name", "user")
+             if k in override} if override else None)
 
 
 def _dts_available(board: str) -> bool:
@@ -461,6 +500,7 @@ def dts_generate():
         rows = _last_plan["rows"]
         board = _last_plan["board"]
         have_fp = _last_plan["fp"]
+        plan_override = _last_plan["override"]
     if not rows:
         return jsonify(error="伺服器尚無已求解的 plan——請先求解一次。"), 409
     if not fp:
@@ -497,6 +537,14 @@ def dts_generate():
         snapshot_csv = os.path.join(gen_dir, "plan.used.csv")
         with open(snapshot_csv, "w", newline="", encoding="utf-8") as fh:
             fh.write(csv_text)
+        # 溯源 meta（USER_SYSTEM_PLAN III.3）：這份 DTS 是用哪塊板、哪份 plan、
+        # 哪組 pin 覆寫（user／set／version；官方＝null）算出來的
+        with open(os.path.join(gen_dir, "plan.used.meta.json"), "w",
+                  encoding="utf-8") as fh:
+            json.dump({"board": board, "fingerprint": have_fp,
+                       "override_set": plan_override,
+                       "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S")},
+                      fh, ensure_ascii=False, indent=2)
         threading.Thread(target=_dts_worker, args=(board, have_fp, snapshot_csv),
                          daemon=True).start()
     except Exception as exc:                     # 落地/啟動失敗：釋放 single-flight

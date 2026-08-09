@@ -29,6 +29,11 @@ class ChatSession:
                                                     # [{summary, intent}]，每輪重置
     validator_runs: int = 0                         # 本輪 run_validator 次數
                                                     # （修復迴圈停損，每輪重置）
+    override: dict | None = None                    # 本對話綁定的 pin 覆寫組
+                                                    # {set_id, version, data}——
+                                                    # 對話「開始」當下的版本；
+                                                    # 儲存新覆寫不影響進行中對話
+                                                    # （前端開新話題才生效，III.3）
 
 
 class SessionStore:
@@ -44,15 +49,20 @@ class SessionStore:
         self._max = max_sessions
         self._lock = threading.RLock()
 
-    def get_or_create(self, session_id: str | None, board: str) -> ChatSession:
+    def get_or_create(self, session_id: str | None, board: str,
+                      ns: str = "") -> ChatSession:
+        """ns（命名空間）：web 傳入登入 user id——session_id 是 client 自報的，
+        不加命名空間任何人都能用別人的 id 接手他的對話（多使用者後是隱私洞）。
+        內部儲存 key＝f"{ns}:{sid}"；session_id 本身維持原樣回給 client。"""
         with self._lock:
-            if session_id and session_id in self._store:
-                sess = self._store.pop(session_id)          # LRU touch
-                self._store[session_id] = sess
+            key = f"{ns}:{session_id}" if session_id else None
+            if key and key in self._store:
+                sess = self._store.pop(key)                 # LRU touch
+                self._store[key] = sess
                 return sess
             sid = session_id or uuid.uuid4().hex            # honour client id if given
             sess = ChatSession(session_id=sid, board=board)
-            self._store[sid] = sess
+            self._store[f"{ns}:{sid}"] = sess
             while len(self._store) > self._max:             # evict oldest
                 self._store.popitem(last=False)
             return sess

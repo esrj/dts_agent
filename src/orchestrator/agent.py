@@ -311,20 +311,31 @@ class Orchestrator:
     # ----------------------------------------------------------------------- #
     def _dispatch(self, name: str, inp: dict, session: ChatSession) -> dict:
         """Execute one tool call. Defaults board to the session's board, and
-        records the latest SAT plan so the front-end can render/export it."""
+        records the latest SAT plan so the front-end can render/export it.
+
+        session.override（本對話綁定的 pin 覆寫組）透過參數傳進每個會載板的
+        工具——SolverTools 是所有 session 共用的單例，不能把 per-user 狀態放
+        實例上（並發請求會互踩）。覆寫綁的是 sess.board 那塊板：模型對**別的
+        板**呼叫工具時不得沿用（那組差異是針對本板 require.json 錨定的）。"""
+        def ov_for(b):
+            return session.override if b == session.board else None
         try:
             if name == "solve_pinmux":
                 board = inp.get("board") or session.board
-                out = self.tools.solve_pinmux(inp.get("intent") or {}, board)
+                out = self.tools.solve_pinmux(inp.get("intent") or {}, board,
+                                              override=ov_for(board))
                 if out.get("status") == "sat":
                     session.last_plan = out.get("assignment")
                 return out
             if name == "get_capabilities":
-                return self.tools.get_capabilities(inp.get("board") or session.board,
-                                                   instance=inp.get("instance"))
+                board = inp.get("board") or session.board
+                return self.tools.get_capabilities(board,
+                                                   instance=inp.get("instance"),
+                                                   override=ov_for(board))
             if name == "lookup_binding":
+                board = inp.get("board") or session.board
                 return self.tools.lookup_binding(
-                    inp.get("peripheral"), inp.get("board") or session.board)
+                    inp.get("peripheral"), board, override=ov_for(board))
             if name == "run_validator":
                 # 同 emit_plan 的防偽原則：只驗證伺服器保存的已 SAT 解。
                 if not session.last_plan:
@@ -338,15 +349,17 @@ class Orchestrator:
                                         "不要再驗證：把仍存在的衝突如實回報使用者，"
                                         "並用 propose_suggestion 提交驗證過的替代方案。")}
                 session.validator_runs += 1
+                board = inp.get("board") or session.board
                 return self.tools.run_validator(
-                    session.last_plan, inp.get("board") or session.board)
+                    session.last_plan, board, override=ov_for(board))
             if name == "propose_suggestion":
                 if len(session.suggestions) >= MAX_SUGGESTIONS:
                     return {"status": "rejected",
                             "reason": f"本輪建議已達上限（{MAX_SUGGESTIONS} 張）。"}
+                board = inp.get("board") or session.board
                 out = self.tools.propose_suggestion(
                     inp.get("summary"), inp.get("intent"),
-                    inp.get("board") or session.board)
+                    board, override=ov_for(board))
                 if out.get("status") == "ok":
                     # 只有通過伺服器重解驗證的方案才成為卡片（intent 原樣保存，
                     # 採納時送回 /api/chat 重跑同一條路徑）。
@@ -361,10 +374,10 @@ class Orchestrator:
                 if not session.last_plan:
                     return {"status": "error",
                             "message": "尚無可匯出的分配，請先成功求解一次。"}
+                board = inp.get("board") or session.board
                 return self.tools.emit_plan(
-                    session.last_plan,
-                    inp.get("board") or session.board,
-                    inp.get("format") or "csv")
+                    session.last_plan, board,
+                    inp.get("format") or "csv", override=ov_for(board))
             return {"status": "error", "message": f"未知的工具：{name}"}
         except Exception as exc:                          # never crash the loop
             return {"status": "error", "message": str(exc)}

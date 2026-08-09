@@ -26,6 +26,7 @@ import zipfile
 
 from flask import Blueprint, jsonify, request, send_file
 
+import auth
 from util.dataio import DATA
 
 bp = Blueprint("board_create", __name__)
@@ -109,6 +110,51 @@ def _safe_relpath(p: str) -> str | None:
     if not norm or norm.startswith("..") or os.path.isabs(norm):
         return None
     return norm
+
+
+# 安全保留群組（PMIC 等）表單欄位的格式守門：只做寬鬆 sanity（命名慣例不
+# 寫死——紅線 2；真正的「腳位存在/訊號可達」由 knowledge_extract.
+# reserved_groups 在 af_table 誕生後驗證）。壞形狀丟 ValueError → 400。
+_RG_NAME_RE = re.compile(r"^[A-Za-z0-9_]{2,32}$")
+_RG_SIG_RE = re.compile(r"^[A-Za-z0-9_/]{2,48}$")
+_RG_PIN_RE = re.compile(r"^[A-Za-z0-9_.]{2,16}$")
+
+
+def _parse_reserved_groups(raw: str) -> list:
+    try:
+        data = json.loads(raw)
+    except ValueError as exc:
+        raise ValueError(f"reserved_groups 不是合法 JSON（{exc}）")
+    if not isinstance(data, list) or len(data) > 16:
+        raise ValueError("reserved_groups 必須是 list（最多 16 組）")
+    out = []
+    for i, g in enumerate(data, 1):
+        if not isinstance(g, dict):
+            raise ValueError(f"保留群組第 {i} 組不是物件")
+        name = str(g.get("name") or "").strip()
+        if not name:
+            continue                          # 全空的組直接忽略
+        if not _RG_NAME_RE.match(name):
+            raise ValueError(f"保留群組第 {i} 組群組名格式不正確（{name!r}）")
+        pins = []
+        rows = g.get("pins") or []
+        if not isinstance(rows, list) or len(rows) > 32:
+            raise ValueError(f"保留群組 {name} 的腳位列必須是 list（最多 32 列）")
+        for r in rows:
+            sig = str((r or {}).get("signal") or "").strip()
+            pin = str((r or {}).get("pin") or "").strip()
+            if not sig and not pin:
+                continue                      # 空列忽略
+            if not _RG_SIG_RE.match(sig):
+                raise ValueError(f"保留群組 {name} 訊號格式不正確（{sig!r}）")
+            if not _RG_PIN_RE.match(pin):
+                raise ValueError(f"保留群組 {name} 腳位格式不正確（{pin!r}）")
+            pins.append({"signal": sig, "pin": pin})
+        out.append({"name": name,
+                    "role": str(g.get("role") or "").strip()[:120],
+                    "owner": str(g.get("owner") or "").strip()[:120],
+                    "pins": pins})
+    return out
 
 
 # --------------------------------------------------------------------------- #
@@ -263,6 +309,11 @@ def _build_review(stage_dir: str) -> dict:
 def _gate():
     if not FEATURE_ON:
         return jsonify(error="board create 功能未啟用"), 404
+    # 知識庫是所有使用者共用的資產——變動入口（上傳/覆寫板子）收斂到 admin
+    #（USER_SYSTEM_PLAN Part II 權限矩陣）。
+    err = auth.require_admin()
+    if err:
+        return err
     return None
 
 
@@ -313,6 +364,16 @@ def create():
         pdf.save(pdf_path)
         if os.path.getsize(pdf_path) > _MAX_PDF:
             raise ValueError("PDF 超過大小上限")
+
+        # 安全保留群組（選填）——先過格式守門再落 staging input/；manual 階段
+        # require 草稿就緒後由 knowledge_extract.reserved_groups 驗證併入
+        rg_raw = (request.form.get("reserved_groups") or "").strip()
+        if rg_raw:
+            rg = _parse_reserved_groups(rg_raw)         # ValueError → 400
+            if rg:
+                with open(os.path.join(input_dir, "reserved_groups.json"),
+                          "w", encoding="utf-8") as f:
+                    json.dump(rg, f, ensure_ascii=False, indent=1)
 
         total = 0
         if len(dts_files) == 1 and dts_files[0].filename.lower().endswith(".zip"):

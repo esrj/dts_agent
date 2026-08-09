@@ -6,7 +6,7 @@
     "pin_map_columns": ["signal", "pin", "af"],
     "groups": {
       "SDMMC1": {
-        "role": "SD-card boot (EV1 default)",
+        "role": "SD 卡開機 (EV1 預設開機來源)",
         "in_kernel_dt": true,
         "solver_action": "emit_fixed_assignment",
         "dt_pin_groups": ["sdmmc1_b4_pins_a"],
@@ -21,7 +21,7 @@
         ]
       },
       "SDMMC2": {
-        "role": "eMMC boot (8-bit)",
+        "role": "eMMC 儲存/開機 (8-bit)",
         "in_kernel_dt": true,
         "solver_action": "emit_fixed_assignment",
         "dt_pin_groups": ["sdmmc2_b4_pins_a", "sdmmc2_d47_pins_a"],
@@ -40,7 +40,7 @@
         ]
       },
       "OCTOSPIM_P1": {
-        "role": "serial NOR boot",
+        "role": "NOR Flash 開機 (serial NOR，U-Boot/OP-TEE 持有)",
         "owner": "U-Boot / OP-TEE (ommanager)",
         "in_kernel_dt": false,
         "solver_action": "reserve_only",
@@ -56,7 +56,7 @@
         ]
       },
       "USART2": {
-        "role": "console (all boot stages) + ROM UART serial boot",
+        "role": "Debug 主控台 (console，各開機階段共用；亦為 ROM UART 序列開機口)",
         "in_kernel_dt": true,
         "solver_action": "emit_fixed_assignment",
         "dt_pin_groups": ["usart2_pins_a"],
@@ -67,7 +67,7 @@
         ]
       },
       "I2C7": {
-        "role": "PMIC STPMIC25 control bus (TF-A BL2 拉電軌 / OP-TEE runtime 持有)",
+        "role": "電源管理 PMIC (STPMIC25 控制匯流排，TF-A/OP-TEE 持有)",
         "owner": "TF-A BL2 / OP-TEE (secure)",
         "in_kernel_dt": false,
         "solver_action": "reserve_only",
